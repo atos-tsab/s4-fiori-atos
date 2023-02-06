@@ -5,5 +5,5 @@ npm run "build"
 git checkout master
 git add .
 git commit
-#git push
+git push
 npm run "deploy_autogen"
