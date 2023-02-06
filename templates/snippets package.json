@@ -1,0 +1,4 @@
+  "scripts": {
+    "deploy":"deploy.sh", 
+    "deploy_autogen": "fiori verify", 
+  },
