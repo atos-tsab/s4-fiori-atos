@@ -1,0 +1,32 @@
+<mvc:View 
+    controllerName="z.confstorage.controller.ConfirmStorage"
+    xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core"
+	displayBlock="true"
+    xmlns="sap.m">
+
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+ 		<customHeader>
+			<Bar>
+				<contentLeft>
+					<Button text="{i18n>Back}" type="Ghost" icon="sap-icon://back-to-top" iconFirst="true" press="onNavBack" class="sapUiTinyMarginBegin" />
+				</contentLeft>
+				<contentMiddle><Title text="{i18n>title}" titleStyle="H5"></Title></contentMiddle>
+				<contentRight></contentRight>		
+			</Bar>
+		</customHeader>
+
+        <content>
+<!--             <core:Fragment fragmentName="z.confstorage.view.parts.FilterArea" type="XML" />
+ -->
+        </content>
+
+		<footer>
+			<Toolbar>
+				<ToolbarSpacer />
+				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
+			</Toolbar>
+		</footer>
+    </Page>
+
+</mvc:View>
