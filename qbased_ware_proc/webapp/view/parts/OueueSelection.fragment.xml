@@ -1,0 +1,95 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:card="sap.f.cards"
+ 	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+	xmlns:f="sap.f"
+    xmlns="sap.m">
+
+	<Panel accessibleRole="Form" height="auto" class="sapUiTinyMarginTop">
+		<content>
+			<f:GridContainer>
+				<f:layout>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="5px" />
+				</f:layout>
+				<f:layoutXS>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="5px" />
+				</f:layoutXS>
+				<f:items>
+					<f:Card width="100%">
+						<f:layoutData>
+							<f:GridContainerItemLayoutData columns="4" />
+						</f:layoutData>
+						<f:header>
+							<card:Header title="{i18n>CaptureQueue}" />
+						</f:header>
+						<f:content>
+
+							<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showOk}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showOkText}" width="auto" wrapping="true" class="atosOkText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+			 					<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showErr}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showErrText}" width="auto" wrapping="true" class="atosErrorText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLocation}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>HU}{i18n>Colon}" width="110px" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_HU" value="{ScanModel>/valueMaterialNo}" width="160px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScan('Location')" width="auto" class="sapUiTinyMarginBegin" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewQueue}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<OverflowToolbar width="520px" class="sapUiSmallMarginBegin">
+											<Label text="{i18n>Toolbar}{i18n>Colon}" />
+											<ToolbarSpacer/>
+											<Button press="onHandleQueue($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
+											<ToolbarSeparator />
+											<Button press="onHandleQueue($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
+										</OverflowToolbar>
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableQueue" type="XML" />
+									</HBox>
+								</VBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewLocation}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<OverflowToolbar width="800px" class="sapUiSmallMarginBegin">
+											<Label text="{i18n>Toolbar}{i18n>Colon}" />
+											<ToolbarSpacer/>
+											<Button press="onHandleLocation($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
+											<ToolbarSeparator />
+											<Button press="onHandleLocation($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
+										</OverflowToolbar>
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableLocation" type="XML" />
+									</HBox>
+								</VBox>
+							</VBox>
+
+						</f:content>
+					</f:Card>
+				</f:items>
+			</f:GridContainer>
+		</content>
+	</Panel>
+
+</core:FragmentDefinition>

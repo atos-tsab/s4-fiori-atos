@@ -1,0 +1,53 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerLocationTable" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableLocationList" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row" 
+			visibleRowCount="6"
+			rowSelectionChange="onRowSelectionLocationList"
+			width="800px">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="50px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "No", "columnIndex":"0", "leadingProperty": "No"}' />
+					</ui:customData>
+					<Label text="{i18n>No}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{No}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "SourceStorageLoc", "columnIndex":"1", "leadingProperty": "SourceStorageLoc"}' />
+					</ui:customData>
+					<Label text="{i18n>SourceStorageLoc}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{SourceStorageLoc}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="70px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Number", "columnIndex":"2", "leadingProperty": "Number"}' />
+					</ui:customData>
+					<Label text="{i18n>Number}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Number}" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>
