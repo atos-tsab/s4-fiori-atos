@@ -1,0 +1,33 @@
+<mvc:View 
+    controllerName="z.adhoclbtomat.controller.AdhocLbToMat"
+    xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core"
+	displayBlock="true"
+    xmlns="sap.m">
+
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+ 		<customHeader>
+			<Toolbar>
+				<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+				<ToolbarSpacer />
+					<Button id="idButtonBook_ADHOC_LB_TOMA" press="onPressBooking" text="{i18n>Book}" type="Reject" width="100px" enabled="{ScanModel>/booking}" />
+					<ToolbarSeparator />
+					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>OkF2}" type="Success" width="100px" enabled="{ScanModel>/ok}" />
+					<ToolbarSeparator />
+					<Button press="onPressRefresh" text="{i18n>Clear}" type="Emphasized" width="100px" enabled="{ScanModel>/refresh}" class="sapUiSmallMarginEnd" />
+			</Toolbar>
+		</customHeader>
+
+        <content>
+            <core:Fragment fragmentName="z.adhoclbtomat.view.ScanDetails" type="XML" />
+ 		</content>
+
+		<footer>
+			<Toolbar>
+				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
+				<ToolbarSpacer />
+			</Toolbar>
+		</footer>
+    </Page>
+
+</mvc:View>
