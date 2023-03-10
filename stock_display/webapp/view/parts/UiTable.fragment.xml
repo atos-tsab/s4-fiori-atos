@@ -1,0 +1,73 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:u="sap.ui.unified" 
+	xmlns:l="sap.ui.layout" 
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+	xmlns:ndc="sap.ndc" 
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableWorkList" 
+			title="{i18n>PodWorkList}" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			selectionMode="Single" 
+			rowSelectionChange="onTableSelectionChange" 
+			selectionBehavior="Row" 
+			visibleRowCount="11">
+			<ui:columns>
+				<ui:Column width="10%" id="multiheader" sortProperty="Layer">
+					<ui:multiLabels>
+						<Label text="{i18n>Layer}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Layer}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="5%" sortProperty="Position">
+					<ui:multiLabels>
+						<Label text="{i18n>Pos}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Position}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="30%" sortProperty="Module">
+					<ui:multiLabels>
+						<Label text="{i18n>StackId}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Module}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="25%" sortProperty="LoadedModuleID">
+					<ui:multiLabels>
+						<Label text="{i18n>StackLoaded}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<ObjectStatus text="{LoadedModuleID}" state="{LoadState}" inverted="{LoadInverted}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="30%">
+					<ui:multiLabels>
+						<Label text="{i18n>Action}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<HBox>
+	<!-- 						<ndc:BarcodeScannerButton id="sampleBarcodeScannerButton" icon="sap-icon://edit" 
+								scanSuccess="onScanSuccess" scanFail="onScanError" inputLiveUpdate="onScanLiveupdate" 
+								dialogTitle="Barcode Scanner Button Sample" />
+	-->
+							<Button press="onLoadJig($event,${Layer},${Position},${Module})" text="{i18n>Load}" type="Emphasized" width="70px" enabled="{LoadEnabled}" visible="{LoadShow}" class="sapUiTinyMarginBegin" />
+							<Button press="onUnLoadJig($event,${Layer},${Position},${LoadedModuleID})" text="{i18n>UnLoad}" type="Emphasized" width="70px" enabled="{UnloadEnabled}" visible="{UnloadShow}" class="sapUiTinyMarginBegin" />
+						</HBox>
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>
