@@ -1,0 +1,87 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerTableB" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTablePackageList" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row" 
+			visibleRowCount="12">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Booked", "columnIndex":"0", "leadingProperty": "Booked"}' />
+					</ui:customData>
+					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
+					<ui:template>
+						<CheckBox text="" selected="{Booked}" enabled="false" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="14%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Package", "columnIndex":"1", "leadingProperty": "Package"}' />
+					</ui:customData>
+					<Label text="{i18n>Package}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Package}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="18%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Packaging", "columnIndex":"2", "leadingProperty": "Packaging"}' />
+					</ui:customData>
+					<Label text="{i18n>Packaging}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Packaging}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="18%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"3", "leadingProperty": "Material"}' />
+					</ui:customData>
+					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Material}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Amount", "columnIndex":"4", "leadingProperty": "Amount"}' />
+					</ui:customData>
+					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Amount}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "UOM", "columnIndex":"5", "leadingProperty": "UOM"}' />
+					</ui:customData>
+					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{UOM}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Description", "columnIndex":"6", "leadingProperty": "Description"}' />
+					</ui:customData>
+					<Label text="{i18n>Description}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Description}" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

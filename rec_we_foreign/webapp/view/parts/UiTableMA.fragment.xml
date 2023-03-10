@@ -1,0 +1,67 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:u="sap.ui.unified" 
+	xmlns:l="sap.ui.layout" 
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+	xmlns:ndc="sap.ndc" 
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerTableA" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableMaterialInfo" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			selectionMode="None" 
+			selectionBehavior="Row" 
+			visibleRowCount="1">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="10%" sortProperty="Pos">
+					<ui:multiLabels>
+						<Label text="{i18n>Pos}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Pos}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="25%" sortProperty="Material">
+					<ui:multiLabels>
+						<Label text="{i18n>Material}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Material}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="40%" sortProperty="Description">
+					<ui:multiLabels>
+						<Label text="{i18n>Description}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Description}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" sortProperty="Amount">
+					<ui:multiLabels>
+						<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{Amount}" textAlign="Right" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" sortProperty="UOM">
+					<ui:multiLabels>
+						<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
+					</ui:multiLabels>
+					<ui:template>
+						<Text text="{UOM}" textAlign="Center" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>
