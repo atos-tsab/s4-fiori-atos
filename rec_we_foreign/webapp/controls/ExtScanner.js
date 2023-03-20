@@ -100,8 +100,6 @@ sap.ui.define([
                 changeButton:    true,
                 valueScan:       "",
                 valueMaterialNo: "",
-                valueEvidence:   "",
-                typeEvidence:    "",
                 videoDeviceId:   null,
                 decoders:        this.getDecoders(),
                 decoderKey:      this.getDecoderKey(),
@@ -131,6 +129,9 @@ sap.ui.define([
 			var mainDataSource = oManiData["sap.app"].dataSources.mainService;
 
 			this._MainServiceUrl = mainDataSource.uri;
+
+			// ---- Enable the Function key solution
+            this._setKeyboardShortcuts();
 		},
 
 		// --------------------------------------------------------------------------------------------------------------------
@@ -705,6 +706,43 @@ sap.ui.define([
         },
    
 
+		// --------------------------------------------------------------------------------------------------------------------
+		// ---- Hotkey Function
+		// --------------------------------------------------------------------------------------------------------------------
+		
+		_setKeyboardShortcuts: function() {
+            var that = this;
+
+			// ---- Set the Shortcut to buttons
+			$(document).keydown($.proxy(function (evt) {
+                var controlF1 = sap.ui.getCore().byId("__scanner0--idButtonOk_REC_WE_FORN");
+
+                // ---- Now call the actual event/method for the keyboard keypress
+                switch (evt.keyCode) {
+			        case 13: // ---- Enter Key
+                        evt.preventDefault();
+
+				        if (controlF1 && controlF1.getEnabled()) {
+                            controlF1.firePress();
+                        }
+						
+						break;			                
+			        case 113: // ---- F2 Key
+                        evt.preventDefault();
+ 
+				        if (controlF1 && controlF1.getEnabled()) {
+                            controlF1.firePress();
+                        }
+						
+						break;			                
+					default: 
+					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                        break;
+				}
+			}, this));
+		},
+
+
         // --------------------------------------------------------------------------------------------------------------------
 		// ---- Helper Functions
 		// --------------------------------------------------------------------------------------------------------------------
@@ -743,7 +781,7 @@ sap.ui.define([
             .decodeFromVideoDevice(this._oScanModel.getProperty("/videoDeviceId"), this.getId() + "--scanVideo", this._saveScannedValue.bind(this))
             .catch( function(err) {
                     if (err && err.name && err.name === "NotAllowedError") {
-                        jQuery.sap.log.error(noCam);
+                        // jQuery.sap.log.error(noCam);
                     } else {
                         MessageToast.show(err.message || emesg);
                         jQuery.sap.log.error(err.message || emesg);

@@ -20,44 +20,67 @@
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
 			<ui:columns>
-				<ui:Column width="10%" sortProperty="Pos">
-					<ui:multiLabels>
-						<Label text="{i18n>Pos}" textAlign="Center" width="100%" />
-					</ui:multiLabels>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "StatusUnload", "columnIndex":"0", "leadingProperty": "StatusUnload"}' />
+					</ui:customData>
+					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Pos}" />
+						<CheckBox text="" selected="{StatusUnload}" enabled="false" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="25%" sortProperty="Material">
-					<ui:multiLabels>
-						<Label text="{i18n>Material}" textAlign="Center" width="100%" />
-					</ui:multiLabels>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnit", "columnIndex":"1", "leadingProperty": "HandlingUnit"}' />
+					</ui:customData>
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{HandlingUnit}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialPackaging", "columnIndex":"2", "leadingProperty": "MaterialPackaging"}' />
+					</ui:customData>
+					<Label text="{i18n>Packaging}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{MaterialPackaging}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"3", "leadingProperty": "Material"}' />
+					</ui:customData>
+					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{Material}" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="40%" sortProperty="Description">
-					<ui:multiLabels>
-						<Label text="{i18n>Description}" textAlign="Center" width="100%" />
-					</ui:multiLabels>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"4", "leadingProperty": "Quantity"}' />
+					</ui:customData>
+					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Description}" />
+						<Text text="{Quantity}" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="15%" sortProperty="Amount">
-					<ui:multiLabels>
-						<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
-					</ui:multiLabels>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"5", "leadingProperty": "UnitOfMeasurement"}' />
+					</ui:customData>
+					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Amount}" textAlign="Right" />
+						<Text text="{UnitOfMeasurement}" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="10%" sortProperty="UOM">
-					<ui:multiLabels>
-						<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
-					</ui:multiLabels>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialDescription", "columnIndex":"6", "leadingProperty": "MaterialDescription"}' />
+					</ui:customData>
+					<Label text="{i18n>Description}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{UOM}" textAlign="Center" />
+						<Text text="{MaterialDescription}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>

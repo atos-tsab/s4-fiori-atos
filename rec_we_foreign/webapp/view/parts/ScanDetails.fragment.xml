@@ -44,15 +44,10 @@
 
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>ExtLsPackage}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{i18n>HandlingUnit}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
 										<Input id="idInput_Material" value="{ScanModel>/valueMaterialNo}" width="156px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('Material')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
-									</HBox>
-
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Label text="" width="205px" class="sapUiTinyMarginTop" />
 									</HBox>
 								</HBox>
 
@@ -60,8 +55,13 @@
 
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>ExtLsPackage}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/ExtLsPackage}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+										<Label text="{i18n>HandlingUnit}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/HandlingUnit}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>DocumentNo}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/DocumentNo}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 
@@ -80,22 +80,22 @@
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>ExtShipment}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/ExtShipment}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/ExternalShipment}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>Scanmodus}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/Scanmodus}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/ScanModus}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>Delivery}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/Delivery}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/DeliveryNo}" width="200px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>PsDeliverNote}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/PsDeliverNote}" width="60px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/PSDeliveryNote}" width="60px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 							</VBox>
@@ -107,15 +107,15 @@
 		</content>
 	</Panel>
 
-	<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+	<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%" visible="false">
 		<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="true">
 			<HBox justifyContent="Start" wrap="Wrap">
-				<Label text="31315046" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-				<Label text="21215046" width="205px" class="sapUiTinyMarginTop" />
+				<Label text="A 1000000852" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="B 1000000846" width="205px" class="sapUiTinyMarginTop" />
 			</HBox>
 			<HBox justifyContent="Start" wrap="Wrap">
-				<Label text="1000000366" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-				<Label text="1000000368" width="205px" class="sapUiTinyMarginTop" />
+				<Label text="A 1000000456" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="B 1000000450" width="205px" class="sapUiTinyMarginTop" />
 			</HBox>
 		</HBox>
 	</VBox>

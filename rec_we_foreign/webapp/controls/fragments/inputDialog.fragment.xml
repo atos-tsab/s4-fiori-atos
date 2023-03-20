@@ -8,7 +8,7 @@
         <content>
             <VBox>
                 <HBox>
-                    <Label text="{i18n>ExtLsPackage}{i18n>Colon}" width="140px" class="sapUiTinyMarginTop" />
+                    <Label text="{i18n>HandlingUnit}{i18n>Colon}" width="110px" class="sapUiTinyMarginTop" />
 					<Input change="onScanInputChanged" liveChange="onScanInputLiveChange" width="240px" 
                            value="{scanModel>/valueMaterialNo}" class="sapUiTinyMarginEnd" />
                 </HBox>
@@ -20,7 +20,7 @@
         </content>
 
         <beginButton>
-            <Button press="onOkPress" text="{i18n>Ok}" icon="sap-icon://accept" enabled="{scanModel>/okButton}" />
+            <Button id="idButtonOk_REC_WE_FORN" press="onOkPress" text="{i18n>Ok}" icon="sap-icon://accept" enabled="{scanModel>/okButton}" />
         </beginButton>
         <endButton>
             <Button press="onCancelPress" text="{i18n>Cancel}" icon="sap-icon://decline" />

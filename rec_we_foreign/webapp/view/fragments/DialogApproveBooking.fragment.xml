@@ -1,0 +1,36 @@
+<core:FragmentDefinition
+	xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core" 
+	class="sapUiSizeCompact"
+	xmlns="sap.m">
+	
+	<Dialog 
+		id="idDialogBookApproval" 
+		class="sapThemeHighlight-asColor"
+		contentHeight="110px"
+		contentWidth="auto"
+		resizable="false"
+		type="Message"
+		state="Warning"
+		afterClose="onBookApprovalAfterClose"
+		title="{i18n>BookApproveTitle}">
+		<content>
+			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
+				<HBox>
+					<Label text="{i18n>ApproveContent}" width="auto" />
+				</HBox>
+				<HBox>
+					<Label text="{i18n>ApproveHint}" width="auto" class="atosErrorText sapUiSmallMarginTop" />
+				</HBox>
+			</VBox>
+		</content>
+		
+		<beginButton>
+			<Button text="{i18n>Yes}" type="Emphasized" press="onBookApprovalSave" />
+		</beginButton>
+		<endButton>
+			<Button text="{i18n>No}" type="Default" press="onBookApprovalClose" />
+		</endButton>
+		
+	</Dialog>
+</core:FragmentDefinition>

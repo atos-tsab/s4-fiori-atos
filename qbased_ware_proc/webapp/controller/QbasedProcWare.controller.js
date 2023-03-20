@@ -104,7 +104,7 @@
             // ---- Set Jason Models.
             var oData = {
                 "viewMode":        "Queue",
-                "backMode":        "Queue",
+                "backMode":        "Launchpad",
                 "booking":         false,
                 "refresh":         false,
                 "ok":              true,
@@ -226,6 +226,8 @@
                 oData.next         = false;
                 oData.viewLocation = true;
                 oData.viewQueue    = false;
+
+                this._loadLocationTableData();
             }
 
             this.oScanModel.setData(oData);
@@ -243,9 +245,16 @@
             var oTable = this.QueueListTable;
             var oModel = oTable.getModel();
 
+            this.HandleEvent   = oEvent;
+            this.HandleQueueId = oEvent.getSource().sId;
+
             if (oTable !== null && oTable !== undefined) {
                 var iIndex = oTable.getSelectedIndex();
                 var iEnd   = oModel.getData().length;
+
+                // if (this.iActiveQueue !== iIndex) {
+                //     iIndex = this.iActiveQueue;
+                // }
 
                 if (navTo === "next") {
                     iIndex = iIndex + 1;
@@ -265,6 +274,44 @@
                 }
 
                 oTable.setSelectedIndex(iIndex);
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
+        onRowSelectionQueueList: function (oEvent) {
+            var oData = this.oScanModel.getData();
+            var oTable = this.QueueListTable;
+            var oModel = oTable.getModel();
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var sSource = oEvent.getSource();
+
+                    if (oTable !== null && oTable !== undefined) {
+                        var iIndex = sSource.getSelectedIndex();
+                        var iEnd   = oModel.getData().length;
+
+                        this.iActiveQueue = iIndex;
+
+                        if (navTo === "next") {
+                            iIndex = iIndex + 1;
+                        } else {
+                            iIndex = iIndex - 1;
+                        }
+        
+                        if (iIndex === 0) {
+                            oData.next = true;
+                            oData.back = false;
+                        } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                            oData.next = true;
+                            oData.back = true;
+                        } else if (iIndex < iEnd) {
+                            oData.next = false;
+                            oData.back = true;
+                        }                                       
+                    }
+                }
             }
 
             this.oScanModel.setData(oData);
@@ -362,39 +409,46 @@
             var oData = {
 				results:[
                     { 
-                        "Status":  "None",
-                        "Booked":  false,
-                        "No":     "1",
-                        "Queue":  "T03",
-                        "Number": 24
+                        "TA":                  "909414",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
                     },
                     { 
-                        "Status":  "None",
-                        "Booked":  false,
-                        "No":     "2",
-                        "Queue":  "RZ2",
-                        "Number": 6
+                        "TA":                  "909415",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
                     },
                     { 
-                        "Status":  "None",
-                        "Booked":  false,
-                        "No":     "3",
-                        "Queue":  "XXX",
-                        "Number": 8
+                        "TA":                  "909416",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
                     },
                     { 
-                        "Status":  "None",
-                        "Booked":  false,
-                        "No":     "4",
-                        "Queue":  "SOEDERLIN2",
-                        "Number": 1
+                        "TA":                  "909417",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
                     },
                     { 
-                        "Status":  "None",
-                        "Booked":  false,
-                        "No":     "5",
-                        "Queue":  "T02",
-                        "Number": 4
+                        "TA":                  "909430",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
+                    },
+                    { 
+                        "TA":                  "909431",
+                        "Material":            "03.001.00.66.0",
+                        "DestStorageLocation": "ZUG02",
+                        "Queue":               "T03",
+                        "TemplatePlace":       "03-06-01"
                     }
                 ]
 			};
@@ -443,17 +497,6 @@
             }
         },
 
-        onRowSelectionQueueList: function (oEvent) {
-            if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
-                    var sSource = oEvent.getSource();
-                    var iIndex  = sSource.getSelectedIndex();
-
-                    this.iActiveQueue = iIndex;
-                }
-            }
-        },
-
         onRowSelectionLocationList: function (oEvent) {
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
@@ -461,6 +504,8 @@
                     var iIndex  = sSource.getSelectedIndex();
 
                     this.iActiveLocation = iIndex;
+
+                    // this.onHandleLocation("next");
                 }
             }
         },
@@ -757,16 +802,33 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onNavBack: function (backMode) {
-            if (sap.ushell !== null && sap.ushell !== undefined) {
-                if (sap.ushell.Container !== null && sap.ushell.Container !== undefined) {
-                    var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-                        oCrossAppNavigator.toExternal({
-                            target: {
-                                shellHash: this.sShellSource
-                            }
-                        });
+            var oData = this.oScanModel.getData();
+
+            if (backMode === "Launchpad") {
+                if (sap.ushell !== null && sap.ushell !== undefined) {
+                    if (sap.ushell.Container !== null && sap.ushell.Container !== undefined) {
+                        var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                            oCrossAppNavigator.toExternal({
+                                target: {
+                                    shellHash: this.sShellSource
+                                }
+                            });
+                    }
                 }
+            } else if (backMode === "Queue") {
+                oData.viewMode     = "Queue";
+                oData.backMode     = "Launchpad";
+                oData.back         = false;
+                oData.next         = true;
+                oData.viewLocation = false;
+                oData.viewQueue    = true;
+
+                this.QueueListTable.setSelectedIndex(0);
+
+                this.iActiveQueue = 0;
             }
+    
+            this.oScanModel.setData(oData);
         },
 
 		_getShellSource: function (oEvent) {
@@ -799,6 +861,7 @@
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
+                var sBackMode = that.oScanModel.getData().backMode;
                 var sViewMode = that.oScanModel.getData().viewMode;
 
                 // ---- Now call the actual event/method for the keyboard keypress
@@ -822,7 +885,7 @@
 						break;			                
                     case 114: // ---- F3 Key
                         evt.preventDefault();
-                        that.onNavBack();
+                        that.onNavBack(sBackMode);
 						break;			                
                     case 115: // ---- F4 Key
                         evt.preventDefault();
@@ -862,7 +925,7 @@
             // ---- Reset the Scan Model
             var oData = { 
                 "viewMode":        "Queue",
-                "backMode":        "Queue",
+                "backMode":        "Launchpad",
                 "booking":         false,
                 "refresh":         false,
                 "ok":              true,

@@ -17,8 +17,8 @@ server:
           url: https://ui5.sap.com
         backend:
           - path: /sap
-            url: http://bpw-s4d.bpw.internal:8000
-            client: '100'
+            url: https://bpw-s4d.bpw.internal:44300
+            client: '501'
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
@@ -30,7 +30,7 @@ server:
       configuration:
         mountPath: /
         services:
-          - urlPath: /sap/opu/odata4/sap/api_warehouse_order_task_2/default/iwbep/common/0001
+          - urlPath: /sap/opu/odata/sap/Z_EEWM_GOODS_RECEIPT_SRV
             metadataPath: ./webapp/localService/metadata.xml
             mockdataPath: ./webapp/localService/data
             generateMockData: true

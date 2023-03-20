@@ -1,13 +1,13 @@
 ## Application Details
 |               |
 | ------------- |
-|**Generation Date and Time**<br>Wed Feb 15 2023 15:18:33 GMT+0100 (Central European Standard Time)|
+|**Generation Date and Time**<br>Fri Mar 10 2023 14:33:13 GMT+0100 (Central European Standard Time)|
 |**App Generator**<br>@sap/generator-fiori-freestyle|
 |**App Generator Version**<br>1.8.6|
 |**Generation Platform**<br>Visual Studio Code|
 |**Template Used**<br>simple|
 |**Service Type**<br>SAP System (ABAP On Premise)|
-|**Service URL**<br>http://bpw-s4d.bpw.internal:8000/sap/opu/odata4/sap/api_warehouse_order_task_2/default/iwbep/common/0001/
+|**Service URL**<br>https://bpw-s4d.bpw.internal:44300/sap/opu/odata/sap/Z_EEWM_GOODS_RECEIPT_SRV
 |**Module Name**<br>rec_we_foreign|
 |**Application Title**<br>Recording WE-Foreign|
 |**Namespace**<br>z|

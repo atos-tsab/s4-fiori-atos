@@ -12,39 +12,39 @@
 			enableSelectAll="false"
 			selectionMode="Single" 
 			selectionBehavior="Row" 
-			visibleRowCount="12">
+			visibleRowCount="1">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
 			<ui:columns>
 				<ui:Column width="8%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Booked", "columnIndex":"0", "leadingProperty": "Booked"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "StatusUnload", "columnIndex":"0", "leadingProperty": "StatusUnload"}' />
 					</ui:customData>
 					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
 					<ui:template>
-						<CheckBox text="" selected="{Booked}" enabled="false" />
+						<CheckBox text="" selected="{StatusUnload}" enabled="false" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="14%" visible="true" autoResizable="true">
+				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Package", "columnIndex":"1", "leadingProperty": "Package"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnit", "columnIndex":"1", "leadingProperty": "HandlingUnit"}' />
 					</ui:customData>
-					<Label text="{i18n>Package}" textAlign="Center" width="100%" />
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Package}" />
+						<Text text="{HandlingUnit}" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="18%" visible="true" autoResizable="true">
+				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Packaging", "columnIndex":"2", "leadingProperty": "Packaging"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialPackaging", "columnIndex":"2", "leadingProperty": "MaterialPackaging"}' />
 					</ui:customData>
 					<Label text="{i18n>Packaging}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Packaging}" />
+						<Text text="{MaterialPackaging}" />
 					</ui:template>
 				</ui:Column>
-				<ui:Column width="18%" visible="true" autoResizable="true">
+				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
 						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"3", "leadingProperty": "Material"}' />
 					</ui:customData>
@@ -55,29 +55,29 @@
 				</ui:Column>
 				<ui:Column width="10%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Amount", "columnIndex":"4", "leadingProperty": "Amount"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"4", "leadingProperty": "Quantity"}' />
 					</ui:customData>
 					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Amount}" />
+						<Text text="{Quantity}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="8%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "UOM", "columnIndex":"5", "leadingProperty": "UOM"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"5", "leadingProperty": "UnitOfMeasurement"}' />
 					</ui:customData>
 					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{UOM}" />
+						<Text text="{UnitOfMeasurement}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Description", "columnIndex":"6", "leadingProperty": "Description"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialDescription", "columnIndex":"6", "leadingProperty": "MaterialDescription"}' />
 					</ui:customData>
 					<Label text="{i18n>Description}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Description}" />
+						<Text text="{MaterialDescription}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>

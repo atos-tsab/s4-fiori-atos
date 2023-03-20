@@ -13,7 +13,7 @@
     "sourceTemplate": {
       "id": "@sap/generator-fiori:basic",
       "version": "1.8.6",
-      "toolsId": "52878a6d-a6f5-46b7-a976-e05f94177a79"
+      "toolsId": "a50073f2-0e41-45dd-a6df-0a5ae3db174a"
     },
     "dataSources": {
       "mainService": {
@@ -72,20 +72,10 @@
       "": {
         "dataSource": "mainService",
         "preload": true,
-        "settings": {
-          "synchronizationMode": "None",
-          "operationMode": "Server",
-          "autoExpandSelect": true,
-          "earlyRequests": true
-        }
+        "settings": {}
       }
     },
     "resources": {
-      "js": [
-        {
-            "uri": "./controls/lib/zxingjs0186.min.js"
-        }
-      ],
       "css": [
         {
           "uri": "css/style.css"

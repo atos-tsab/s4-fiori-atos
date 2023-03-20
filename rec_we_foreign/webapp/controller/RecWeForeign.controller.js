@@ -58,7 +58,12 @@ sap.ui.define([
             // ---- Define variables for the License View
             this.oView = this.getView();
 
-            this.sShellSource = "";
+            this.iWN = "";
+            this.iHU = "";
+            this.sScanType       = "";
+            this.sShellSource    = "";
+            this.oDeliveryData   = {};
+            this.bScanModusAktiv = false;
 
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
@@ -69,29 +74,6 @@ sap.ui.define([
             // ---- Define the UI Tables
             this.MaterialInfoTable = this.byId("idTableMaterialInfo");
             this.PackageListTable  = this.byId("idTablePackageList");
-
-            // ---- Define Model data
-            this.oDisplayData1 = {
-                "HU":               "1000000366",
-                "ExtLsPackage":     "31315046",
-                "SupplierId":       "913130",
-                "Supplier":         "MORAVSKE KOVARNY A",
-                "ExtShipment":      "",
-                "Delivery":         "18979387",
-                "Scanmodus":        "A",
-                "PsDeliverNote":    "1 / 1"
-            };
-
-            this.oDisplayData2 = {
-                "HU":               "1000000368",
-                "ExtLsPackage":     "21215046",
-                "SupplierId":       "912130",
-                "Supplier":         "MORAVSKE KOVARNY A",
-                "ExtShipment":      "",
-                "Delivery":         "18974587",
-                "Scanmodus":        "B",
-                "PsDeliverNote":    "0 / 16"
-            };
         },
 
         _initLocalModels: function () {
@@ -163,10 +145,10 @@ sap.ui.define([
 
             this._getShellSource();
             this._resetAll();
-            this._loadTableDataB();
+            this.loadUserData();
 
             // ---- Set Focus to main Input field
-            setTimeout(() => this.byId("idInput_Material").focus());
+            this._setFocus();
 
             // tools.alertMe(sap.ui.Device.resize.width);
         },
@@ -177,31 +159,42 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onPressBooking: function () {
-            var sOkMesg    = this.getResourceBundle().getText("OkMesBooking", "000909790");
-            var tSTime     = this.getResourceBundle().getText("ShowTime");
-            var oScanModel = this.oScanModel;
-            var oScanData  = oScanModel.getData();
-            var that = this
+            var oDisplayModel = this.getView().getModel("DisplayModel");
+            var iDocumentNo   = oDisplayModel.getProperty("/DocumentNo");
+            var iDeliveryNo   = oDisplayModel.getProperty("/DeliveryNo");
+            var sOkMesg       = this.getResourceBundle().getText("OkMesBooking", iDeliveryNo);
+            var tSTime        = this.getResourceBundle().getText("ShowTime");
+            var check = false;
+            var that  = this
 
-            // ---- ToDo: Check from Backend for not identically dest. Storage Location
-            var check = true;
+            if (this.ScanModus === "A") {
+                this.oScanModel.setProperty("/showOk", true);
+                this.oScanModel.setProperty("/showOkText", sOkMesg);
 
-            if (check) {
-                oScanData.showOk     = true;
-                oScanData.showOkText = sOkMesg;
+                this.saveBookingData(iDocumentNo);
+
+                check = true;
             } else {
-                oScanData.showOk     = false;
-                oScanData.showOkText = "";               
-            }
+                if (this.AllBooked) {
+                    this.oScanModel.setProperty("/showOk", true);
+                    this.oScanModel.setProperty("/showOkText", sOkMesg);
 
-            this.oScanModel.setData(oScanData);
+                    this.saveBookingData(iDocumentNo);
+    
+                    check = true;
+                } else {
+                    this.onBookApprovalOpen(iDocumentNo);
+
+                    check = false;
+                }
+            }
 
             if (check) {
                 setTimeout(function () {
                     that._resetAll();
 
                     // ---- Set Focus to main Input field
-                    setTimeout(() => that.byId("idInput_Material").focus());
+                    that._setFocus();
                 }, tSTime);            
             }         
         },
@@ -215,348 +208,6 @@ sap.ui.define([
 
         onPressRefresh: function () {
             this._resetAll();
-        },
-
-
-        // --------------------------------------------------------------------------------------------------------------------
-        // ---- Loading Functions
-        // --------------------------------------------------------------------------------------------------------------------
-
-	    loadHuData: function (hu, sScanView) {
-            var oDisplayModel = new JSONModel();
-            var oModel = this.oModel;
-            var oData = {};
-            hu = "1000000366";
-
-            // ---- Read the HU Data from the backend
-
-            
-        },
-
-		_loadScanData: function (mResult, sScanView) {
-            var oDisplayModel = new JSONModel();
-            var oData = {};
-
-            // ---- Get the right Data for the new model
-            if (mResult.material !== null && mResult.material !== undefined && mResult.material !== "" && sScanView === "Material") {
-                this.MAT = mResult.material;
-            }
-
-            if (mResult.material !== null && mResult.material !== undefined) {
-                if (this.MAT === "1000000366" || this.MAT === "31315046") {
-                    oData = this.oDisplayData1;
-                } else {
-                    oData = this.oDisplayData2;
-                }
-            }
-
-            // ---- Get the Data for all not empty values
-            if (mResult.material !== null && mResult.material !== undefined && mResult.material !== "") {
-                if (sScanView === "Material") {
-                    oData.ExtLsPackage = mResult.material;
-                } else {
-                    oData.ExtLsPackage = "";
-                }
-            } else {
-                oData.ExtLsPackage = "";
-            }
-
-            // ---- Set the Data for the Model and set the Model to the View
-            oDisplayModel.setData(oData);
-
-            this.getView().setModel(oDisplayModel, "DisplayModel");
-
-            if (this.MAT === "1000000366" || this.MAT === "31315046") {
-                this.byId("idScrollContainerTableA").setVisible(true);
-                this.byId("idScrollContainerTableB").setVisible(false);
-
-                this._setTableDataA(mResult.material);
-            } else {
-                this.byId("idScrollContainerTableA").setVisible(false);
-                this.byId("idScrollContainerTableB").setVisible(true);
-
-                this._setTableDataB(mResult.material);
-            }
-        },
-
-		_changeScanModel: function(trigger) {
-            var oData = this.oScanModel.getData();
-            var id    = "";
-            var that  = this;
-
-            // ---- Change the Scan Model
-            if (trigger) {
-                id = "idButtonBook_REC_WE_FORN";
-                oData.booking  = true;
-                oData.refresh  = false;
-                oData.ok       = false;
-
-                setTimeout(function () {
-                    that.byId(id).focus();
-                }, 300);            
-            } else {
-                id = "idInput_Material";
-                oData.booking  = false;
-                oData.refresh  = true;
-                oData.ok       = true;
-            }
-
-            this.oScanModel.setData(oData);
-            this.byId(id).focus();
-            this.byId(id).focus();
-        },
-
-        _setTableDataA: function (mResult) {
-            var oData = this.oScanModel.getData();
-            var id    = "";
-            var that  = this;
-
-            var oTableData = {
-				results:[
-                    { 
-                        "Status":      "Success",
-                        "Pos":         "10",
-                        "Material":    "01.001.00.68.0",
-                        "Description": "TRAVERSE_TS2",
-                        "Amount":      "6.240",
-                        "UOM":         "ST"
-                    }
-                ]
-			};
-
-            var oModel = new JSONModel();
-                oModel.setData(oTableData.results);
-
-            this.MaterialInfoTable.setModel(oModel);
-            this.MaterialInfoTable.bindRows("/");
-
-            if (this.MaterialInfoTable.getModel().getData().length > 0) {
-                // ---- Change the Scan Model
-                this._changeScanModel(true);
-            } else {
-                // ---- Change the Scan Model
-                this._changeScanModel(false);
-            }
-        },
-
-        _loadTableDataB: function () {
-            var oData = {
-				results:[
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215046",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215047",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215048",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215049",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215050",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215051",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215052",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215053",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215054",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215055",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215056",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215057",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215058",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215059",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215060",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    },
-                    { 
-                        "Status":      "None",
-                        "Booked":      false,
-                        "Package":     "21215061",
-                        "Packaging":   "12.999.01.070",
-                        "Material":    "01.001.00.68.0",
-                        "Amount":      "6.240",
-                        "UOM":         "ST",
-                        "Description": "TRAVERSE_TS2"
-                    }
-                ]
-			};
-            
-            var oModel = new JSONModel();
-                oModel.setData(oData.results);
-
-            this.PackageListTable.setModel(oModel);
-            this.PackageListTable.bindRows("/");
-        },
-
-        _setTableDataB: function (mResult) {
-            var oTable     = this.PackageListTable;
-            var oModel     = oTable.getModel();
-            var oTableData = oModel.getData();
-            var iCnt = 0;
-            var id   = "";
-            var that = this;
-
-            if (oTableData.length > 0) {
-                for (let i = 0; i < oTableData.length; i++) {
-                    if (oTableData[i].Package === mResult) {
-                        oTableData[i].Booked = true;
-                        oTableData[i].Status = "Success";
-                    }
-
-                    if (oTableData[i].Booked === true) {
-                        iCnt = iCnt + 1;
-                    }
-                }
-            }
-    
-            // ---- Sort Table data
-            var oSorter = new Sorter({ path: "Booked", descending: false, group: true });
-            
-            oTable.getBinding("rows").sort(oSorter);
-
-            // ---- Set and bind data
-            oModel.setData(oTableData);
-            oTable.setModel(oModel);
-            
-            // ---- Check the Scanning data
-            var oDisplayModel = this.getView().getModel("DisplayModel");
-            var oDisplayData  = oDisplayModel.getData();
-
-            oDisplayData.PsDeliverNote = iCnt + " / " + oTableData.length;
- 
-            oDisplayModel.setData(oDisplayData);
-
-            if (iCnt === oTableData.length) {
-                // ---- Change the Scan Model
-                this._changeScanModel(true);
-            } else {
-                // ---- Change the Scan Model
-                this._changeScanModel(false);
-            }
         },
 
 		_onOkClicked: function () {
@@ -573,37 +224,535 @@ sap.ui.define([
                         sMatNumber = "";
                     }
 
-                    var oMaterialNo = {
+                    var oResult = {
                         "sView":     this.sScanView,
-                        "material":  sMatNumber,
-                        "scanValue": ""
+                        "material":  sMatNumber
                     };
                     
-                    this._loadScanData(oMaterialNo, this.sScanView);
+                    this.loadHuData(oResult);
                 }    
             }
 		},
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Loading / Set Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+	    loadUserData: function () {
+            var sParam = encodeURIComponent("/SCWM/LGN");
+            var that   = this;
+
+            this.iWN = "";
+
+            // ---- Read the User Data from the backend
+            var sPath = "/UserParameter('" + sParam + "')";
+
+			this.oModel.read(sPath, {
+				error: function(oError, resp) {
+                    tools.handleODataRequestFailed(oError, resp, true);
+				},
+				success: function(rData, response) {
+                    // ---- Check for complete final booking
+                    if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
+                        tools.alertMe(rData.SapMessageText, "");
+                    } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
+                        // ---- Coding in case of showing Business application Errors
+                        tools.showMessageError(rData.SapMessageText, "");
+                    } else if (rData.SapMessageType === "I") {
+                        // ---- Coding in case of showing Business application Informations
+                    }
+
+					if (rData !== null && rData !== undefined && rData !== "") {
+                        that.iWN = rData.ParameterValue;
+                    }
+				}
+			});
+        },
+
+	    loadHuData: function (oResult) {
+            this.iHU = oResult.material;
+
+            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", this.iHU);
+            var that = this;
+
+            // ---- Check for Warehouse Number
+            if (this.iWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            // ---- Read the HU Data from the backend
+			var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
+
+			this.oModel.read("/DeliveryHU", {
+				filters: aFilters,
+				error: function(err) {
+				},
+				success: function(rData, response) {
+					if (rData.results !== null && rData.results !== undefined) {
+                        if (rData.results.length > 0) {
+                            for (let i = 0; i < rData.results.length; i++) {
+                                let data = rData.results[i];
+                                
+                                if (data.HandlingUnit === that.iHU) {                                    
+                                    that.loadDeliveryData(data.DocumentNo, that.iHU, rData);
+                                }
+                            }
+                        } else {
+                            tools.alertMe(sErrMsg, "");
+                        }
+                    }
+				}
+			});
+        },
+
+	    loadDeliveryData: function (sDocumentNo, iHU, oData) {
+            var oDisplayModel = new JSONModel();
+            var that = this;
+
+            // ---- Read the HU Data from the backend
+			var sPath = "/Delivery('" + sDocumentNo + "')?$expand=to_HUs";
+
+            this.oModel.read(sPath, {
+				error: function(oError, resp) {
+                    tools.handleODataRequestFailed(oError, resp, true);
+				},
+				success: function(rData, response) {
+                    // ---- Check for complete final booking
+                    if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
+                        tools.alertMe(rData.SapMessageText, "");
+
+                        return;
+                    } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
+                        // ---- Coding in case of showing Business application Errors
+                        tools.showMessageError(rData.SapMessageText, "");
+                        
+                        return;
+                    } else if (rData.SapMessageType === "I") {
+                        // ---- Coding in case of showing Business application Informations
+                    }
+
+                    // ---- Start with showing data
+                    that.oDeliveryData = rData;
+
+                    // ---- Set the Data for the Model and set the Model to the View
+                    rData.HandlingUnit = iHU;
+
+                    oDisplayModel.setData(rData);
+
+                    that.getView().setModel(oDisplayModel, "DisplayModel");
+                    
+                    // ---- Handle the Scan Modus for the different tables
+                    that.bScanModusAktiv = false;
+                    that.ScanModus = rData.ScanModus;
+
+                    if (rData.ScanModus === "A") {
+                        that._setTableDataA(oData);
+
+                        that.byId("idScrollContainerTableA").setVisible(true);
+                        that.byId("idScrollContainerTableB").setVisible(false);        
+                    } else {
+                        that._setTableDataB(oData, iHU);
+
+                        that.byId("idScrollContainerTableA").setVisible(false);
+                        that.byId("idScrollContainerTableB").setVisible(true);        
+                    }
+                }
+			});
+        },
+
+	    reloadHuData: function (oTable) {
+            var that = this;
+
+            // ---- Read the HU Data from the backend
+			var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
+
+			this.oModel.read("/DeliveryHU", {
+				filters: aFilters,
+				error: function(err) {
+				},
+				success: function(rData, response) {
+					if (rData.results !== null && rData.results !== undefined) {
+                        that._setTableModel(rData, oTable);
+                        
+                        if (rData.results.length > 0) {
+                            that._handleHuData(oTable);
+                        }
+                    }
+				}
+			});
+        },
+
+        _setTableDataA: function (oData) {
+            var oTable = this.MaterialInfoTable;
+
+            // ---- Set Model data to Table
+            this._setTableModel(oData, oTable);
+
+            // ---- Change Table settings
+            this._changeTableSettings(oTable, oData.results.length);
+
+            // ---- Handle Scan Model data
+            this._handleScanModelData("A", oTable);
+
+            // ---- Set the booking Status for the whole Delivery
+            this._updateStatusAllHUs(oTable, oData);
+
+            // ---- Set focus to Input field
+            this._setFocus();
+        },
+
+        _setTableDataB: function (oData, iHU) {
+            var oTable = this.PackageListTable;
+            
+            // ---- Set Model data to Table
+            this._setTableModel(oData, oTable);
+
+            // ---- Change Table settings
+            this._changeTableSettings(oTable, oData.results.length);
+
+            // ---- Handle Scan Model data
+            this._handleScanModelData("B", oTable);
+
+            // ---- Set the booking Status for the enterd HU
+            this._updateStatusSingleHU(oTable);
+
+            // ---- Set focus to Input field
+            this._setFocus();
+        },
+
+        _updateStatusAllHUs: function (oTable, oData) {
+            var iODataLength = oData.results.length;
+            var iCounter     = 1;
+
+            // ---- Update the HU Data to the backend
+            if (oData.results.length > 0) {
+                this.oModel.setDeferredGroups(["huListGroup"]);
+                this.oModel.setUseBatch(true);
+                this.getView().setBusy(true);
+
+                for (let i = 0; i < oData.results.length; i++) {
+                    var data = oData.results[i];
+                        data.BookUnload = true;
+
+                    var sPath = "/DeliveryHU(WarehouseNumber='" + data.WarehouseNumber + "',HandlingUnit='" + data.HandlingUnit + "')";
+                    var that  = this;
+
+                    // var urlParam = { "BookUnload": true };
+
+                    this.oModel.update(sPath, data, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
+                    this.oModel.submitChanges({
+                        groupId: "huListGroup",
+                        error: function (oError, resp) {
+                            that.oModel.setUseBatch(false);
+                            that.getView().setBusy(false);
+
+                            tools.handleODataRequestFailed(oError, resp, true);
+                        },
+                        success: function (rData, oResponse) {
+                            that.oModel.setUseBatch(false);
+                            that.getView().setBusy(false);
+
+                            if (parseInt(oResponse.statusCode, 10) === 202 && oResponse.statusText === "Accepted" && iCounter === iODataLength) {
+                                that.reloadHuData(oTable);
+                            }
+
+                            iCounter = iCounter + 1;
+                        }
+                    }); 
+                }
+            }
+        },
+
+        _updateStatusSingleHU: function (oTable) {
+            var that = this;
+
+            var sPath    = "/DeliveryHU(WarehouseNumber='" + this.iWN + "',HandlingUnit='" + this.iHU + "')";
+            var urlParam = { "BookUnload": true };
+
+            this.oModel.update(sPath, urlParam, { 
+                error: function (oError, resp) {
+                    tools.handleODataRequestFailed(oError, resp, true);
+                },
+                success: function(rData, oResponse) {
+                    if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                        that.reloadHuData(oTable);
+                    }
+                }
+            });
+        },
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Booking Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+        _bookHuMissingData: function (oTable) {
+            var oData = oTable.getModel().getData();
+            var iODataLength = oData.length;
+            var iCounter     = 1;
+
+            // ---- Update the HU Data to the backend
+            if (oData.length > 0) {
+                this.oModel.setDeferredGroups(["huListGroup"]);
+                this.oModel.setUseBatch(true);
+                this.getView().setBusy(true);
+
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+
+                    if (data.StatusUnload === false) {
+                        var sPath = "/DeliveryHU(WarehouseNumber='" + data.WarehouseNumber + "',HandlingUnit='" + data.HandlingUnit + "')";
+                        var that  = this;
+    
+                        var urlParam = { "BookMissing": true };
+    
+                        this.oModel.update(sPath, urlParam, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
+    
+                        this.oModel.submitChanges({
+                            groupId: "huListGroup",
+                            error: function (oError, resp) {
+                                that.oModel.setUseBatch(false);
+                                that.getView().setBusy(false);
+                                
+                                tools.handleODataRequestFailed(oError, resp, true);
+                            },
+                            success: function (rData, oResponse) {
+                                that.oModel.setUseBatch(false);
+                                that.getView().setBusy(false);
+    
+                                if (parseInt(oResponse.statusCode, 10) === 202 && oResponse.statusText === "Accepted" && iCounter === iODataLength) {
+                                    that.reloadHuData(oTable);
+                                }
+    
+                                iCounter = iCounter + 1;
+                            }
+                        }); 
+                    } else {
+                        iODataLength = iODataLength - 1;
+                    }
+                }
+            }
+        },
+
+        saveBookingData: function (iDocumentNo) {
+            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", iDocumentNo);
+            var that = this;
+
+            if (this.oDeliveryData !== null && this.oDeliveryData !== undefined && iDocumentNo === this.oDeliveryData.DocumentNo) {
+                var sDeliveryNo = this.oDeliveryData.DocumentNo;
+                
+                delete this.oDeliveryData.HandlingUnit;
+
+                this.oDeliveryData.BookGoodsReceipt = true;
+
+                var sPath    = "/Delivery(DocumentNo='" + sDeliveryNo + "')";
+                // var urlParam = { "BookGoodsReceipt": true };
+    
+                this.oModel.update(sPath, that.oDeliveryData, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, oResponse) {
+                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                            // ---- Do nothing -> Good case
+                            that._resetAll();
+                        } else {
+                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                        }
+                    }
+                });
+            } else {
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
+            }
+        },
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Table Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-		_resetSortingState: function() {
-            var oTable = this.PackageListTable;
-			var aColumns = oTable.getColumns();
+		_setTableModel: function (oData, oTable) {
+            var oModel = new JSONModel();
+                oModel.setData(oData.results);
 
-			for (var i = 0; i < aColumns.length; i++) {
-				aColumns[i].setSorted(false);
-			}
+            oTable.setModel(oModel);
+            oTable.bindRows("/");
+    	},
+
+		_changeTableSettings: function (oTable, iLength) {
+            var iMaxRowCount = parseInt(this.getResourceBundle().getText("MaxRowCount"), 10);
+            var iRowCount    = parseInt((iLength + 1), 10);
+
+            if (iRowCount > iMaxRowCount) {
+                iRowCount = iMaxRowCount;
+            }
+
+            oTable.setVisibleRowCount(iRowCount);
+		},
+
+		_handleScanModelData: function (type, oTable) {
+            if (oTable.getModel().getData().length > 0) {
+                this.oScanModel.setProperty("/booking", true);
+                this.oScanModel.setProperty("/valueMaterialNo", "");
+
+                if (type === "A") {
+                    this.sScanType = "A";
+                    this.oScanModel.setProperty("/ok", false);
+                } else {
+                    this.sScanType = "B";
+                    this.oScanModel.setProperty("/ok", true);
+                }
+             } else {
+                this.oScanModel.setProperty("/booking", false);
+                this.oScanModel.setProperty("/ok", true);
+            }
+		},
+
+		_handleHuData: function (oTable) {
+            var oData = oTable.getModel().getData();
+            var sNote = 0;
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+ 
+                    if (data.StatusUnload === true) {
+                        sNote = sNote + 1;
+                    }
+                }
+            }
+
+            if (sNote === oData.length) {
+                this.AllBooked = true;
+            } else {
+                this.AllBooked = false;
+            }
+    
+            var oDisplayModel = this.getView().getModel("DisplayModel");
+                oDisplayModel.setProperty("/PSDeliveryNote", sNote + " / " + oData.length);
+		},
+
+		_handleLessHuData: function (oTable) {
+            var oData = oTable.getModel().getData();
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+ 
+                    if (data.StatusUnload === false) {
+                        data.BookMissing = true;
+                        data.Status = "Error";
+                    } else if (data.StatusUnload === true) {
+                        data.Status = "Success";
+                    }
+                }
+            }
+
+            oTable.getModel().setData(oData);
+		},
+
+		_resetLessHuData: function (oTable) {
+            var oData = oTable.getModel().getData();
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+ 
+                    if (data.StatusUnload === false) {
+                        data.BookMissing = false;
+                        data.Status = "None";
+                    } else if (data.StatusUnload === true) {
+                        data.Status = "Success";
+                    }
+                }
+            }
+
+            oTable.getModel().setData(oData);
 		},
 
 
 		// --------------------------------------------------------------------------------------------------------------------
+		// ---- Dialog Functions
+		// --------------------------------------------------------------------------------------------------------------------
+
+		onBookApprovalOpen: function (sceneNumber, activeStatus) {
+			var fragmentFile = _fragmentPath + "DialogApproveBooking";
+            var oTable = this.PackageListTable;
+			var oView = this.getView();
+			var that = this;
+			
+            // ---- Mark all HU's which are not delivered (under booking)
+            this._handleLessHuData(oTable);
+
+            // ---- Starts the Bookung Dialog for Handling Units
+			if (!this.getView().dialogApproveBooking) {
+				sap.ui.core.Fragment.load({
+					id: oView.getId(),
+					name: fragmentFile,
+					controller: this
+				}).then(function (oDialog) {
+					oView.addDependent(oDialog);
+					oView.dialogApproveBooking = oDialog;
+					oView.dialogApproveBooking.addStyleClass(that.getOwnerComponent().getContentDensityClass());
+                    oView.dialogApproveBooking.open();
+				});
+			} else {
+                oView.dialogApproveBooking.open();
+            }
+ 		},
+
+		onBookApprovalClose: function () {
+            var oTable = this.PackageListTable;
+
+            if (this.getView().dialogApproveBooking) {
+				this.getView().dialogApproveBooking.close();
+			}
+
+            // ---- Unmark all HU's which are not delivered (reset under booking)
+            this._resetLessHuData(oTable);
+
+            this._setFocus();
+		},
+
+		onBookApprovalAfterClose: function () {
+            this._setFocus();
+		},
+
+		onBookApprovalSave: function () {
+			if (this.getView().dialogApproveBooking) {
+				this.getView().dialogApproveBooking.close();
+			}
+
+            // ---- Remove all not found Handling Units from the Delivery
+            var oTable = this.PackageListTable;
+
+            // ---- Unmark all HU's which are not delivered (reset under booking) and start booking
+            this._resetLessHuData(oTable);
+            this._bookHuMissingData(oTable);
+
+            // ---- Set Focus to default Input field
+            this._setFocus();
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
 		// ---- QR/Bar Code Ext Scanner Event Handlers
 		// --------------------------------------------------------------------------------------------------------------------
 
 		onScanned: function (oEvent) {
+            var oScanModel = this.oScanModel;
+
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameter("valueMaterialNo") !== null && oEvent.getParameter("valueMaterialNo") !== undefined) {
                     var sMatNumber  = oEvent.getParameter("valueMaterialNo");
@@ -611,18 +760,22 @@ sap.ui.define([
                     
                     if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
                         sMatNumber = oEvent.getParameter("valueMaterialNo").trim()
+
+                        oScanModel.setProperty("/valueMaterialNo", sMatNumber);
                     }
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
+                        
+                        oScanModel.setProperty("/valueMaterialNo", sScanNumber);
                     }
 
-                    var oMaterialNo = {
-                        "sView":     this.sScanView,
-                        "material":  sMatNumber,
-                        "scanValue": sScanNumber
+                    var oResult = {
+                        "sView":     oScanModel.getProperty("/viewMode"),
+                        "material":  oScanModel.getProperty("/valueMaterialNo")
                     };
                     
-                    this._loadScanData(oMaterialNo, this.sScanView);
+                    this.bScanModusAktiv = true;
+                    this._onOkClicked(oResult);
                 }    
             }
  		},
@@ -835,7 +988,11 @@ sap.ui.define([
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
-                        that.onPressOk(sScanView);
+
+                        if (!that.bScanModusAktiv) {
+                            that.onPressOk(sScanView);
+                        }
+                        
 						break;			                
 			        case 112: // ---- F1 Key
                         evt.preventDefault();
@@ -848,7 +1005,11 @@ sap.ui.define([
 						break;			                
                     case 113: // ---- F2 Key
                         evt.preventDefault();
-                        that.onPressOk(sScanView);
+ 
+                        if (!that.bScanModusAktiv) {
+                            that.onPressOk(sScanView);
+                        }
+                        
 						break;			                
                     case 114: // ---- F3 Key
                         evt.preventDefault();
@@ -870,20 +1031,38 @@ sap.ui.define([
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
+        _setFocus: function () {
+            setTimeout(() => this.byId("idInput_Material").focus());
+        },
+
+        _resetSortingState: function() {
+            var oTable = this.PackageListTable;
+			var aColumns = oTable.getColumns();
+
+			for (var i = 0; i < aColumns.length; i++) {
+				aColumns[i].setSorted(false);
+			}
+		},
+
         _resetAll: function () {
             var oModel = new JSONModel([]);
 
             // ---- Reset the Main Model
             var oDisplayData = {
-                "ExtLsPackage":     "",
-                "SupplierId":       "",
-                "Supplier":         "",
-                "ExtShipment":      "",
-                "Delivery":         "",
-                "Scanmodus":        "",
-                "PsDeliverNote":    ""
+                BookGoodsReceipt:   "",
+                ConsignmentNote:    "",
+                DeliveryNo:         "",
+                DocumentNo:         "",
+                ExternalShipment:   "",
+                HandlingUnit:       "",
+                PSDeliveryNote:     "",
+                ScanModus:          "",
+                StatusGoodsReceipt: "",
+                Supplier:           "",
+                SupplierId:         "",            
+                UnloadingPoint:     ""                
             };
-
+            
             var oDisplayModel = new JSONModel();
                 oDisplayModel.setData(oDisplayData);
 
@@ -904,6 +1083,7 @@ sap.ui.define([
             };
 
             this.oScanModel.setData(oData);
+            this.sScanType = "";
 
             // ---- Reset the Scroll container
             this.byId("idScrollContainerTableA").setVisible(true);
@@ -916,6 +1096,7 @@ sap.ui.define([
                 }
 
                 this.MaterialInfoTable.setModel(oModel);
+                this.MaterialInfoTable.setVisibleRowCount(1);
             }
 
             // ---- Reset the UI Table B
