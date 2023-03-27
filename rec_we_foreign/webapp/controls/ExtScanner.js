@@ -98,9 +98,11 @@ sap.ui.define([
             this._oScanModel = new JSONModel({
                 okButton:        false,
                 changeButton:    true,
+                scanMode:        "",
                 valueScan:       "",
                 valueMaterialNo: "",
                 videoDeviceId:   null,
+                iScanModusAktiv: 0,
                 decoders:        this.getDecoders(),
                 decoderKey:      this.getDecoderKey(),
                 editButton:      this.getEditMode(),
@@ -109,8 +111,6 @@ sap.ui.define([
                 type:            this.getType()
             });
 
-            this._oInputModel = new JSONModel();
- 
             // ---- i18n from owner or library if possible
             this.setModel(sap.ui.core.Component.getOwnerComponentFor(this).getModel("i18n"), "i18n");
             this.setModel(this._oScanModel,  "scanModel");
@@ -261,7 +261,37 @@ sap.ui.define([
             }
         },
 
+		// --------------------------------------------------------------------------------------------------------------------
+
         onScanInputChanged: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
+
+                        this._oScanModel.setProperty("/valueScan", key);
+                    } else {
+                       this._oScanModel.setProperty("/valueScan", "");
+                    }
+
+                    this._validateInputs();
+                }
+            }
+        },
+
+        _removePrefix: function (key) {
+            // ---- Remove the Prefix from the Scanned Values
+            let str = key.slice(1);
+
+            return str;
+        },
+
+		// --------------------------------------------------------------------------------------------------------------------
+
+        onInputChanged: function (oEvent) {
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
                     var source = oEvent.getSource();
@@ -278,7 +308,7 @@ sap.ui.define([
             }
         },
 
-        onScanInputLiveChange: function (oEvent) {
+        onInputLiveChange: function (oEvent) {
             var iCnt = parseInt(this.getResourceBundle().getText("CountScanLiveInput"), 10);
 
             if (oEvent !== null && oEvent !== undefined) {
@@ -332,11 +362,13 @@ sap.ui.define([
 
                     }.bind(this)
                 ).then( function() {
+                        this._oScanModel.setProperty("/scanMode", "Scanner");
                         this._showScanDialog();
                     }.bind(this)
                 ).catch( function(error) {
                         jQuery.sap.log.warning(error);
 
+                        this._oScanModel.setProperty("/scanMode", "Input");
                         this._showInputDialog();
                     }.bind(this)
                 );
@@ -366,6 +398,37 @@ sap.ui.define([
             return this._oTD;
         },
  
+        onScanCancelPress: function (oEvent) {
+            var oDialog = oEvent.getSource().getParent();
+                oDialog.close();
+
+            this.fireCancelled({});
+            this._resetInputs();
+        },
+
+        onScannerOkPress: function (oEvent) {
+            var oDialog = oEvent.getSource().getParent();
+                oDialog.close();
+
+            var check = this._validateOkPressed();
+
+            if (check) {
+                this.fireValueScanned({
+                    valueScan:       this._oScanModel.getProperty("/valueScan"),
+                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
+                    iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                });
+            } else {
+                // this.fireValueScanned({
+                //     valueScan:       this._oScanModel.getProperty("/valueScan"),
+                //     valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
+                //     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                // });
+            }
+
+            this._resetInputs();
+        },
+
         onCancelPress: function (oEvent) {
             var oDialog = oEvent.getSource().getParent();
                 oDialog.close();
@@ -383,13 +446,15 @@ sap.ui.define([
             if (check) {
                 this.fireValueScanned({
                     valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo")
+                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
+                    iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
                 });
             } else {
-                this.fireValueScanned({
-                    valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo")
-                });
+                // this.fireValueScanned({
+                //     valueScan:       this._oScanModel.getProperty("/valueScan"),
+                //     valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
+                //     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                // });
             }
 
             this._resetInputs();
@@ -407,6 +472,7 @@ sap.ui.define([
 
         _onAfterOpen: function () {
             this._startScan();
+            this._setFocus({ preventScroll: true, focusVisible: true });
         },
 
         _onAfterClose: function () {
@@ -422,6 +488,7 @@ sap.ui.define([
                 var oDecoder    = this.getDecoderByKey(this._oScanModel.getProperty("/decoderKey"));
                 var sResultText = oDecoder.decoder(result) || result.text;
 
+                this._oScanModel.setProperty("/valueMaterialNo", sResultText);
                 this._oScanModel.setProperty("/valueScan", sResultText);
                 this._oScanModel.setProperty("/okButton", true);
                 
@@ -429,7 +496,7 @@ sap.ui.define([
 
                     this.fireValueScanned({
                             valueScan:       sResultText,
-                            valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo")
+                            valueMaterialNo: sResultText
                     });
 
                     this._getScanDialog().close();
@@ -450,6 +517,7 @@ sap.ui.define([
 		// --------------------------------------------------------------------------------------------------------------------
 
         _showInputDialog: function () {
+            this._oScanModel.setProperty("/scanMode", "Input");
             this._openDialog(this._getInputDialog());
         },
 
@@ -713,17 +781,35 @@ sap.ui.define([
 		_setKeyboardShortcuts: function() {
             var that = this;
 
-			// ---- Set the Shortcut to buttons
+			// ---- Set the Shortcut to buttons 
 			$(document).keydown($.proxy(function (evt) {
+                var sScanMode = this._oScanModel.getProperty("/scanMode");
                 var controlF1 = sap.ui.getCore().byId("__scanner0--idButtonOk_REC_WE_FORN");
+                var controlF2 = sap.ui.getCore().byId("__scanner0--idButtonScanOk_REC_WE_FORN");
+
+                if (evt.keyCode === 16) {
+                    evt.keyCode = undefined;
+                }
 
                 // ---- Now call the actual event/method for the keyboard keypress
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
 
-				        if (controlF1 && controlF1.getEnabled()) {
-                            controlF1.firePress();
+                        if (sScanMode === "Input") {
+                            if (controlF1 && controlF1.getEnabled()) {
+                                that._oScanModel.setProperty("/iScanModusAktiv", 2);
+
+                                controlF1.firePress();
+                            }
+                        } else if (sScanMode === "Scanner") {
+                            if (controlF2 && controlF2.getEnabled()) {
+                                that._oScanModel.setProperty("/iScanModusAktiv", 2);
+
+                                controlF2.firePress();
+                            }
+                        } else {
+                            that._oScanModel.setProperty("/iScanModusAktiv", 1);
                         }
 						
 						break;			                
@@ -746,6 +832,10 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 		// ---- Helper Functions
 		// --------------------------------------------------------------------------------------------------------------------
+
+        _setFocus: function () {
+            setTimeout(() => sap.ui.getCore().byId("__scanner0--idScannedInput").focus({ preventScroll: true, focusVisible: true }));
+        },
 
         _initDecoder: function () {
             var sType = this.getProperty("type");
@@ -781,7 +871,7 @@ sap.ui.define([
             .decodeFromVideoDevice(this._oScanModel.getProperty("/videoDeviceId"), this.getId() + "--scanVideo", this._saveScannedValue.bind(this))
             .catch( function(err) {
                     if (err && err.name && err.name === "NotAllowedError") {
-                        // jQuery.sap.log.error(noCam);
+                        jQuery.sap.log.error(noCam);
                     } else {
                         MessageToast.show(err.message || emesg);
                         jQuery.sap.log.error(err.message || emesg);
@@ -822,15 +912,17 @@ sap.ui.define([
             this._oScanModel.setProperty("/valueScan", "");
             this._oScanModel.setProperty("/valueMaterialNo", "");
             this._oScanModel.setProperty("/okButton", false);
-            
-            // ---- Reset the Input Model
-            this._oInputModel.setData([]);
+            this._oScanModel.setProperty("/scanMode", "");
+            this._oScanModel.setProperty("/iScanModusAktiv", 0);
         },
     
         _validateInputs: function () {
-            var mNumber = this._oScanModel.getProperty("/valueMaterialNo");
+            var mNumber     = this._oScanModel.getProperty("/valueMaterialNo");
+            var mScanNumber = this._oScanModel.getProperty("/valueScan");
 
             if (mNumber !== null && mNumber !== undefined && mNumber !== "") {                    
+                this._oScanModel.setProperty("/okButton", true);
+            } else if ( mScanNumber !== null && mScanNumber !== undefined && mScanNumber !== "") {                    
                 this._oScanModel.setProperty("/okButton", true);
             } else {
                 this._oScanModel.setProperty("/okButton", false);
@@ -838,9 +930,12 @@ sap.ui.define([
         },
     
         _validateOkPressed: function () {
-            var mNumber = this._oScanModel.getProperty("/valueMaterialNo");
+            var mNumber     = this._oScanModel.getProperty("/valueMaterialNo");
+            var mScanNumber = this._oScanModel.getProperty("/valueScan");
 
-            if (mNumber !== null && mNumber !== undefined && mNumber !== "") {                    
+            if (mNumber !== null && mNumber !== undefined && mNumber !== "") {
+                return true;
+            } else if ( mScanNumber !== null && mScanNumber !== undefined && mScanNumber !== "") {                    
                 return true;
             } else {
                 return false;

@@ -21,16 +21,16 @@ sap.ui.define([
 	"z/recweforeign/model/formatter",
 	"z/recweforeign/utils/tools",
 	"sap/ui/model/json/JSONModel",
-	"sap/ui/model/Sorter",
 	"sap/ndc/BarcodeScanner",
     "sap/ui/core/routing/History",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, Sorter, BarcodeScanner, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, BarcodeScanner, History, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
-    var _fragmentPath = "z.recweforeign.view.fragments.";
+    var _fragmentPath   = "z.recweforeign.view.fragments.";
+	var _sAppModulePath = "z/recweforeign/";
     var APP = "REC_WE_FORN";
  
  
@@ -40,7 +40,7 @@ sap.ui.define([
         formatter: formatter,
 
         // ---- Implementation of an utility toolset for generic use
-        tools: tools,
+        tools:  tools,
 
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ sap.ui.define([
             this.sScanType       = "";
             this.sShellSource    = "";
             this.oDeliveryData   = {};
-            this.bScanModusAktiv = false;
+            this.iScanModusAktiv = 0;
 
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
@@ -163,7 +163,6 @@ sap.ui.define([
             var iDocumentNo   = oDisplayModel.getProperty("/DocumentNo");
             var iDeliveryNo   = oDisplayModel.getProperty("/DeliveryNo");
             var sOkMesg       = this.getResourceBundle().getText("OkMesBooking", iDeliveryNo);
-            var tSTime        = this.getResourceBundle().getText("ShowTime");
             var check = false;
             var that  = this
 
@@ -190,6 +189,8 @@ sap.ui.define([
             }
 
             if (check) {
+                var tSTime = this.getResourceBundle().getText("ShowTime");
+
                 setTimeout(function () {
                     that._resetAll();
 
@@ -229,6 +230,7 @@ sap.ui.define([
                         "material":  sMatNumber
                     };
                     
+                    this.iScanModusAktiv = 1;
                     this.loadHuData(oResult);
                 }    
             }
@@ -289,26 +291,28 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
                 aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
 
-			this.oModel.read("/DeliveryHU", {
-				filters: aFilters,
-				error: function(err) {
-				},
-				success: function(rData, response) {
-					if (rData.results !== null && rData.results !== undefined) {
-                        if (rData.results.length > 0) {
-                            for (let i = 0; i < rData.results.length; i++) {
-                                let data = rData.results[i];
-                                
-                                if (data.HandlingUnit === that.iHU) {                                    
-                                    that.loadDeliveryData(data.DocumentNo, that.iHU, rData);
+            var oModel = this._getServiceUrl()[0];
+                oModel.read("/DeliveryHU", {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results.length > 0) {
+                                for (let i = 0; i < rData.results.length; i++) {
+                                    let data = rData.results[i];
+                                    
+                                    if (data.HandlingUnit === that.iHU) {                                    
+                                        that.loadDeliveryData(data.DocumentNo, that.iHU, rData);
+                                    }
                                 }
+                            } else {
+                                tools.alertMe(sErrMsg, "");
                             }
-                        } else {
-                            tools.alertMe(sErrMsg, "");
                         }
                     }
-				}
-			});
+                });
         },
 
 	    loadDeliveryData: function (sDocumentNo, iHU, oData) {
@@ -348,8 +352,8 @@ sap.ui.define([
                     that.getView().setModel(oDisplayModel, "DisplayModel");
                     
                     // ---- Handle the Scan Modus for the different tables
-                    that.bScanModusAktiv = false;
                     that.ScanModus = rData.ScanModus;
+                    that.iScanModusAktiv = 0;
 
                     if (rData.ScanModus === "A") {
                         that._setTableDataA(oData);
@@ -376,7 +380,8 @@ sap.ui.define([
 
 			this.oModel.read("/DeliveryHU", {
 				filters: aFilters,
-				error: function(err) {
+				error: function(oError, resp) {
+                    tools.handleODataRequestFailed(oError, resp, true);
 				},
 				success: function(rData, response) {
 					if (rData.results !== null && rData.results !== undefined) {
@@ -431,6 +436,7 @@ sap.ui.define([
         _updateStatusAllHUs: function (oTable, oData) {
             var iODataLength = oData.results.length;
             var iCounter     = 1;
+            var that = this;
 
             // ---- Update the HU Data to the backend
             if (oData.results.length > 0) {
@@ -443,9 +449,6 @@ sap.ui.define([
                         data.BookUnload = true;
 
                     var sPath = "/DeliveryHU(WarehouseNumber='" + data.WarehouseNumber + "',HandlingUnit='" + data.HandlingUnit + "')";
-                    var that  = this;
-
-                    // var urlParam = { "BookUnload": true };
 
                     this.oModel.update(sPath, data, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
                     this.oModel.submitChanges({
@@ -460,7 +463,7 @@ sap.ui.define([
                             that.oModel.setUseBatch(false);
                             that.getView().setBusy(false);
 
-                            if (parseInt(oResponse.statusCode, 10) === 202 && oResponse.statusText === "Accepted" && iCounter === iODataLength) {
+                            if (iCounter === iODataLength) {
                                 that.reloadHuData(oTable);
                             }
 
@@ -482,9 +485,7 @@ sap.ui.define([
                     tools.handleODataRequestFailed(oError, resp, true);
                 },
                 success: function(rData, oResponse) {
-                    if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
-                        that.reloadHuData(oTable);
-                    }
+                    that.reloadHuData(oTable);
                 }
             });
         },
@@ -495,6 +496,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _bookHuMissingData: function (oTable) {
+            var smallAmountHint = this.getResourceBundle().getText("HandlingSmallAmountHint");
             var oData = oTable.getModel().getData();
             var iODataLength = oData.length;
             var iCounter     = 1;
@@ -528,7 +530,11 @@ sap.ui.define([
                                 that.oModel.setUseBatch(false);
                                 that.getView().setBusy(false);
     
-                                if (parseInt(oResponse.statusCode, 10) === 202 && oResponse.statusText === "Accepted" && iCounter === iODataLength) {
+                                if (iCounter === iODataLength) {
+                                    that.oScanModel.setProperty("/showOk", true);
+                                    that.oScanModel.setProperty("/showOkText", smallAmountHint);
+
+                                    that.iScanModusAktiv = 0;
                                     that.reloadHuData(oTable);
                                 }
     
@@ -752,21 +758,31 @@ sap.ui.define([
 
 		onScanned: function (oEvent) {
             var oScanModel = this.oScanModel;
+                oScanModel.setProperty("/valueMaterialNo", "");
+                oScanModel.setProperty("/valueScan", "");
 
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameter("valueMaterialNo") !== null && oEvent.getParameter("valueMaterialNo") !== undefined) {
                     var sMatNumber  = oEvent.getParameter("valueMaterialNo");
                     var sScanNumber = oEvent.getParameter("valueScan");
+                    var iScanAktiv  = oEvent.getParameter("iScanModusAktiv");
                     
                     if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
                         sMatNumber = oEvent.getParameter("valueMaterialNo").trim()
 
                         oScanModel.setProperty("/valueMaterialNo", sMatNumber);
                     }
+
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
                         
                         oScanModel.setProperty("/valueMaterialNo", sScanNumber);
+                    }
+
+                    if (iScanAktiv !== null && iScanAktiv !== undefined && iScanAktiv !== "") {
+                        this.iScanModusAktiv = iScanAktiv;
+                    } else {
+                        this.iScanModusAktiv = 2;
                     }
 
                     var oResult = {
@@ -774,8 +790,7 @@ sap.ui.define([
                         "material":  oScanModel.getProperty("/valueMaterialNo")
                     };
                     
-                    this.bScanModusAktiv = true;
-                    this._onOkClicked(oResult);
+                    this.loadHuData(oResult);
                 }    
             }
  		},
@@ -972,7 +987,31 @@ sap.ui.define([
             }
 		},
 
+		_getServiceUrl: function () {
+            var sService = "";
 
+            // ---- Get the Main Models.
+            this.oModel = this.getOwnerComponent().getModel();
+
+			// ---- Get the OData Services from the manifest.json file. mediaService
+			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
+
+            if (sManifestFile !== null && sManifestFile !== undefined) {
+                var oManifestData  = jQuery.sap.syncGetJSON(sManifestFile).data;
+
+                if (oManifestData !== null && oManifestData !== undefined) {
+                    var mainService = oManifestData["sap.app"].dataSources.mainService;
+
+                    if (mainService !== null && mainService !== undefined) {
+                        sService = mainService.uri;
+                    }
+                }
+            }
+
+            return [this.oModel, sService];
+		},
+
+        
 		// --------------------------------------------------------------------------------------------------------------------
 		// ---- Hotkey Function
 		// --------------------------------------------------------------------------------------------------------------------
@@ -989,10 +1028,12 @@ sap.ui.define([
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
 
-                        if (!that.bScanModusAktiv) {
+                        if (that.iScanModusAktiv < 2) {
                             that.onPressOk(sScanView);
+                        } else {
+                            that.iScanModusAktiv = 0;
                         }
-                        
+
 						break;			                
 			        case 112: // ---- F1 Key
                         evt.preventDefault();
@@ -1006,7 +1047,7 @@ sap.ui.define([
                     case 113: // ---- F2 Key
                         evt.preventDefault();
  
-                        if (!that.bScanModusAktiv) {
+                        if (that.iScanModusAktiv < 2) {
                             that.onPressOk(sScanView);
                         }
                         

@@ -676,7 +676,7 @@ sap.ui.define([
 		// ---- Error Functions
 		// --------------------------------------------------------------------------------------------------------------------
 		
-		handleODataRequestFailed: function (oTitle, oError, showDetails) {								// eslint-disable-line
+		handleODataRequestFailed: function (oError, oTitle, showDetails) {								// eslint-disable-line
 			var errTitle   = this.getResourceBundle().getText("Error");
 			var errCheck   = false;
 			var detailText = "";

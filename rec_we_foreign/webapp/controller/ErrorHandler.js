@@ -78,20 +78,20 @@ sap.ui.define([
         _showServiceError : function (sErrorTitle, sErrorMessages, bErrorDetails) {
             this._bMessageOpen = true;
 
-            // tools.handleODataRequestFailed(sErrorTitle, sErrorMessages, bErrorDetails, this._bMessageOpen); 
+            // this.handleODataRequestFailed(sErrorMessages, sErrorTitle, bErrorDetails); 
 
-            MessageBox.error(
-                sErrorTitle,
-                {
-                    id : "serviceErrorMessageBox",
-                    details: sDetails,
-                    styleClass: this._oComponent.getContentDensityClass(),
-                    actions: [MessageBox.Action.CLOSE],
-                    onClose: function () {
-                        this._bMessageOpen = false;
-                    }.bind(this)
-                }
-            );
+            // MessageBox.error(
+            //     sErrorTitle,
+            //     {
+            //         id : "serviceErrorMessageBox",
+            //         details: sDetails,
+            //         styleClass: this._oComponent.getContentDensityClass(),
+            //         actions: [MessageBox.Action.CLOSE],
+            //         onClose: function () {
+            //             this._bMessageOpen = false;
+            //         }.bind(this)
+            //     }
+            // );
         }
 
 	});
