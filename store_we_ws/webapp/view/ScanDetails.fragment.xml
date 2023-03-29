@@ -56,20 +56,6 @@
 									</HBox>
 								</HBox>
 
-								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewQuantity}">
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Quantity} {i18n>Opt}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Quantity" value="{ScanModel>/valueMaterialNo}" width="96px" class="atosMInputBaseDisabled" />
-										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Quantity')" width="auto" class="sapUiTinyMarginBegin" />
-									</HBox>
-
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Label text="" width="205px" class="sapUiTinyMarginTop" />
-									</HBox>
-								</HBox>
-
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLoc}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>DestStorageLocation}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />

@@ -118,7 +118,6 @@
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewHU":          true,
-                "viewQuantity":    false,
                 "viewLocConf":     false,
                 "viewLoc":         false,
                 "valueMaterialNo": ""
@@ -283,7 +282,6 @@
                 "showOkText":   "",
                 "showErrText":  "",
                 "viewHU":       false,
-                "viewQuantity": false,
                 "viewLocConf":  false,
                 "viewLoc":      false
             };
@@ -294,11 +292,6 @@
 
             switch (sScanView) {
                 case "HU":
-                    id = "idInput_Quantity";
-                    oData.viewMode     = "Quantity";
-                    oData.viewQuantity = true;
-                    break;
-                case "Quantity":
                     id = "idInput_Location";
                     oData.viewMode = "Location";
                     oData.viewLoc  = true;
@@ -681,7 +674,6 @@
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewHU":          true,
-                "viewQuantity":    false,
                 "viewLocConf":     false,
                 "viewLoc":         false,
                 "valueMaterialNo": ""
