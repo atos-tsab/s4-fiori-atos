@@ -21,10 +21,9 @@ sap.ui.define([
 	"z/recweforeign/model/formatter",
 	"z/recweforeign/utils/tools",
 	"sap/ui/model/json/JSONModel",
-	"sap/ndc/BarcodeScanner",
     "sap/ui/core/routing/History",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, BarcodeScanner, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
 
     "use strict";
 
@@ -61,7 +60,7 @@ sap.ui.define([
             this.iWN = "";
             this.iHU = "";
             this.sScanType       = "";
-            this.sShellSource    = "";
+            this.sShellSource    = "#Shell-home";
             this.oDeliveryData   = {};
             this.iScanModusAktiv = 0;
 
@@ -85,7 +84,7 @@ sap.ui.define([
 
             // ---- Set Jason Models.
             var oData = {
-                "viewMode":        "Material",
+                "viewMode":        "Handling",
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
@@ -94,15 +93,12 @@ sap.ui.define([
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewMat":         true,
-                "valueMaterialNo": ""
+                "valueManuallyNo": ""
             };
 
 			this.oScanModel = new JSONModel(oData);
 
             this.getView().setModel(this.oScanModel, "ScanModel");
-
-            // ---- Set Barcode Model.
-			this.BarCodeModel = BarcodeScanner.getStatusModel();
         },
 
         _initBarCodeScanner: function () {
@@ -149,8 +145,6 @@ sap.ui.define([
 
             // ---- Set Focus to main Input field
             this._setFocus();
-
-            // tools.alertMe(sap.ui.Device.resize.width);
         },
 
         
@@ -217,10 +211,10 @@ sap.ui.define([
             if (oScanModel !== null && oScanModel !== undefined) {
                 if (oScanModel.getData() !== null && oScanModel.getData() !== undefined) {
                     var oScanData  = oScanModel.getData();
-                    var sMatNumber = oScanData.valueMaterialNo;
+                    var sMatNumber = oScanData.valueManuallyNo;
                     
                     if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
-                        sMatNumber = oScanData.valueMaterialNo.trim();
+                        sMatNumber = oScanData.valueManuallyNo.trim();
                     } else {
                         sMatNumber = "";
                     }
@@ -559,8 +553,7 @@ sap.ui.define([
 
                 this.oDeliveryData.BookGoodsReceipt = true;
 
-                var sPath    = "/Delivery(DocumentNo='" + sDeliveryNo + "')";
-                // var urlParam = { "BookGoodsReceipt": true };
+                var sPath = "/Delivery(DocumentNo='" + sDeliveryNo + "')";
     
                 this.oModel.update(sPath, that.oDeliveryData, {
                     error: function(oError, resp) {
@@ -610,7 +603,7 @@ sap.ui.define([
 		_handleScanModelData: function (type, oTable) {
             if (oTable.getModel().getData().length > 0) {
                 this.oScanModel.setProperty("/booking", true);
-                this.oScanModel.setProperty("/valueMaterialNo", "");
+                this.oScanModel.setProperty("/valueManuallyNo", "");
 
                 if (type === "A") {
                     this.sScanType = "A";
@@ -758,38 +751,45 @@ sap.ui.define([
 
 		onScanned: function (oEvent) {
             var oScanModel = this.oScanModel;
-                oScanModel.setProperty("/valueMaterialNo", "");
+                oScanModel.setProperty("/valueManuallyNo", "");
                 oScanModel.setProperty("/valueScan", "");
 
             if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getParameter("valueMaterialNo") !== null && oEvent.getParameter("valueMaterialNo") !== undefined) {
-                    var sMatNumber  = oEvent.getParameter("valueMaterialNo");
+                if (oEvent.getParameter("valueManuallyNo") !== null && oEvent.getParameter("valueManuallyNo") !== undefined) {
+                    var sMatNumber  = oEvent.getParameter("valueManuallyNo");
                     var sScanNumber = oEvent.getParameter("valueScan");
                     var iScanAktiv  = oEvent.getParameter("iScanModusAktiv");
                     
                     if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
-                        sMatNumber = oEvent.getParameter("valueMaterialNo").trim()
+                        sMatNumber = oEvent.getParameter("valueManuallyNo").trim()
 
-                        oScanModel.setProperty("/valueMaterialNo", sMatNumber);
+                        oScanModel.setProperty("/valueManuallyNo", sMatNumber);
                     }
 
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
                         
-                        oScanModel.setProperty("/valueMaterialNo", sScanNumber);
+                        // ---- Check for Data Matix Code
+                        var check = tools.checkForDataMatrixArray(sScanNumber);
+
+                        if (check[0]) {
+                            var sScanNumber = check[1];
+                        }
+
+                        oScanModel.setProperty("/valueManuallyNo", sScanNumber);
                     }
 
+                    var oResult = {
+                        "sView":     oScanModel.getProperty("/viewMode"),
+                        "material":  oScanModel.getProperty("/valueManuallyNo")
+                    };
+                    
                     if (iScanAktiv !== null && iScanAktiv !== undefined && iScanAktiv !== "") {
                         this.iScanModusAktiv = iScanAktiv;
                     } else {
                         this.iScanModusAktiv = 2;
                     }
 
-                    var oResult = {
-                        "sView":     oScanModel.getProperty("/viewMode"),
-                        "material":  oScanModel.getProperty("/valueMaterialNo")
-                    };
-                    
                     this.loadHuData(oResult);
                 }    
             }
@@ -798,7 +798,7 @@ sap.ui.define([
 		onScan: function (sScanView) {
             this.sScanView = sScanView;
 
-			this.oScanner.openScanDialog();
+			this.oScanner.openScanDialog(sScanView);
 		},
 
 		getDecoders: function () {
@@ -884,83 +884,19 @@ sap.ui.define([
 		},
 
 
-		// --------------------------------------------------------------------------------------------------------------------
-		// ---- QR/Bar Code Scanner Event Handlers
-		// --------------------------------------------------------------------------------------------------------------------
-
-		onScanOld: function (oEvent) {
-			var noBarCodeScanner = this.getResourceBundle().getText("NoBarCodeScanner");
-			var scanPossible = this.BarCodeModel.getData().available;
-			var that = this;
-
-			if (scanPossible) {
-				BarcodeScanner.scan(
-					function (mResult) {
-						var oScanned = { "Package": "" };
-
-						if (mResult.cancelled) {
-							return;
-						}
-
-                        that._loadScanData(mResult);
-					},
-					function (Error) {
-						var errText = that.getResourceBundle().getText("ScanningFailed");
-
-						tools.alertMe(errText + Error);
-					},
-					function (mParams) {
-						var paramText = that.getResourceBundle().getText("EnterredValue");
-
-						// tools.alertMe(paramText + mParams.newValue);
-					},
-					// ---- Hard coded Dialog Title for manual data entering
-					"Manuelle Qr / Barcode Eingabe"
-
-					// Fragment.load({
-					//     id: this.oView.getId(),
-					//     name: _fragmentPath + "EnterMaterialNumberDialog",
-					//     controller: this
-					// }).then(function (oDialog) {
-					//     that._scanned = true;
-
-					//     that.oView.addDependent(oDialog);
-					//     that.oView._materialEnterMaterialDialog = oDialog;
-					//     that.oView._materialEnterMaterialDialog.open();
-					//     that.oView.byId("idEnterMaterialNumber").focus();
-					// }.bind(this))
-				);
-			} else {
-				tools.showMessageWarning(noBarCodeScanner, "");
-			}
-		},
-
-		onAcceptEnterMaterialDialog: function () {
-			var oValue = this.byId("idEnterMaterialNumber").getValue();
-
-			// this._proceedWithMaterialDialog(oValue);
-		},
-
-		onCancelEnterMaterialDialog: function () {
-			this.getView()._materialEnterMaterialDialog.close();
-		},
-
-		onAfterCloseEnterMaterialDialog: function () {
-			this.getView()._materialEnterMaterialDialog.destroy();
-		},
-
-
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Navigation Functions
         // --------------------------------------------------------------------------------------------------------------------
 
         onNavBack: function () {
+			var that = this;
+
             if (sap.ushell !== null && sap.ushell !== undefined) {
                 if (sap.ushell.Container !== null && sap.ushell.Container !== undefined) {
                     var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
                         oCrossAppNavigator.toExternal({
                             target: {
-                                shellHash: this.sShellSource
+                                shellHash: that.sShellSource
                             }
                         });
                 }
@@ -1073,7 +1009,9 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function () {
-            setTimeout(() => this.byId("idInput_Material").focus());
+            if (sap.ui.getCore().byId("idInput_HU") !== null && sap.ui.getCore().byId("idInput_HU") !== undefined) {
+                setTimeout(() => sap.ui.getCore().byId("idInput_HU").focus({ preventScroll: true, focusVisible: true }));
+            }
         },
 
         _resetSortingState: function() {
@@ -1111,7 +1049,7 @@ sap.ui.define([
 
             // ---- Reset the Scan Model
             var oData = { 
-                "viewMode":        "Material",
+                "viewMode":        "Handling",
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
@@ -1120,7 +1058,7 @@ sap.ui.define([
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewMat":         true,
-                "valueMaterialNo": ""
+                "valueManuallyNo": ""
             };
 
             this.oScanModel.setData(oData);
