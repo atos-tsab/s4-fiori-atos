@@ -26,7 +26,8 @@
     "use strict";
 
  	// ---- The app namespace is to be define here!
-    var _fragmentPath = "z.delivery.view.fragments.";
+    var _fragmentPath   = "z.delivery.view.fragments.";
+	var _sAppModulePath = "z/delivery/";
     var APP = "DELIV";
  
  

@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV/",
+        "uri": "/sap/opu/odata/sap/Z_EEWM_ORDER_CONFIRMATION_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -72,7 +72,11 @@
       "": {
         "dataSource": "mainService",
         "preload": true,
-        "settings": {}
+        "settings": {
+          "defaultBindingMode": "OneWay",
+          "defaultCountMode": "Inline",
+          "useBatch": true
+        }
       }
     },
     "resources": {
@@ -95,9 +99,16 @@
       "routes": [
         {
           "name": "main",
-          "pattern": ":?query:",
+          "pattern": "",
           "target": [
             "TargetConfirmStorage"
+          ]
+        },
+        {
+          "name": "store",
+          "pattern": "hu/:hu:",
+          "target": [
+            "TargetStore"
           ]
         }
       ],
@@ -108,6 +119,14 @@
           "clearControlAggregation": false,
           "viewId": "ConfirmStorage",
           "viewName": "ConfirmStorage"
+        },
+        "TargetStore": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewLevel": 2,
+          "viewId": "AdhocLbToHu",
+          "viewName": "AdhocLbToHu"
         }
       }
     },

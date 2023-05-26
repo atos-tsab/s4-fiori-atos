@@ -1,0 +1,33 @@
+<core:FragmentDefinition
+	xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core" 
+	class="sapUiSizeCompact"
+	xmlns="sap.m">
+	
+	<Dialog 
+		id="idDialogHU2Scan" 
+		class="sapThemeHighlight-asColor"
+		contentHeight="80px"
+		contentWidth="auto"
+		resizable="false"
+		type="Message"
+		state="Warning"
+		afterClose="onHU2ScanAfterClose"
+		title="{i18n>HU2ScanTitle}">
+		<content>
+			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
+				<HBox>
+					<Label text="{i18n>HU2ScanContent}" width="auto" />
+				</HBox>
+			</VBox>
+		</content>
+		
+		<beginButton>
+			<Button text="{i18n>Yes}" type="Emphasized" press="onHU2ScanSave" />
+		</beginButton>
+		<endButton>
+			<Button text="{i18n>No}" type="Default" press="onHU2ScanClose" />
+		</endButton>
+		
+	</Dialog>
+</core:FragmentDefinition>

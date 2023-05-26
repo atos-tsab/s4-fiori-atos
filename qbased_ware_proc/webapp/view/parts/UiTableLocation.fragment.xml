@@ -30,11 +30,11 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "TA", "columnIndex":"1", "leadingProperty": "TA"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnitId", "columnIndex":"1", "leadingProperty": "HandlingUnitId"}' />
 					</ui:customData>
-					<Label text="{i18n>TA}" textAlign="Center" width="100%" />
+					<Label text="{ScanModel>/captionColumn}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{TA}" />
+						<Text text="{HandlingUnitId}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
@@ -48,29 +48,20 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "DestStorageLocation", "columnIndex":"3", "leadingProperty": "DestStorageLocation"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "StorageBin", "columnIndex":"3", "leadingProperty": "StorageBin"}' />
 					</ui:customData>
-					<Label text="{i18n>DestStorageLocation}" textAlign="Center" width="100%" />
+					<Label text="{i18n>SourceStorageLocation}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{DestStorageLocation}" />
+						<Text text="{SourceStorageLocation}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "TemplatePlace", "columnIndex":"4", "leadingProperty": "TemplatePlace"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "StorageType", "columnIndex":"4", "leadingProperty": "StorageType"}' />
 					</ui:customData>
-					<Label text="{i18n>TemplatePlace}" textAlign="Center" width="100%" />
+					<Label text="{i18n>SourceStorageType}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{TemplatePlace}" />
-					</ui:template>
-				</ui:Column>
-				<ui:Column width="70px" visible="true" autoResizable="true">
-					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Number", "columnIndex":"2", "leadingProperty": "Number"}' />
-					</ui:customData>
-					<Label text="{i18n>Number}" textAlign="Center" width="100%" />
-					<ui:template>
-						<Text text="{Number}" />
+						<Text text="{SourceStorageType}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>

@@ -32,13 +32,13 @@ server:
         backend:
           - path: /sap
             url: http://bpw-s4d.bpw.internal:8000
-            client: '100'
+            client: '501'
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:
         mountPath: /
         services:
-          - urlPath: /sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV
+          - urlPath: /sap/opu/odata/scwm/Z_EEWM_HU_OPERATION_SRV
             metadataPath: ./webapp/localService/metadata.xml
             mockdataPath: ./webapp/localService/data
             generateMockData: true

@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV/",
+        "uri": "/sap/opu/odata/sap/Z_EEWM_HU_OPERATION_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -72,10 +72,19 @@
       "": {
         "dataSource": "mainService",
         "preload": true,
-        "settings": {}
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline",
+          "useBatch": true
+        }
       }
     },
     "resources": {
+      "js": [
+        {
+            "uri": "./controls/lib/zxingjs0186.min.js"
+        }
+      ],
       "css": [
         {
           "uri": "css/style.css"
@@ -95,19 +104,50 @@
       "routes": [
         {
           "name": "main",
-          "pattern": ":?query:",
+          "pattern": "/:qmode:",
           "target": [
-            "TargetQbasedProcWare"
+            "TargetMain"
+          ]
+        },
+        {
+          "name": "hu",
+          "pattern": ":whn:/:queue:/:qmode:",
+          "target": [
+            "TargetHU"
+          ]
+        },
+        {
+          "name": "resign",
+          "pattern": ":whn:/:queue:/:qmode:/:hu:",
+          "target": [
+            "TargetResign"
           ]
         }
       ],
       "targets": {
-        "TargetQbasedProcWare": {
+        "TargetMain": {
           "viewType": "XML",
           "transition": "slide",
           "clearControlAggregation": false,
+          "viewLevel": 1,
           "viewId": "QbasedProcWare",
           "viewName": "QbasedProcWare"
+        },
+        "TargetHU": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewLevel": 2,
+          "viewId": "HandlingUnits",
+          "viewName": "HandlingUnits"
+        },
+        "TargetResign": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewLevel": 3,
+          "viewId": "Resign",
+          "viewName": "Resign"
         }
       }
     },

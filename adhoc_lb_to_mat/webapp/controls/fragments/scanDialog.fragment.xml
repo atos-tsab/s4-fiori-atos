@@ -20,9 +20,10 @@
         </content>
 
         <buttons>
-            <Button press="onChangePress" tooltip="{i18n>TextChangeButton}"             visible="{scanModel>/changeButton}" icon="sap-icon://synchronize" />
-            <Button press="onOkPress"     text="{i18n>Ok}"     icon="sap-icon://accept" visible="{scanModel>/editButton}" enabled="{scanModel>/okButton}" />
-            <Button press="onCancelPress" text="{i18n>Cancel}" icon="sap-icon://decline" />
+            <Button press="onChangePress" tooltip="{i18n>TextChangeButton}" visible="{scanModel>/changeButton}" icon="sap-icon://synchronize" />
+            <Button press="onScannerOkPress" text="{i18n>Ok}" icon="sap-icon://accept" 
+                    id="idButtonScanOk_ADHOC_LB_TOMA" visible="{scanModel>/editButton}" enabled="{scanModel>/okButton}" />
+            <Button press="onScanCancelPress" text="{i18n>Cancel}" icon="sap-icon://decline" />
         </buttons>
     </Dialog>
 

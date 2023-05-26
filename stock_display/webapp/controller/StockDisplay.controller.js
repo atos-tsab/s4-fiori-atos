@@ -26,7 +26,8 @@
     "use strict";
 
  	// ---- The app namespace is to be define here!
-    var _fragmentPath = "z.stockdisplay.view.fragments.";
+    var _fragmentPath   = "z.stockdisplay.view.fragments.";
+	var _sAppModulePath = "z/stockdisplay/";
     var APP = "STOC_DISP";
  
  

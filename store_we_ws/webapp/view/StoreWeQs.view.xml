@@ -8,7 +8,7 @@
 	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
  		<customHeader>
 			<Toolbar>
-				<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+				<Title text="{ScanModel>/viewTitle}" titleStyle="H5" class="sapUiSmallMarginBegin" />
 				<ToolbarSpacer />
 					<Button id="idButtonBook_STORE_WE_QS" press="onPressBooking" text="{i18n>Book}" type="Reject" width="100px" enabled="{ScanModel>/booking}" />
 					<ToolbarSeparator />

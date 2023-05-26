@@ -14,7 +14,7 @@
 			selectionBehavior="Row" 
 			visibleRowCount="12"
 			rowSelectionChange="onRowSelectionQueueList"
-			width="520px">
+			width="560px">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
@@ -28,22 +28,31 @@
 						<Text text="{No}" />
 					</ui:template>
 				</ui:Column>
+				<ui:Column width="120px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "QueueId", "columnIndex":"1", "leadingProperty": "QueueId"}' />
+					</ui:customData>
+					<Label text="{i18n>QueueId}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{QueueId}" />
+					</ui:template>
+				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Queue", "columnIndex":"1", "leadingProperty": "Queue"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "Description", "columnIndex":"2", "leadingProperty": "Description"}' />
 					</ui:customData>
 					<Label text="{i18n>Queue}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Queue}" />
+						<Text text="{Description}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="80px" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Number", "columnIndex":"2", "leadingProperty": "Number"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "NoOfOpenTasks", "columnIndex":"4", "leadingProperty": "NoOfOpenTasks"}' />
 					</ui:customData>
 					<Label text="{i18n>Number}" textAlign="Center" width="100%" />
 					<ui:template>
-						<Text text="{Number}" />
+						<Text text="{NoOfOpenTasks}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>

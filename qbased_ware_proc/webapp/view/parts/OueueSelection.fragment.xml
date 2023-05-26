@@ -22,7 +22,7 @@
 							<f:GridContainerItemLayoutData columns="4" />
 						</f:layoutData>
 						<f:header>
-							<card:Header title="{i18n>CaptureQueue}" />
+							<card:Header title="{ScanModel>/viewCaption}" />
 						</f:header>
 						<f:content>
 
@@ -41,22 +41,18 @@
 
 								<!-- ============================================================================================================================== -->
 
-								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLocation}">
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>HU}{i18n>Colon}" width="110px" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_HU" value="{ScanModel>/valueMaterialNo}" width="160px" class="atosMInputBaseDisabled" />
-										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Location')" width="auto" class="sapUiTinyMarginBegin" />
-									</HBox>
-								</HBox>
-
-								<!-- ============================================================================================================================== -->
-
 								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewQueue}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<OverflowToolbar width="520px" class="sapUiSmallMarginBegin">
+										<OverflowToolbar width="560px" class="sapUiSmallMarginBegin">
 											<Label text="{i18n>Toolbar}{i18n>Colon}" />
 											<ToolbarSpacer/>
+											<Switch state="{ScanModel>/switchState}" change="onSwitchChange" tooltip="{i18n>SwitchTooltip}" customTextOn="{i18n>SwitchInt}" customTextOff="{i18n>SwitchExt}">
+												<layoutData>
+													<FlexItemData growFactor="1" />
+												</layoutData>
+											</Switch>
+
+											<ToolbarSeparator />
 											<Button press="onHandleQueue($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
 											<ToolbarSeparator />
 											<Button press="onHandleQueue($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
@@ -64,23 +60,6 @@
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
 										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableQueue" type="XML" />
-									</HBox>
-								</VBox>
-
-								<!-- ============================================================================================================================== -->
-
-								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewLocation}">
-									<HBox justifyContent="Start" wrap="Wrap">
-										<OverflowToolbar width="800px" class="sapUiSmallMarginBegin">
-											<Label text="{i18n>Toolbar}{i18n>Colon}" />
-											<ToolbarSpacer/>
-											<Button press="onHandleLocation($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
-											<ToolbarSeparator />
-											<Button press="onHandleLocation($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
-										</OverflowToolbar>
-									</HBox>
-									<HBox justifyContent="Start" wrap="Wrap">
-										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableLocation" type="XML" />
 									</HBox>
 								</VBox>
 							</VBox>

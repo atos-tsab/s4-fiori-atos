@@ -28,7 +28,8 @@ sap.ui.define([
     "use strict";
 
     // ---- The app namespace is to be define here!
-    var _fragmentPath = "z.adhoclbtomat.view.fragments.";
+    var _fragmentPath   = "z.adhoclbtomat.view.fragments.";
+	var _sAppModulePath = "z/adhoclbtomat/";
     var APP = "ADHOC_LB_TOMA";
 
 
@@ -60,51 +61,22 @@ sap.ui.define([
             // ---- Define variables for the Mobile App
             this.oView = this.getView();
 
-            this.sScanView    = "Storage";
-            this.sShellSource = "";
-            this.iBookCount   = 0;
+            this.sWN = "";
+            this.iHU = "";
+            this.sViewMode       = "Material";
+            this.sShellSource    = "#Shell-home";
+            this.iScanModusAktiv = 0;
 
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
 
             // ---- Define the Booking Button
             this.BookButton = this.byId("idButtonBook_" + APP);
-
-            // ---- Define Model data
-            this.oDisplayData1 = {
-                "HandlingUnit":        "31315046",
-                "WarehouseNo":         "L007",
-                "WarehouseTask":       "XXX",
-                "Material":            "01.179.07.13.0",
-                "MatText":             "GEWINDEHUELSE_TS2_1234567890123456789011",
-                "Quantity":            "240",
-                "UOM":                 "ST",
-                "SourceUnit":          "5000172703",
-                "DestStorageType":     "",
-                "DestStorageLocConf":  "",
-                "DestStorageLocation": "",
-                "IdentifyHU2":         "",
-                "StorageLocation":     "07"
-            };
-
-            this.oDisplayData2 = {
-                "HandlingUnit":        "21215046",
-                "WarehouseNo":         "L009",
-                "WarehouseTask":       "YYY",
-                "Material":            "01.179.07.15.0",
-                "MatText":             "GEWINDEHUELSE_TS3_1234567890123456789099",
-                "Quantity":            "620",
-                "UOM":                 "ST",
-                "SourceUnit":          "5000172703",
-                "DestStorageType":     "",
-                "DestStorageLocConf":  "",
-                "DestStorageLocation": "",
-                "IdentifyHU2":         "",
-                "StorageLocation":     "09"
-            };
         },
 
         _initLocalModels: function () {
+            var sTitle = this.getResourceBundle().getText("title");
+
             // ---- Get the Main Models.
             this.oModel = this.getOwnerComponent().getModel();
 
@@ -113,25 +85,26 @@ sap.ui.define([
 
             // ---- Set Jason Models.
             var oData = {
-                "viewMode":        "Material",
-                "booking":         false,
-                "refresh":         true,
-                "ok":              true,
-                "showOk":          false,
-                "showErr":         false,
-                "showOkText":      "",
-                "showErrText":     "",
-                "viewStorage":     false,
-                "viewMat":         true,
-                "viewQuantity":    false,
-                "viewLocConf":     false,
-                "viewLoc":         false,
-                "valueMaterialNo": ""
+                "viewMode":          "Material",
+                "viewTitle":         sTitle,
+                "booking":           false,
+                "refresh":           true,
+                "ok":                true,
+                "showOk":            false,
+                "showErr":           false,
+                "showOkText":        "",
+                "showErrText":       "",
+                "viewMat":           true,
+                "viewStorage":       false,
+                "viewLoc":           false,
+                "valueManuallyNo":   ""
             };
 
-			this.oScanModel = new JSONModel(oData);
+			this.oScanModel    = new JSONModel(oData);
+			this.oDisplayModel = new JSONModel([]);
 
             this.getView().setModel(this.oScanModel, "ScanModel");
+            this.getView().setModel(this.oDisplayModel, "DisplayModel");
         },
  
         _initBarCodeScanner: function () {
@@ -174,9 +147,10 @@ sap.ui.define([
 
             this._getShellSource();
             this._resetAll();
+            this.loadUserData();
 
             // ---- Set Focus to main Input field
-            setTimeout(() => this.byId("idInput_Material").focus());
+            this._setFocus("idInput_Material");
         },
 
         
@@ -215,15 +189,176 @@ sap.ui.define([
             }
         },
 
-        onPressOk: function (sScanView) {
-            this.sScanView = sScanView;
+        onPressOk: function (sViewMode) {
+            this.sViewMode = sViewMode;
 
             // ---- Change the Scan Model
-            this._onOkClicked(sScanView);
+            this._onOkClicked();
         },
 
         onPressRefresh: function () {
             this._resetAll();
+        },
+
+		_onOkClicked: function () {
+            var oScanModel = this.oScanModel;
+
+            if (oScanModel !== null && oScanModel !== undefined) {
+                if (oScanModel.getData() !== null && oScanModel.getData() !== undefined) {
+                    var oScanData  = oScanModel.getData();
+                    var sMatNumber = oScanData.valueManuallyNo;
+                    
+                    if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
+                        sMatNumber = oScanData.valueManuallyNo.trim();
+                    } else {
+                        sMatNumber = "";
+                    }
+
+                    var oResult = {
+                        "sView":     this.sViewMode,
+                        "material":  sMatNumber
+                    };
+
+                    this.iScanModusAktiv = 1;
+
+                    if (this.sViewMode === "Material") {
+                        this.loadMaterialData(oResult, this.sViewMode);
+                    } else if (this.sViewMode === "LocConf") {
+                        this.loadStorageBinData(oResult, this.sViewMode);
+                    }
+                }    
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Booking Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+        _createWarehouseTask: function () {
+            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
+            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var that = this;
+
+            if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                var oData = this.oDisplayModel.getData();
+ 
+                var sPath   = "/WarehouseTask";
+                var urlData = {
+                    "WarehouseNumber":       oData.WarehouseNumber,
+                    "HandlingUnitId":        oData.HandlingUnitId,
+                    "BookConfirm":           true,
+                    "BookMoveHu":            true,
+                    "DestinationStorageBin": oData.Book2StorageBin
+                };
+
+                // ---- Create new Warehouse Task
+                this.oModel.create(sPath, urlData, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+
+                        that._resetByLocation();
+                    },
+                    success: function(rData, oResponse) {
+                        // ---- Check for complete final booking
+                        if (rData !== null && rData !== undefined && rData.SapMessageType === "E") {
+                            tools.alertMe(rData.SapMessageText, "");
+                            
+                            that._resetAll();
+                            that._setFocus("idInput_HU");
+
+                            return;
+                        } else if (rData !== null && rData !== undefined && rData.SapMessageType === "I") {
+                            // ---- Coding in case of showing Business application Informations
+                            tools.alertMe(rData.SapMessageText, "");
+                        }
+                        
+                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
+                            parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
+                            that.oScanModel.setProperty("/showOk", true);
+                            that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                            // ---- Do nothing -> Good case
+                            setTimeout(function () {
+                                that._resetAll();
+                
+                                // ---- Set Focus to main Input field
+                                that._setFocus("idInput_HU");
+                            }, tSTime);            
+                        } else {
+                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                        }
+                    }
+                });
+            } else {
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
+            }
+        },
+
+        _updateWarehouseTask: function () {
+            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
+            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var that = this;
+
+            if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                var oData = this.oDisplayModel.getData();
+                    oData.to_WarehouseTask.BookConfirm = true;
+                    oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
+                    oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
+
+                var sWarehouseNumber = oData.to_WarehouseTask.WarehouseNumber;
+                var sWarehouseTask   = oData.to_WarehouseTask.WarehouseTaskId;
+
+                var sPath = "/WarehouseTask(WarehouseNumber='" + sWarehouseNumber + "',WarehouseTaskId='" + sWarehouseTask + "')";
+
+                // ---- Update an existing Warehouse Task
+                this.oModel.update(sPath, oData.to_WarehouseTask, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+
+                        that._resetByLocation();
+                    },
+                    success: function(rData, oResponse) {
+                        // ---- Check for complete final booking
+                        if (rData !== null && rData !== undefined && rData.SapMessageType === "E") {
+                            tools.alertMe(rData.SapMessageText, "");
+                            
+                            that._resetAll();
+                            that._setFocus("idInput_HU");
+
+                            return;
+                        } else if (rData !== null && rData !== undefined && rData.SapMessageType === "I") {
+                            // ---- Coding in case of showing Business application Informations
+                            tools.alertMe(rData.SapMessageText, "");
+                        }
+
+                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                            that.oScanModel.setProperty("/showOk", true);
+                            that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                            // ---- Do nothing -> Good case
+                            setTimeout(function () {
+                                that._resetAll();
+                
+                                // ---- Set Focus to main Input field
+                                that._setFocus("idInput_HU");
+                            }, tSTime);            
+                        } else {
+                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                        }
+                    }
+                });
+            } else {
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
+            }
         },
 
 
@@ -231,112 +366,221 @@ sap.ui.define([
         // ---- Loading Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-		_loadScanData: function (mResult, sScanView) {
-            var DisplayModel = new JSONModel();
-            var oData = {};
+	    loadUserData: function () {
+            var sParam = encodeURIComponent("/SCWM/LGN");
+            var that   = this;
 
-            // ---- Get the right Data for the new model
-            if (mResult.material !== null && mResult.material !== undefined && mResult.material !== "" && sScanView === "Material") {
-                this.MAT = mResult.material;
-            }
+            this.sWN = "";
 
-            if (mResult.material !== null && mResult.material !== undefined) {
-                if (this.MAT === "01.179.07.13.0") {
-                    oData = this.oDisplayData1;
-                } else {
-                    oData = this.oDisplayData2;
-                }
-            }
+            // ---- Read the User Data from the backend
+            var sPath = "/UserParameter('" + sParam + "')";
 
-            // ---- Get the Data for all not empty values
-            if (mResult.material !== null && mResult.material !== undefined && mResult.material !== "") {
-                if (sScanView === "Material") {
-                    oData.Material = mResult.material;
-                } else if (sScanView === "Storage") {
-                    oData.StorageLocation = mResult.material;
-                } else if (sScanView === "Quantity") {
-                    oData.Quantity = mResult.material;
-                } else if (sScanView === "Location") {
-                    oData.DestStorageType     = "HHO";
-                    oData.DestStorageLocation = mResult.material;
-                } else if (sScanView === "LocConf") {
-                    oData.DestStorageType    = "HHO";
-                    oData.DestStorageLocConf = mResult.material;
-                }
-            }
+			this.oModel.read(sPath, {
+				error: function(oError, resp) {
+                    tools.handleODataRequestFailed(oError, resp, true);
+				},
+				success: function(rData, response) {
+                    // ---- Check for complete final booking
+                    if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
+                        tools.alertMe(rData.SapMessageText, "");
+                    } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
+                        // ---- Coding in case of showing Business application Errors
+                        tools.showMessageError(rData.SapMessageText, "");
+                    } else if (rData.SapMessageType === "I") {
+                        // ---- Coding in case of showing Business application Informations
+                        tools.alertMe(rData.SapMessageText, "");
+                    }
 
-            // ---- Set the Data for the Model and set the Model to the View
-            DisplayModel.setData(oData);
-
-            this.getView().setModel(DisplayModel, "DisplayModel");
-
-            // ---- Change the Scan Model
-            this._changeScanModel(sScanView);
+					if (rData !== null && rData !== undefined && rData !== "") {
+                        that.sWN = rData.ParameterValue;
+                    }
+				}
+			});
         },
 
-		_changeScanModel: function(sScanView) {
+	    loadMaterialData: function (oResult, sViewMode) {
+            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var that = this;
+
+            this.iHU = oResult.material;
+            this.iHU = "";
+
+            // ---- Check for Warehouse Number
+            if (this.sWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            // ---- Read the HU Data from the backend
+            var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',HandlingUnitId='" + this.iHU + "')";
+            
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    urlParameters: {
+                        "$expand": "to_WarehouseTask"
+                    },
+                    success: function(rData, response) {
+                        // ---- Check for complete final booking
+                        if (rData.SapMessageType === "E") {
+                            tools.alertMe(rData.SapMessageText, "");
+                            
+                            that._resetAll();
+                            that._setFocus("idInput_HU");
+
+                            return;
+                        } else if (rData.SapMessageType === "I") {
+                            // ---- Coding in case of showing Business application Informations
+                            tools.alertMe(rData.SapMessageText, "");
+                        }
+
+                        if (rData !== null && rData !== undefined) {
+                            that._setMaterialData(rData, sViewMode);
+                        } else {
+                            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+
+                            tools.alertMe(sErrMsg, "");
+                        }
+                    }
+                });
+        },
+
+		_setMaterialData: function (oData, sViewMode) {
+            // ---- Set the Data for the Model and set the Model to the View
+            var oDisplayModel = this.oDisplayModel;
+                oDisplayModel.setData(oData);
+                
+            if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
+                var sStorageBin = oData.to_WarehouseTask.DestinationStorageBin;
+
+                if (sStorageBin !== null && sStorageBin !== undefined && sStorageBin !== "") {
+                    this.oDisplayModel.setProperty("/Book2StorageBin", oData.to_WarehouseTask.DestinationStorageBin);
+                    this.oDisplayModel.setProperty("/Book2StorageType", oData.to_WarehouseTask.DestinationStorageType);
+                }
+            }
+
+            // ---- Change the Scan Model
+            this._changeScanModel(sViewMode);
+        },
+
+	    loadStorageBinData: function (oResult, sViewMode) {
+            this.sStorageBin = oResult.material;
+
+            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sErrMsg = this.getResourceBundle().getText("StorageBinErr", this.sStorageBin);
+            var that = this;
+
+            // ---- Check for Warehouse Number
+            if (this.sWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            // ---- Read the HU Data from the backend
+			var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
+                aFilters.push(new sap.ui.model.Filter("StorageBinID", sap.ui.model.FilterOperator.EQ, this.sStorageBin));
+
+            var oModel = this._getServiceUrl()[0];
+                oModel.read("/StorageBin", {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        if (rData.results !== null && rData.results !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
+                                tools.alertMe(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
+                                // ---- Coding in case of showing Business application Errors
+                                tools.showMessageError(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.showMessageError(rData.SapMessageText, "");
+                            }
+
+                            if (rData.results.length > 0) {
+                                for (let i = 0; i < rData.results.length; i++) {
+                                    let data = rData.results[i];                                    
+                                    
+                                    if (data.StorageBinID === that.sStorageBin) {
+                                        that._setStorageBinData(data, sViewMode);
+                                    }
+                                }
+                            } else {
+                                tools.alertMe(sErrMsg, "");
+                            }
+                        }
+                    }
+                });
+        },
+
+		_setStorageBinData: function (oData, sViewMode) {
+            // ---- Set the Data for the Model and set the Model to the View
+            if (sViewMode === "Location") {
+                this.oDisplayModel.setProperty("/Book2StorageBin", oData.StorageBinID);
+                this.oDisplayModel.setProperty("/Book2StorageType", oData.StorageType);
+            } else if (sViewMode === "LocConf") {
+                this.oDisplayModel.setProperty("/Book2StorageBinVerify", oData.StorageBinID);
+            }
+
+            // ---- Change the Scan Model
+            this._changeScanModel(sViewMode);
+        },
+
+		// --------------------------------------------------------------------------------------------------------------------
+
+		_changeScanModel: function(sViewMode) {
+            var defaultStorage = this.getResourceBundle().getText("DefaultStorageLocation");
             var sErrMesg = this.getResourceBundle().getText("ErrorBooking");
-            var check = false;
+            var sTitle1  = this.getResourceBundle().getText("title1");
             var id    = "";
             var that  = this;
 
             // ---- Change the Scan Model
             var oData = {
-                "viewMode":     "",
-                "booking":      false,
-                "refresh":      true,
-                "ok":           true,
-                "showOk":       false,
-                "showErr":      false,
-                "showOkText":   "",
-                "showErrText":  "",
-                "viewStorage":  false,
-                "viewMat":      false,
-                "viewQuantity": false,
-                "viewLocConf":  false,
-                "viewLoc":      false
+                "viewMode":          "",
+                "viewTitle":         sTitle1,
+                "booking":           false,
+                "refresh":           true,
+                "ok":                true,
+                "showOk":            false,
+                "showErr":           false,
+                "showOkText":        "",
+                "showErrText":       "",
+                "showInspectionLot": false,
+                "viewStorage":       false,
+                "viewMat":           false,
+                "viewLoc":           false
             };
 
-            if (sScanView === "LocConf") {
-                check = this._checkDestStorageLocation();
-            }
-
-            switch (sScanView) {
+            switch (sViewMode) {
                 case "Material":
                     id = "idInput_Storage";
                     oData.viewMode    = "Storage";
                     oData.viewStorage = true;
+
                     break;
                 case "Storage":
-                    id = "idInput_Quantity";
-                    oData.viewMode     = "Quantity";
-                    oData.viewQuantity = true;
-                    break;
-                case "Quantity":
                     id = "idInput_Location";
                     oData.viewMode = "Location";
                     oData.viewLoc  = true;
+                    oData.refresh  = false;
+                    oData.valueManuallyNo  = defaultStorage;
+
                     break;
                 case "Location":
-                    id = "idInput_LocConf";
-                    oData.viewMode    = "LocConf";
-                    oData.viewLocConf = true;
-                    oData.refresh     = false;
-                    break;
-                case "LocConf":
-                    if (check) {
-                        id = "idButtonBook_ADHOC_LB_TOMA";
-                        oData.viewMode = "Material";
-                        oData.booking  = true;
-                        oData.refresh  = false;
-                        oData.ok       = false;
-                    } else {
-                        id = "idInput_Location";
-                        oData.viewMode    = "Location";
-                        oData.viewLoc     = true;
-                        oData.showErr     = true;
-                        oData.showErrText = sErrMesg;
-                    }
+                    id = "idButtonBook_ADHOC_LB_TOMA";
+                    oData.viewMode = "Material";
+                    oData.booking  = true;
+                    oData.refresh  = false;
+                    oData.ok       = false;
+
                     break;
                 default:
                     id = "idInput_Material";
@@ -354,27 +598,10 @@ sap.ui.define([
             }, 300);            
         },
 
-        _checkDestStorageLocation: function () {
-            var oModel = this.getView().getModel("DisplayModel");
-            var check  = false;
-
-            // ---- ToDo: Check from Backend for not identically dest. Storage Location
-            if (oModel !== null && oModel !== undefined) {
-                if (oModel.getData() !== null && oModel.getData() !== undefined) {
-                    var oData = oModel.getData();
-
-                    if (oData.DestStorageLocation === oData.DestStorageLocConf) {
-                        check = true;
-                    }
-                }
-            }
-
-            return check;
-        },
-
         _showBookingError: function () {
             var sErrMesg   = this.getResourceBundle().getText("ErrorBooking");
             var oScanModel = this.oScanModel;
+
             var oScanData  = oScanModel.getData();
                 oScanData.showErr     = true;
                 oScanData.showErrText = sErrMesg;
@@ -383,44 +610,6 @@ sap.ui.define([
             this.oScanModel.refresh();
         },
 
-		_onOkClicked: function () {
-            var iCnt = parseInt(this.getResourceBundle().getText("CountOkInput"), 10);
-            var oScanModel = this.oScanModel;
-
-            if (oScanModel !== null && oScanModel !== undefined) {
-                if (oScanModel.getData() !== null && oScanModel.getData() !== undefined) {
-                    var oScanData  = oScanModel.getData();
-                    var sMatNumber = oScanData.valueMaterialNo;
-                    
-                    if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
-                        sMatNumber = oScanData.valueMaterialNo.trim();
-                    } else {
-                        sMatNumber = "";
-                    }
-
-                    var oMaterialNo = {
-                        "sView":     this.sScanView,
-                        "material":  sMatNumber,
-                        "scanValue": ""
-                    };
-                    
-                    if (this.sScanView === "LocConf") {
-                        this.iBookCount = 1;
-                    } else if (this.sScanView === "Location") {
-                        this.iBookCount = 2;
-                    }
-
-                    if (sMatNumber !== "" && sMatNumber.length > iCnt) {
-                        this._loadScanData(oMaterialNo, this.sScanView);
-                    } else {
-                        if (this.sScanView === "Quantity" && sMatNumber === "") {
-                            this._loadScanData(oMaterialNo, this.sScanView);
-                        }
-                    }
-                }    
-            }
-		},
-
 
 		// --------------------------------------------------------------------------------------------------------------------
 		// ---- QR/Bar Code Ext Scanner Event Handlers
@@ -428,38 +617,51 @@ sap.ui.define([
 
 		onScanned: function (oEvent) {
             if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getParameter("valueMaterialNo") !== null && oEvent.getParameter("valueMaterialNo") !== undefined) {
-                    var sMatNumber  = oEvent.getParameter("valueMaterialNo");
+                if (oEvent.getParameter("valueManuallyNo") !== null && oEvent.getParameter("valueManuallyNo") !== undefined) {
+                    var sMatNumber  = oEvent.getParameter("valueManuallyNo");
                     var sScanNumber = oEvent.getParameter("valueScan");
                     
                     if (sMatNumber !== null && sMatNumber !== undefined && sMatNumber !== "") {
-                        sMatNumber = oEvent.getParameter("valueMaterialNo").trim()
+                        sMatNumber = oEvent.getParameter("valueManuallyNo").trim()
+
+                        this.oScanModel.setProperty("/valueManuallyNo", sMatNumber);
                     }
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
+                        
+                        // ---- Check for Data Matix Code
+                        var check = tools.checkForDataMatrixArray(sScanNumber);
+
+                        if (check[0]) {
+                            var sScanNumber = check[1];
+                        }
+
+                        this.oScanModel.setProperty("/valueManuallyNo", sScanNumber);
                     }
 
-                    var oMaterialNo = {
-                        "sView":     this.sScanView,
+                    var oResult = {
+                        "sView":     this.sViewMode,
                         "material":  sMatNumber,
                         "scanValue": sScanNumber
                     };
                     
-                    if (this.sScanView === "LocConf") {
-                        this.iBookCount = 1;
-                    } else if (this.sScanView === "Location") {
-                        this.iBookCount = 2;
-                    }
+                    this.iScanModusAktiv = 2;
 
-                    this._loadScanData(oMaterialNo, this.sScanView);
+                    if (this.sViewMode === "Material") {
+                        this.loadMaterialData(oResult, this.sViewMode);
+                    } else if (this.sViewMode === "Location") {
+                        this.loadStorageBinData(oResult, this.sViewMode);
+                    } else if (this.sViewMode === "LocConf") {
+                        this.loadStorageBinData(oResult, this.sViewMode);
+                    }
                 }    
             }
 		},
 
-		onScan: function (sScanView) {
-            this.sScanView = sScanView;
-
-			this.oScanner.openScanDialog(sScanView);
+		onScan: function (sViewMode) {
+            this.sViewMode = sViewMode;
+ 
+			this.oScanner.openScanDialog(sViewMode);
 		},
 
 		getDecoders: function () {
@@ -550,12 +752,14 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onNavBack: function () {
+			var that = this;
+
             if (sap.ushell !== null && sap.ushell !== undefined) {
                 if (sap.ushell.Container !== null && sap.ushell.Container !== undefined) {
                     var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
                         oCrossAppNavigator.toExternal({
                             target: {
-                                shellHash: this.sShellSource
+                                shellHash: that.sShellSource
                             }
                         });
                 }
@@ -563,23 +767,47 @@ sap.ui.define([
         },
 
 		_getShellSource: function (oEvent) {
-			var sSpaceID = this.getResourceBundle().getText("SpaceId");
-			var sPageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.getResourceBundle().getText("SpaceId");
+			var pageID  = this.getResourceBundle().getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var spaceHome  = "#Launchpad-openFLPPage?pageId=" + sPageID + "&spaceId=" + sSpaceID;
-                    var shellHome  = "#Shell-home";
+                    var sSpaceHome  = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+                    var sShellHome  = "#Shell-home";
 
                     var sPreviousHash = History.getInstance().getPreviousHash();
 
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = spaceHome;
+                        this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = shellHome;
+                        this.sShellSource = sShellHome;
                     }
                 }    
             }
+		},
+
+		_getServiceUrl: function () {
+            var sService = "";
+
+            // ---- Get the Main Models.
+            this.oModel = this.getOwnerComponent().getModel();
+
+			// ---- Get the OData Services from the manifest.json file. mediaService
+			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
+
+            if (sManifestFile !== null && sManifestFile !== undefined) {
+                var oManifestData  = jQuery.sap.syncGetJSON(sManifestFile).data;
+
+                if (oManifestData !== null && oManifestData !== undefined) {
+                    var mainService = oManifestData["sap.app"].dataSources.mainService;
+
+                    if (mainService !== null && mainService !== undefined) {
+                        sService = mainService.uri;
+                    }
+                }
+            }
+
+            return [this.oModel, sService];
 		},
 
 
@@ -592,14 +820,18 @@ sap.ui.define([
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
-                var sScanView = this.oScanModel.getData().viewMode;
-
                 // ---- Now call the actual event/method for the keyboard keypress
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
-                        that.onPressOk(sScanView);
-						break;			                
+
+                        if (that.iScanModusAktiv < 2) {
+                            that.onPressOk(that.sViewMode);
+                        } else {
+                            that.iScanModusAktiv = 0;
+                        }
+
+                        break;			                
                     case 112: // ---- F1 Key
                         evt.preventDefault();
                         var controlF1 = this.BookButton;
@@ -611,8 +843,12 @@ sap.ui.define([
 						break;			                
                     case 113: // ---- F2 Key
                         evt.preventDefault();
-                        that.onPressOk(sScanView);
-						break;			                
+    
+                        if (that.iScanModusAktiv < 2) {
+                            that.onPressOk(that.sViewMode);
+                        }
+                        
+                        break;			                
                     case 114: // ---- F3 Key
                         evt.preventDefault();
                         that.onNavBack();
@@ -633,72 +869,39 @@ sap.ui.define([
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-		_resetData: function () {
-            var DisplayModel = this.getView().getModel("DisplayModel");
-            var oData = {};
-
-            if (this.MAT === "01.179.07.13.0") {
-                oData = this.oDisplayData1;
-            } else {
-                oData = this.oDisplayData2;
+        _setFocus: function (id) {
+            if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
+                setTimeout(() => sap.ui.getCore().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
+         },
 
-            this.oDisplayData1.DestStorageType     = "";
-            this.oDisplayData1.DestStorageLocConf  = "";
-            this.oDisplayData1.DestStorageLocation = "";
-
-            this.oDisplayData2.DestStorageType     = "";
-            this.oDisplayData2.DestStorageLocConf  = "";
-            this.oDisplayData2.DestStorageLocation = "";
-
-            // ---- Set the Data for the Model and set the Model to the View
-            DisplayModel.setData(oData);
-
-            this.getView().setModel(DisplayModel, "DisplayModel");
+         _resetByLocation: function () {
+            this.oScanModel.setProperty("/viewMode", "LocConf");
+            this.oScanModel.setProperty("/refresh", false);
+            this.oScanModel.setProperty("/viewLocConf", true);
         },
 
         _resetAll: function () {
-            var oModel = new JSONModel([]);
+            var sTitle = this.getResourceBundle().getText("title");
 
             // ---- Reset the Main Model
-            var DisplayModel = new JSONModel();
-
-            var oDisplayData = {
-                "HandlingUnit":        "",
-                "WarehouseNo":         "",
-                "WarehouseTask":       "",
-                "Material":            "",
-                "MatText":             "",
-                "Quantity":            "",
-                "UOM":                 "",
-                "SourceUnit":          "",
-                "DestStorageType":     "",
-                "DestStorageLocConf":  "",
-                "DestStorageLocation": "",
-                "IdentifyHU2":         "",
-                "StorageLocation":     ""
-            };
-
-            DisplayModel.setData(oDisplayData);
-
-            this.getView().setModel(DisplayModel, "DisplayModel");
+            this.oDisplayModel.setData([]);
 
             // ---- Reset the Scan Model
             var oData = {
-                "viewMode":        "Material",
-                "booking":         false,
-                "refresh":         true,
-                "ok":              true,
-                "showOk":          false,
-                "showErr":         false,
-                "showOkText":      "",
-                "showErrText":     "",
-                "viewStorage":     false,
-                "viewMat":         true,
-                "viewQuantity":    false,
-                "viewLocConf":     false,
-                "viewLoc":         false,
-                "valueMaterialNo": ""
+                "viewMode":          "Material",
+                "viewTitle":         sTitle,
+                "booking":           false,
+                "refresh":           true,
+                "ok":                true,
+                "showOk":            false,
+                "showErr":           false,
+                "showOkText":        "",
+                "showErrText":       "",
+                "viewMat":           true,
+                "viewStorage":       false,
+                "viewLoc":           false,
+                "valueManuallyNo":   ""
             };
 
             this.oScanModel.setData(oData);

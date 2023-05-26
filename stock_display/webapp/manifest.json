@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV/",
+        "uri": "/sap/opu/odata/sap/Z_EEWM_ORDER_CONFIRMATION_SRV/",
         "type": "OData",
         "settings": {
           "annotations": [],

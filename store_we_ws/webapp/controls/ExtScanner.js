@@ -100,7 +100,7 @@ sap.ui.define([
                 changeButton:    true,
                 scanMode:        "",
                 valueScan:       "",
-                valueMaterialNo: "",
+                valueManuallyNo: "",
                 labelDialog:     "",
                 lblWidth:        "120px",
                 titleDialog:     "",
@@ -292,29 +292,18 @@ sap.ui.define([
         },
 
         _removePrefix: function (key) {
-            // ---- Remove the Prefix from the Scanned Values
-            let str = key.slice(1);
+            let str = key;
+
+            // ---- Check for P=Material Suffix | Q=Quantity Suffix || S=HandlingUnit Suffix
+            if ((this.sScanView === "Material" && key.startsWith("P")) || 
+                (this.sScanView === "Quantity" && key.startsWith("Q")) || 
+                (this.sScanView === "Handling" && key.startsWith("S"))) {
+
+                // ---- Remove the Prefix from the Scanned Values
+                str = key.slice(1);
+            }
 
             return str;
-        },
-
-        onScanInputLiveChange: function (oEvent) {
-            var iCnt = parseInt(this.getResourceBundle().getText("CountScanLiveInput"), 10);
-
-            if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
-                    var source = oEvent.getSource();
-                    var key = source.getValue();
-    
-                    if (key !== null && key !== undefined && key !== "" && key.length > iCnt) {
-                        this._oScanModel.setProperty("/valueMaterialNo", key);
-                    } else {
-                        this._oScanModel.setProperty("/valueMaterialNo", "");
-                    }
-
-                    this._validateInputs();
-                }
-            }
         },
 
 		// --------------------------------------------------------------------------------------------------------------------
@@ -326,9 +315,11 @@ sap.ui.define([
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        this._oScanModel.setProperty("/valueMaterialNo", key);
+                        key = this._removePrefix(key);
+
+                        this._oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
-                       this._oScanModel.setProperty("/valueMaterialNo", "");
+                       this._oScanModel.setProperty("/valueManuallyNo", "");
                     }
 
                     this._validateInputs();
@@ -345,9 +336,11 @@ sap.ui.define([
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "" && key.length > iCnt) {
-                        this._oScanModel.setProperty("/valueMaterialNo", key);
+                        key = this._removePrefix(key);
+
+                        this._oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
-                       this._oScanModel.setProperty("/valueMaterialNo", "");
+                       this._oScanModel.setProperty("/valueManuallyNo", "");
                     }
 
                     this._validateInputs();
@@ -368,6 +361,7 @@ sap.ui.define([
 
         onShowDialog: function () {
             var noCams = this.getResourceBundle().getText("NoCameraDevices");
+            var that = this;
 
             this.lastScannedResult = null;
             this._initDecoder();
@@ -391,14 +385,14 @@ sap.ui.define([
 
                     }.bind(this)
                 ).then( function() {
-                        this._oScanModel.setProperty("/scanMode", "Scanner");
-                        this._showScanDialog();
+                        that.sScanMode = "Scanner";
+                        that._showScanDialog();
                     }.bind(this)
                 ).catch( function(error) {
                         jQuery.sap.log.warning(error);
 
-                        this._oScanModel.setProperty("/scanMode", "Input");
-                        this._showInputDialog();
+                        that.sScanMode = "Input";
+                        that._showInputDialog();
                     }.bind(this)
                 );
             }
@@ -424,6 +418,8 @@ sap.ui.define([
                 this.addDependent(this._oTD);
             }
 
+            this.sScanMode = "Scanner";
+
             return this._oTD;
         },
  
@@ -440,18 +436,19 @@ sap.ui.define([
                 oDialog.close();
 
             var check = this._validateOkPressed();
+            var that  = this;
 
             if (check) {
                 this.fireValueScanned({
-                    valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
-                    iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                    valueScan:       that._oScanModel.getProperty("/valueScan"),
+                    valueManuallyNo: that._oScanModel.getProperty("/valueManuallyNo"),
+                    iScanModusAktiv: that._oScanModel.getProperty("/iScanModusAktiv")
                 });
             } else {
                 // this.fireValueScanned({
-                //     valueScan:       this._oScanModel.getProperty("/valueScan"),
-                //     valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
-                //     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                //     valueScan:       that._oScanModel.getProperty("/valueScan"),
+                //     valueManuallyNo: that._oScanModel.getProperty("/valueManuallyNo"),
+                //     iScanModusAktiv: that._oScanModel.getProperty("/iScanModusAktiv")
                 // });
             }
 
@@ -471,18 +468,22 @@ sap.ui.define([
                 oDialog.close();
 
             var check = this._validateOkPressed();
+            var that  = this;
 
             if (check) {
+                var key = this._oScanModel.getProperty("/valueManuallyNo");
+                    key = this._removePrefix(key);
+
                 this.fireValueScanned({
-                    valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
-                    iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                    valueScan:       that._oScanModel.getProperty("/valueScan"),
+                    valueManuallyNo: key,
+                    iScanModusAktiv: that._oScanModel.getProperty("/iScanModusAktiv")
                 });
             } else {
                 // this.fireValueScanned({
-                //     valueScan:       this._oScanModel.getProperty("/valueScan"),
-                //     valueMaterialNo: this._oScanModel.getProperty("/valueMaterialNo"),
-                //     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                //     valueScan:       that._oScanModel.getProperty("/valueScan"),
+                //     valueManuallyNo: that._oScanModel.getProperty("/valueManuallyNo"),
+                //     iScanModusAktiv: that._oScanModel.getProperty("/iScanModusAktiv")
                 // });
             }
 
@@ -515,7 +516,7 @@ sap.ui.define([
             this._oScanModel.setProperty("/okButton", false);
             this._oScanModel.setProperty("/lblWidth", "120px");
 
-            if (this.sScanView === "HU") {
+            if (this.sScanView === "Handling") {
                 this._oScanModel.setProperty("/titleDialog", titleHU);
                 this._oScanModel.setProperty("/labelDialog", lblHU);
             } else if (this.sScanView === "Type") {
@@ -541,31 +542,39 @@ sap.ui.define([
 
         _onAfterClose: function () {
             this._stopScan();
+            this._resetInputs();
         },
 
         _saveScannedValue: function (result, error) {
             var errVideoDecoderMulti = this.getResourceBundle().getText("ErrorVideoDecoderMulti");
+            var sResultText = "";
+            var that = this;
 
             if (result) {
                 this.lastScannedResult = result;
 
                 var oDecoder    = this.getDecoderByKey(this._oScanModel.getProperty("/decoderKey"));
-                var sResultText = oDecoder.decoder(result) || result.text;
+                    sResultText = oDecoder.decoder(result) || result.text;
+                    sResultText = this._removePrefix(sResultText);
 
-                this._oScanModel.setProperty("/valueMaterialNo", sResultText);
+                this._oScanModel.setProperty("/valueManuallyNo", sResultText);
                 this._oScanModel.setProperty("/valueScan", sResultText);
                 this._oScanModel.setProperty("/okButton", true);
                 
-                if (this.getEditMode() === false) {
+                if (this.getEditMode() === true) {                    
+                    var check = this._validateOkPressed();
 
-                    this.fireValueScanned({
-                            valueScan:       sResultText,
-                            valueMaterialNo: sResultText
-                    });
-
-                    this._getScanDialog().close();
-                } else {
-                    MessageToast.show(sResultText);
+                    if (check) {
+                        this._getScanDialog().close()
+    
+                        this.fireValueScanned({
+                            valueScan:       that._oScanModel.getProperty("/valueScan"),
+                            valueManuallyNo: that._oScanModel.getProperty("/valueManuallyNo"),
+                            iScanModusAktiv: 2
+                        });
+                    } else {
+                        MessageToast.show(sResultText);
+                    } 
                 }
             }
 
@@ -581,7 +590,7 @@ sap.ui.define([
 		// --------------------------------------------------------------------------------------------------------------------
 
         _showInputDialog: function () {
-            this._oScanModel.setProperty("/scanMode", "Input");
+            this.sScanMode = "Input";
             this._openDialog(this._getInputDialog());
         },
 
@@ -596,6 +605,7 @@ sap.ui.define([
 
             // ---- Set the Main Model
 			this.oModel = this.getModel();
+            this.sScanMode = "Input";
 
             return this._oID;
         },
@@ -856,7 +866,7 @@ sap.ui.define([
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
-                var sScanMode = this._oScanModel.getProperty("/scanMode");
+                var sScanMode = that.sScanMode;
                 var controlF1 = sap.ui.getCore().byId("__scanner0--idButtonOk_STORE_WE_QS");
                 var controlF2 = sap.ui.getCore().byId("__scanner0--idButtonScanOk_STORE_WE_QS");
 
@@ -907,11 +917,11 @@ sap.ui.define([
 		// --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function () {
-            var sScanMode = this._oScanModel.getProperty("/scanMode");
-
-            if (sScanMode === "Input") {
-                setTimeout(() => sap.ui.getCore().byId("__scanner0--idScannedDialog").focus({ preventScroll: true, focusVisible: true }));
-            } else if (sScanMode === "Scanner") {
+            if (this.sScanMode === "Input") {
+                if (sap.ui.getCore().byId("__scanner0--idScannedDialog") !== null && sap.ui.getCore().byId("__scanner0--idScannedDialog") !== undefined) {
+                    setTimeout(() => sap.ui.getCore().byId("__scanner0--idScannedDialog").focus({ preventScroll: true, focusVisible: true }));
+                }
+            } else if (this.sScanMode === "Scanner") {
                 if (sap.ui.getCore().byId("__scanner0--idScannedInput") !== null && sap.ui.getCore().byId("__scanner0--idScannedInput") !== undefined) {
                     setTimeout(() => sap.ui.getCore().byId("__scanner0--idScannedInput").focus({ preventScroll: true, focusVisible: true }));
                 }
@@ -991,14 +1001,13 @@ sap.ui.define([
         _resetInputs: function () {
             // ---- Reset the Scan Model Properties
             this._oScanModel.setProperty("/valueScan", "");
-            this._oScanModel.setProperty("/valueMaterialNo", "");
+            this._oScanModel.setProperty("/valueManuallyNo", "");
             this._oScanModel.setProperty("/okButton", false);
-            this._oScanModel.setProperty("/scanMode", "");
             this._oScanModel.setProperty("/iScanModusAktiv", 0);
         },
     
         _validateInputs: function () {
-            var mNumber     = this._oScanModel.getProperty("/valueMaterialNo");
+            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo");
             var mScanNumber = this._oScanModel.getProperty("/valueScan");
 
             if (mNumber !== null && mNumber !== undefined && mNumber !== "") {                    
@@ -1011,7 +1020,7 @@ sap.ui.define([
         },
     
         _validateOkPressed: function () {
-            var mNumber     = this._oScanModel.getProperty("/valueMaterialNo");
+            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo");
             var mScanNumber = this._oScanModel.getProperty("/valueScan");
 
             if (mNumber !== null && mNumber !== undefined && mNumber !== "") {

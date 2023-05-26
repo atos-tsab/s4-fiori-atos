@@ -2,8 +2,7 @@
     xmlns:mvc="sap.ui.core.mvc"
 	xmlns:card="sap.f.cards"
  	xmlns:core="sap.ui.core"
-	xmlns:u="sap.ui.unified" 
-	xmlns:l="sap.ui.layout" 
+	xmlns:ui="sap.ui.table" 
     displayBlock="true"
 	xmlns:f="sap.f"
     xmlns="sap.m">
@@ -23,7 +22,7 @@
 							<f:GridContainerItemLayoutData columns="4" />
 						</f:layoutData>
 						<f:header>
-							<card:Header title="{i18n>Capture}" />
+							<card:Header title="{ScanModel>/captionList}" />
 						</f:header>
 						<f:content>
 
@@ -42,23 +41,38 @@
 
 								<!-- ============================================================================================================================== -->
 
-								<HBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewQueue}">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewHu}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>IdQueue}{i18n>Colon}" width="90px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Queue" value="{ScanModel>/valueMaterialNo}" width="160px" class="atosMInputBaseDisabled" />
+										<Label text="{ScanModel>/captionTable}{i18n>Colon}" width="{ScanModel>/lblWidth}" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" width="160px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Queue')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+												press="onScanHu('Handling')" width="auto" class="sapUiTinyMarginBegin" />
 									</HBox>
 								</HBox>
 
-								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewLocation}">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>SslQueue}{i18n>Colon}" width="180px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{ScanModel>/captionTable}{i18n>Colon}" width="{ScanModel>/lblWidth}" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_Material" value="{ScanModel>/valueManuallyNo}" width="160px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScanHu('Material')" width="auto" class="sapUiTinyMarginBegin" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<VBox justifyContent="Start" wrap="Wrap" visible="true">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<OverflowToolbar width="800px" class="sapUiSmallMarginBegin">
+											<Label text="{i18n>Toolbar}{i18n>Colon}" />
+											<ToolbarSpacer/>
+											<Button press="onHandleLocation($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
+											<ToolbarSeparator />
+											<Button press="onHandleLocation($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
+										</OverflowToolbar>
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Input id="idInput_SourceStorage" value="{ScanModel>/valueMaterialNo}" width="240px" class="atosMInputBaseDisabled sapUiLargeMarginBegin" />
-										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Location')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableLocation" type="XML" />
 									</HBox>
 								</VBox>
 							</VBox>
