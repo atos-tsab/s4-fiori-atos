@@ -45,7 +45,8 @@
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>HandlingUnit}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" width="156px" class="atosMInputBaseDisabled" />
+										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="156px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('Handling')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
