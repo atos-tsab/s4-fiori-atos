@@ -247,7 +247,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                    tools.alertMe(rData.SapMessageText, "");
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus("idInput_Material");
@@ -376,7 +377,7 @@ sap.ui.define([
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
                                 }
                             }
 
@@ -446,7 +447,7 @@ sap.ui.define([
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
                                 }
                             }
 
