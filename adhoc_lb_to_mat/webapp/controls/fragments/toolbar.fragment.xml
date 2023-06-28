@@ -9,6 +9,6 @@
 
         <Button press="onResetScan"       tooltip="{i18n>resetScan}" icon="sap-icon://reset"    visible="{= !${scanModel>/settings} }" />
         <Button press="onSettingsPopover" tooltip="{i18n>settings}"  icon="sap-icon://settings" visible="{= ${scanModel>/settings} }" />
-     </Toolbar>
+    </Toolbar>
     
 </core:FragmentDefinition>

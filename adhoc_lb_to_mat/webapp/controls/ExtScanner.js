@@ -498,12 +498,9 @@ sap.ui.define([
         },
 
         _redefineTitles: function () {
-            var titleStorage   = this.getResourceBundle().getText("TitleInputDialogStorage");
-            var titleMaterial  = this.getResourceBundle().getText("TitleInputDialogMaterial");
-            var titleLoc       = this.getResourceBundle().getText("TitleInputDialogLoc");
-            var defaultStorage = this.getResourceBundle().getText("DefaultStorageLocation");
+            var titleMaterial = this.getResourceBundle().getText("TitleInputDialogMaterial");
+            var titleLoc      = this.getResourceBundle().getText("TitleInputDialogLoc");
 
-            var lblStorage  = this.getResourceBundle().getText("StorageLocation");
             var lblMaterial = this.getResourceBundle().getText("Material");
             var lblLoc      = this.getResourceBundle().getText("DestStorageLocation");
             
@@ -513,17 +510,15 @@ sap.ui.define([
             if (this.sScanView === "Material") {
                 this._oScanModel.setProperty("/titleDialog", titleMaterial);
                 this._oScanModel.setProperty("/labelDialog", lblMaterial);
-            } else if (this.sScanView === "Storage") {
-                this._oScanModel.setProperty("/titleDialog", titleStorage);
-                this._oScanModel.setProperty("/labelDialog", lblStorage);
-                this._oScanModel.setProperty("/valueManuallyNo", defaultStorage);
             } else if (this.sScanView === "Location") {
                 this._oScanModel.setProperty("/titleDialog", titleLoc);
                 this._oScanModel.setProperty("/labelDialog", lblLoc);
             } else {
-                this._oScanModel.setProperty("/titleDialog", titleStorage);
-                this._oScanModel.setProperty("/labelDialog", lblStorage);
+                this._oScanModel.setProperty("/titleDialog", titleMaterial);
+                this._oScanModel.setProperty("/labelDialog", lblMaterial);
             }
+
+            this._oScanModel.refresh();
         },
 
         _onAfterOpen: function () {
