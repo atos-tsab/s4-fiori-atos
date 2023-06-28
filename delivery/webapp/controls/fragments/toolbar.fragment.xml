@@ -1,0 +1,14 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+     xmlns="sap.m">
+
+     <Toolbar>
+          <Input id="idScannedInput" change="onScanInputChanged" value="{scanModel>/valueScan}" placeholder="{i18n>scannedValue}" width="100%" />
+
+          <ToolbarSpacer />
+
+          <Button press="onResetScan"       tooltip="{i18n>resetScan}" icon="sap-icon://reset"    visible="{= !${scanModel>/settings} }" />
+          <Button press="onSettingsPopover" tooltip="{i18n>settings}"  icon="sap-icon://settings" visible="{= ${scanModel>/settings} }" />
+     </Toolbar>
+    
+</core:FragmentDefinition>

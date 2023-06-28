@@ -32,7 +32,7 @@ server:
         backend:
           - path: /sap
             url: http://bpw-s4d.bpw.internal:8000
-            client: '100'
+            client: '501'
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:
