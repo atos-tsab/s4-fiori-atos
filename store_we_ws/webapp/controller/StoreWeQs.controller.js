@@ -94,6 +94,7 @@
                 "showErrText":       "",
                 "showInspectionLot": false,
                 "viewHU":            true,
+                "viewQuantity":      false,
                 "viewLocConf":       false,
                 "viewLoc":           false,
                 "valueManuallyNo":   ""
@@ -165,14 +166,7 @@
             }
         },
 
-        onPressOk: function (sViewMode) {
-            if (sViewMode !== null && sViewMode !== undefined && sViewMode !== "") {
-                this.sViewMode = sViewMode;
-            } else {
-                this.sViewMode = this.oScanModel.getProperty("/viewMode");
-            }
-
-            // ---- Change the Scan Model
+        onPressOk: function () {
             this._onOkClicked();
         },
 
@@ -181,34 +175,38 @@
         },
 
 		_onOkClicked: function () {
-            var iCnt = parseInt(this.getResourceBundle().getText("CountOkInput"), 10);
             var oScanModel = this.oScanModel;
 
             if (oScanModel !== null && oScanModel !== undefined) {
                 if (oScanModel.getData() !== null && oScanModel.getData() !== undefined) {
                     var oScanData  = oScanModel.getData();
                     var sManNumber = oScanData.valueManuallyNo;
+
+                    this.sViewMode = oScanData.viewMode;
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oScanData.valueManuallyNo.trim();
+                        sManNumber = sManNumber.toUpperCase();
                         sManNumber = this._removePrefix(sManNumber);
+                        
+                        this.iHU = sManNumber;
+                        this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     } else {
                         sManNumber = "";
                     }
 
-                    var oResult = {
-                        "sView":     this.sViewMode,
-                        "material":  sManNumber
-                    };
-
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Handling") {
-                        this.loadHuData(oResult, this.sViewMode);
+                        this._loadHuData(sManNumber);
+                    } else if (this.sViewMode === "Quantity") {
+                        this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
-                        this.loadStorageBinData(oResult, this.sViewMode);
+                        if (sManNumber !== "") {
+                            this._loadStorageBinData(sManNumber);
+                        }
                     } else if (this.sViewMode === "LocConf") {
-                        this.loadStorageBinData(oResult, this.sViewMode);
+                        this._handleLocConfData(sManNumber);
                     }
                 }    
             }
@@ -235,47 +233,52 @@
                     "BookConfirm":           true,
                     "BookMoveHu":            true,
                     "WarehouseTaskType":     "H",
+                    "TargetQuantity":        oData.Quantity,
                     "DestinationStorageBin": oData.Book2StorageBin
                 };
 
                 // ---- Create new Warehouse Task
-                this.oModel.create(sPath, urlData, {
-                    error: function(oError, resp) {
-                        tools.handleODataRequestFailed(oError, resp, true);
+                var oModel = this._getServiceUrl()[0];
+                    oModel.create(sPath, urlData, {
+                        error: function(oError, resp) {
+                            tools.handleODataRequestFailed(oError, resp, true);
 
-                        that._resetByLocation();
-                    },
-                    success: function(rData, oResponse) {
-                        // ---- Check for complete final booking
-                        if (rData !== null && rData !== undefined && rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
+                            that._resetQuantity();
+                            that.oScanModel.setProperty("/refresh", true);
+                        },
+                        success: function(rData, oResponse) {
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    tools.alertMe(rData.SapMessageText, "");
+                                    
+                                    that._resetAll();
+                                    that._setFocus("idInput_HU");
+    
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
+                            }
                             
-                            that._resetAll();
-                            that._setFocus("idInput_HU");
+                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
+                                parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
-                            return;
-                        } else if (rData !== null && rData !== undefined && rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+                                // ---- Do nothing -> Good case
+                                setTimeout(function () {
+                                    that._resetAll();
+                    
+                                    // ---- Set Focus to main Input field
+                                    that._setFocus("idInput_HU");
+                                }, tSTime);            
+                            } else {
+                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                            }
                         }
-                        
-                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
-                            parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
-                            that.oScanModel.setProperty("/showOk", true);
-                            that.oScanModel.setProperty("/showOkText", sOkMesg);       
-
-                            // ---- Do nothing -> Good case
-                            setTimeout(function () {
-                                that._resetAll();
-                
-                                // ---- Set Focus to main Input field
-                                that._setFocus("idInput_HU");
-                            }, tSTime);            
-                        } else {
-                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
-                        }
-                    }
-                });
+                    });
             } else {
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -293,8 +296,11 @@
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
                 var oData = this.oDisplayModel.getData();
                     oData.to_WarehouseTask.BookConfirm = true;
+                    oData.to_WarehouseTask.BookMoveHu  = true;
+                    oData.to_WarehouseTask.HandlingUnitId         = oData.HandlingUnitId;
                     oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
                     oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
+                    oData.to_WarehouseTask.TargetQuantity         = oData.Quantity;
                     oData.to_WarehouseTask.WarehouseTaskType      = "H";
 
                 var sWarehouseNumber = oData.to_WarehouseTask.WarehouseNumber;
@@ -303,42 +309,46 @@
                 var sPath = "/WarehouseTask(WarehouseNumber='" + sWarehouseNumber + "',WarehouseTaskId='" + sWarehouseTask + "')";
 
                 // ---- Update an existing Warehouse Task
-                this.oModel.update(sPath, oData.to_WarehouseTask, {
-                    error: function(oError, resp) {
-                        tools.handleODataRequestFailed(oError, resp, true);
-
-                        that._resetByLocation();
-                    },
-                    success: function(rData, oResponse) {
-                        // ---- Check for complete final booking
-                        if (rData !== null && rData !== undefined && rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
+                var oModel = this._getServiceUrl()[0];
+                    oModel.update(sPath, oData.to_WarehouseTask, {
+                        error: function(oError, resp) {
+                            tools.handleODataRequestFailed(oError, resp, true);
                             
-                            that._resetAll();
-                            that._setFocus("idInput_HU");
+                            that._resetQuantity();
+                            that.oScanModel.setProperty("/refresh", true);
+                        },
+                        success: function(rData, oResponse) {
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    tools.alertMe(rData.SapMessageText, "");
+                                    
+                                    that._resetAll();
+                                    that._setFocus("idInput_HU");
+    
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
+                            }
 
-                            return;
-                        } else if (rData !== null && rData !== undefined && rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                                // ---- Do nothing -> Good case
+                                setTimeout(function () {
+                                    that._resetAll();
+                    
+                                    // ---- Set Focus to main Input field
+                                    that._setFocus("idInput_HU");
+                                }, tSTime);            
+                            } else {
+                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                            }
                         }
-
-                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
-                            that.oScanModel.setProperty("/showOk", true);
-                            that.oScanModel.setProperty("/showOkText", sOkMesg);       
-
-                            // ---- Do nothing -> Good case
-                            setTimeout(function () {
-                                that._resetAll();
-                
-                                // ---- Set Focus to main Input field
-                                that._setFocus("idInput_HU");
-                            }, tSTime);            
-                        } else {
-                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
-                        }
-                    }
-                });
+                    });
             } else {
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -361,34 +371,34 @@
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
-			this.oModel.read(sPath, {
-				error: function(oError, resp) {
-                    tools.handleODataRequestFailed(oError, resp, true);
-				},
-				success: function(rData, response) {
-                    // ---- Check for complete final booking
-                    if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                        tools.alertMe(rData.SapMessageText, "");
-                    } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                        // ---- Coding in case of showing Business application Errors
-                        tools.showMessageError(rData.SapMessageText, "");
-                    } else if (rData.SapMessageType === "I") {
-                        // ---- Coding in case of showing Business application Informations
-                        tools.alertMe(rData.SapMessageText, "");
-                    }
+            var oModel = this._getServiceUrl()[0];
+			    oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        // ---- Check for complete final booking
+                        if (rData !== null && rData !== undefined) {
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                tools.showMessageError(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+                        }
 
-					if (rData !== null && rData !== undefined && rData !== "") {
-                        that.sWN = rData.ParameterValue;
+                        if (rData !== null && rData !== undefined && rData !== "") {
+                            that.sWN = rData.ParameterValue;
+                        }
                     }
-				}
-			});
+                });
         },
 
-	    loadHuData: function (oResult, sViewMode) {
+	    _loadHuData: function (sManNumber) {
             var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
             var that = this;
 
-            this.iHU = oResult.material;
+            this.iHU = sManNumber;
 
             // ---- Check for Warehouse Number
             if (this.sWN === "") {
@@ -409,20 +419,20 @@
                         "$expand": "to_WarehouseTask"
                     },
                     success: function(rData, response) {
-                        // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
-                            
-                            that._resetAll();
-                            that._setFocus("idInput_HU");
-
-                            return;
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
-                        }
-
                         if (rData !== null && rData !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                tools.alertMe(rData.SapMessageText, "");
+                                
+                                that._resetAll();
+                                that._setFocus("idInput_HU");
+
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+
                             // ---- Check for QS relevant HU
                             if (rData.InspectionLot !== "" && rData.InspectionType !== "") {
                                 that.QsRelevantHU = true;
@@ -431,7 +441,7 @@
                             }
 
                             that.StatusOpenWarehouseTask = rData.StatusOpenWarehouseTask;
-                            that._setHuData(rData, sViewMode);
+                            that._setHuData(rData, sManNumber);
                         } else {
                             var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
 
@@ -441,16 +451,16 @@
                 });
         },
 
-		_setHuData: function (oData, sViewMode) {
-            // ---- Set the Data for the Model and set the Model to the View
-            var oDisplayModel = this.oDisplayModel;
-                oDisplayModel.setData(oData);
-                
+	    _setHuData: function (oData, sManNumber) {
+           // ---- Reset the Display Model
+            this.oDisplayModel.setData({});
+            this.oDisplayModel.setData(oData);
+            
             if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
                 var sStorageBin = oData.to_WarehouseTask.DestinationStorageBin;
 
                 if (sStorageBin !== null && sStorageBin !== undefined && sStorageBin !== "") {
-                    this.oDisplayModel.setProperty("/Book2StorageBin", oData.to_WarehouseTask.DestinationStorageBin);
+                    this.oDisplayModel.setProperty("/Book2StorageBin",  oData.to_WarehouseTask.DestinationStorageBin);
                     this.oDisplayModel.setProperty("/Book2StorageType", oData.to_WarehouseTask.DestinationStorageType);
 
                     this.StorageBinDoubleScan = false;
@@ -462,11 +472,11 @@
             }
 
             // ---- Change the Scan Model
-            this._changeScanModel(sViewMode);
+            this._handleHuData(sManNumber);
         },
 
-	    loadStorageBinData: function (oResult, sViewMode) {
-            this.sStorageBin = oResult.material;
+	    _loadStorageBinData: function (sManNumber) {
+            this.sStorageBin = sManNumber.toUpperCase();
 
             var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
             var sErrMsg = this.getResourceBundle().getText("StorageBinErr", this.sStorageBin);
@@ -493,14 +503,16 @@
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
                             // ---- Check for complete final booking
-                            if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                                tools.alertMe(rData.SapMessageText, "");
-                            } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                                // ---- Coding in case of showing Business application Errors
-                                tools.showMessageError(rData.SapMessageText, "");
-                            } else if (rData.SapMessageType === "I") {
-                                // ---- Coding in case of showing Business application Informations
-                                tools.showMessageError(rData.SapMessageText, "");
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
                             }
 
                             if (rData.results.length > 0) {
@@ -515,62 +527,49 @@
                                             }
                                         }
                             
-                                        that._setStorageBinData(data, sViewMode);
+                                        that._setStorageBinData(data);
                                     }
                                 }
                             } else {
-                                tools.alertMe(sErrMsg, "");
+                               tools.alertMe(sErrMsg, "");
                             }
                         }
                     }
                 });
         },
 
-		_setStorageBinData: function (oData, sViewMode) {
+		_setStorageBinData: function (oData) {
+            var oDisplayData = this.oDisplayModel.getData();
+
             // ---- Set the Data for the Model and set the Model to the View
-            if (sViewMode === "Location") {
-                this.oDisplayModel.setProperty("/Book2StorageBin", oData.StorageBinID);
-                this.oDisplayModel.setProperty("/Book2StorageType", oData.StorageType);
-            } else if (sViewMode === "LocConf") {
-                this.oDisplayModel.setProperty("/Book2StorageBinVerify", oData.StorageBinID);
+            if (this.sViewMode === "Location") {
+                oDisplayData.Book2StorageBin  = oData.StorageBinID;
+                oDisplayData.Book2StorageType = oData.StorageType;
+
+                this.oScanModel.setProperty("/viewLoc", false);
+                this.oScanModel.setProperty("/viewMode", "LocConf");
+                this.oScanModel.setProperty("/viewLocConf", true);
+                this.oScanModel.setProperty("/valueManuallyNo", "");              
             }
 
-            // ---- Change the Scan Model
-            this._changeScanModel(sViewMode);
+            this.oDisplayModel.setData(oDisplayData);
+
+            // ---- Set Focus to default Input field
+            this._setFocus("idInput_LocConf");
         },
 
-		// --------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
-		_changeScanModel: function(sViewMode) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking");
+		_handleHuData: function (sManNumber) {
+            var sErrMesg = this.getResourceBundle().getText("ErrorHuScan", sManNumber);
             var sTitle1  = this.getResourceBundle().getText("title1");
             var sTitle2  = this.getResourceBundle().getText("title2");
-            var oDisplayData = this.oDisplayModel.getData();
-            var check = false;
-            var id    = "";
-            var that  = this;
-
-            // ---- Change the Scan Model
-            var oData = {
-                "viewMode":          "",
-                "viewTitle":         sTitle1,
-                "booking":           false,
-                "refresh":           true,
-                "ok":                true,
-                "showOk":            false,
-                "showErr":           false,
-                "showOkText":        "",
-                "showErrText":       "",
-                "showInspectionLot": false,
-                "viewHU":            false,
-                "viewLocConf":       false,
-                "viewLoc":           false
-            };
-
-            if (sViewMode === "LocConf") {
-                if (oDisplayData.Book2StorageBin === oDisplayData.Book2StorageBinVerify) {
-                    check = true;
-                }
+            var id    = "idInput_Quantity";
+            var oData = this.oDisplayModel.getData();
+                oData.viewTitle = sTitle1;
+ 
+            if (oData !== null && oData !== undefined && this.sViewMode === "Handling") {
+                oData.HandlingUnitId = sManNumber;
             }
 
             if (this.QsRelevantHU) {
@@ -578,71 +577,124 @@
                 oData.viewTitle         = sTitle2;
             }
 
-            switch (sViewMode) {
-                case "Handling":
-                    if (this.QsRelevantHU) { 
-                        if (this.StorageBinDoubleScan) {
-                            id = "idInput_Location";
-                            oData.viewMode = "Location";
-                            oData.viewLoc  = true;
-                        } else {
-                            id = "idInput_LocConf";
-                            oData.viewMode    = "LocConf";
-                            oData.refresh     = false;
-                            oData.viewLocConf = true;
-                        }
-                    } else {
-                        if (this.StorageBinDoubleScan) {
-                            id = "idInput_Location";
-                            oData.viewMode = "Location";
-                            oData.viewLoc  = true;
-                        } else {
-                            id = "idInput_LocConf";
-                            oData.viewMode    = "LocConf";
-                            oData.refresh     = false;
-                            oData.viewLocConf = true;
-                        }
-                    }
+            if (this.iHU !== sManNumber && this.sScanView === "Handling") {
+                this.oScanModel.setProperty("/showErr", true);
+                this.oScanModel.setProperty("/showErrText", sErrMesg);
+                this.oScanModel.setProperty("/valueManuallyNo", "");
+            } else {
+                this.oScanModel.setProperty("/showErr", false);
+                this.oScanModel.setProperty("/showErrText", "");
+                this.oScanModel.setProperty("/valueManuallyNo", "");
 
-                    break;
-                case "Location":
-                    id = "idInput_LocConf";
-                    oData.viewMode    = "LocConf";
-                    oData.refresh     = false;
-                    oData.viewLocConf = true;
+                // ---- Get the Data for all not empty values
+                if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
+                    if (this.sViewMode === "Handling") {
+                        this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
 
-                    break;
-                case "LocConf":
-                    if (check) {
-                        id = "idButtonBook_STORE_WE_QS";
-                        oData.viewMode = "Handling";
-                        oData.booking  = true;
-                        oData.refresh  = false;
-                        oData.ok       = false;
-                    } else {
-                        id = "idInput_Location";
-                        oData.viewMode    = "Location";
-                        oData.viewLoc     = true;
-                        oData.showErr     = true;
-                        oData.showErrText = sErrMesg;
+                        this.oScanModel.setProperty("/viewMat", false);
+                        this.oScanModel.setProperty("/viewMode", "Quantity");
+                        this.oScanModel.setProperty("/viewQuantity", true);
+                        this.oScanModel.setProperty("/viewHU", false);
                     }
-                    
-                    break;
-                default:
-                    id = "idInput_HU";
-                    oData.viewMode = "Handling";
-                    oData.viewHU   = true;
-                    break;
+                }
             }
 
-            this.oScanModel.setData(oData);
-
-            this.byId(id).focus();
-
-            setTimeout(function () {
-                that.byId(id).focus();
-            }, 300);            
+            // ---- Set Focus to main Input field
+            this._setFocus(id);
 		},
+
+		_handleQuantityData: function () {
+            var iQuantity = parseInt(this.oDisplayModel.getProperty("/Quantity"), 10);
+
+            this.oScanModel.setProperty("/showErr", false);
+            this.oScanModel.setProperty("/showErrText", "");
+
+            if (this.oScanModel.getProperty("/valueManuallyNo") !== "") {
+                var iActualQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
+                
+                if (iActualQuantity !== iQuantity) {
+                    this.ActualQuantity = this.oScanModel.getProperty("/valueManuallyNo");
+
+                    this.onQuantityScanOpen();
+                } else if (iActualQuantity === iQuantity) {
+                    this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+               
+                    // ---- Set Focus to default Input field
+                    this.oScanModel.setProperty("/valueManuallyNo", "");
+                    this._setFocus("idInput_Quantity");
+                }
+            } else {
+                this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+            }
+           
+            // ---- Set Focus to default Input field
+            this.oScanModel.setProperty("/valueManuallyNo", "");
+            this._setFocus("idInput_Quantity");
+            this._resetQuantity();
+		},
+
+		_handleFeedbackData: function () {
+            this.oScanModel.setProperty("/showOk", false);
+            this.oScanModel.setProperty("/showOkText", "");
+            this.oScanModel.setProperty("/showErr", false);
+            this.oScanModel.setProperty("/showErrText", "");
+
+            this.oScanModel.setProperty("/showFeedback", false);
+            this.oScanModel.setProperty("/showBooking", true);
+            this.oScanModel.setProperty("/feedback", false);
+            this.oScanModel.setProperty("/booking", false);
+            this.oScanModel.setProperty("/ok", true);
+
+            this.oScanModel.setProperty("/viewHU", false);
+            this.oScanModel.setProperty("/viewQuantity", false);
+            this.oScanModel.setProperty("/viewMode", "Location");
+            this.oScanModel.setProperty("/viewLoc", true);
+            this.oScanModel.setProperty("/valueManuallyNo", "");
+
+            // ---- Set Focus to default Input field
+            this._setFocus("idInput_Location");
+        },
+
+        _handleLocConfData: function (sManNumber) {
+            var sErrMesg     = this.getResourceBundle().getText("ErrorBooking");
+            var oDisplayData = this.oDisplayModel.getData();
+            var check = false;
+            var id    = "idInput_HU";
+
+            if (oDisplayData.Book2StorageBin === sManNumber.toUpperCase()) {
+                this.oDisplayModel.setProperty("/Book2StorageBinVerify", sManNumber.toUpperCase());
+
+                check = true;
+            }
+
+            this.oScanModel.setProperty("/showErr", false);
+            this.oScanModel.setProperty("/showErrText", "");
+
+            if (check) {
+                id = "idButtonBookStorage";
+
+                this.oScanModel.setProperty("/viewMode", "Handling");
+                this.oScanModel.setProperty("/viewLocConf", false);
+                this.oScanModel.setProperty("/booking", true);
+                this.oScanModel.setProperty("/refresh", false);
+                this.oScanModel.setProperty("/ok", false);
+                this.oScanModel.setProperty("/valueManuallyNo", "");
+            } else {
+                id = "idInput_Location";
+
+                this.oScanModel.setProperty("/viewMode", "Location");
+                this.oScanModel.setProperty("/viewLoc", true);
+                this.oScanModel.setProperty("/viewLocConf", false);
+                this.oScanModel.setProperty("/showErr", true);
+                this.oScanModel.setProperty("/showErrText", sErrMesg);
+                this.oScanModel.setProperty("/valueManuallyNo", "");
+            }
+    
+            // ---- Set Focus to default Input field
+            this._setFocus(id);
+        },
+
+		// --------------------------------------------------------------------------------------------------------------------
 
         _showBookingError: function () {
             var sErrMesg   = this.getResourceBundle().getText("ErrorBooking");
@@ -656,24 +708,116 @@
             this.oScanModel.refresh();
         },
 
+        onInputChanged: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
+
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                       this.oScanModel.setProperty("/valueManuallyNo", "");
+                    }
+                }
+
+                this._onOkClicked();
+            }
+        },
+
+        onInputLiveChange: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
+
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                        this.oScanModel.setProperty("/valueManuallyNo", "");
+                    }
+                }
+            }
+        },
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Dialog Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		onQuantityScanOpen: function () {
+			var fragmentFile = _fragmentPath + "DialogQuantityScan";
+			var oView = this.getView();
+			var that = this;
+			
+            // ---- Starts the Bookung Dialog for Handling Units
+			if (!this.getView().dialogQuantityScan) {
+				sap.ui.core.Fragment.load({
+					id: oView.getId(),
+					name: fragmentFile,
+					controller: this
+				}).then(function (oDialog) {
+					oView.addDependent(oDialog);
+					oView.dialogQuantityScan = oDialog;
+					oView.dialogQuantityScan.addStyleClass(that.getOwnerComponent().getContentDensityClass());
+                    oView.dialogQuantityScan.open();
+				});
+			} else {
+                oView.dialogQuantityScan.open();
+            }
+ 		},
+
+        onQuantityScanClose: function () {
+            if (this.getView().dialogQuantityScan) {
+				this.getView().dialogQuantityScan.close();
+			}
+
+            this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+            this._resetQuantity();
+        },
+
+		onQuantityScanAfterClose: function () {
+            this._setFocus("idInput_HU");
+		},
+
+		onQuantityScanSave: function () {
+			if (this.getView().dialogQuantityScan) {
+				this.getView().dialogQuantityScan.close();
+			}
+
+            this.oDisplayModel.setProperty("/Quantity", this.ActualQuantity);
+            this._resetQuantity();
+		},
+
 
 		// --------------------------------------------------------------------------------------------------------------------
 		// ---- QR/Bar Code Ext Scanner Event Handlers
 		// --------------------------------------------------------------------------------------------------------------------
 
 		onScanned: function (oEvent) {
+            var oScanModel = this.oScanModel;
+
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameter("valueManuallyNo") !== null && oEvent.getParameter("valueManuallyNo") !== undefined) {
                     var sManNumber  = oEvent.getParameter("valueManuallyNo");
                     var sScanNumber = oEvent.getParameter("valueScan");
                     
+                    this.sViewMode = oScanModel.getData().viewMode;
+
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oEvent.getParameter("valueManuallyNo").trim()
+                        sManNumber = sManNumber.toUpperCase();
 
-                        this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
+                        oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     }
+
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
+                        sScanNumber = sManNumber.toUpperCase();
                         
                         // ---- Check for Data Matix Code
                         var check = tools.checkForDataMatrixArray(sScanNumber);
@@ -682,23 +826,22 @@
                             var sScanNumber = check[1];
                         }
 
-                        this.oScanModel.setProperty("/valueManuallyNo", sScanNumber);
+                        oScanModel.setProperty("/valueManuallyNo", sScanNumber);
+                        sManNumber = sScanNumber;
                     }
 
-                    var oResult = {
-                        "sView":     this.sViewMode,
-                        "material":  sManNumber,
-                        "scanValue": sScanNumber
-                    };
-                    
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Handling") {
-                        this.loadHuData(oResult, this.sViewMode);
+                        this._loadHuData(sManNumber);
+                    } else if (this.sViewMode === "Quantity") {
+                        this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
-                        this.loadStorageBinData(oResult, this.sViewMode);
+                        if (sManNumber !== "") {
+                            this._loadStorageBinData(sManNumber);
+                        }
                     } else if (this.sViewMode === "LocConf") {
-                        this.loadStorageBinData(oResult, this.sViewMode);
+                        this._handleLocConfData(sManNumber);
                     }
                 }    
             }
@@ -870,16 +1013,20 @@
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
+                var controlF2 = that.byId("idInput_HU");
+
                 // ---- Now call the actual event/method for the keyboard keypress
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
 
                         if (that.iScanModusAktiv < 2) {
-                            that.onPressOk(that.sViewMode);
+                            that.onPressOk();
                         } else {
                             that.iScanModusAktiv = 0;
                         }
+
+                        evt.keyCode = null;
 
                         break;			                
                     case 112: // ---- F1 Key
@@ -893,10 +1040,14 @@
 						break;			                
                     case 113: // ---- F2 Key
                         evt.preventDefault();
-    
+
                         if (that.iScanModusAktiv < 2) {
-                            that.onPressOk(that.sViewMode);
+                            if (controlF2 && controlF2.getEnabled()) {
+                                controlF2.fireChange();
+                            }
                         }
+
+                        evt.keyCode = null;
                         
                         break;			                
                     case 114: // ---- F3 Key
@@ -919,11 +1070,15 @@
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-        _setFocus: function () {
-            if (sap.ui.getCore().byId("idInput_HU") !== null && sap.ui.getCore().byId("idInput_HU") !== undefined) {
-                setTimeout(() => sap.ui.getCore().byId("idInput_HU").focus({ preventScroll: true, focusVisible: true }));
+        _setFocus: function (id) {
+            var that = this;
+
+            if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
+                setTimeout(() => sap.ui.getCore().byId(id).focus({ preventScroll: true, focusVisible: true }));
+            } else if (this.byId(id) !== null && this.byId(id) !== undefined) {
+                setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
-         },
+        },
 
          _removePrefix: function (key) {
             let str = key;
@@ -943,18 +1098,16 @@
             return str;
         },
 
-        _resetByLocation: function () {
-            if (this.StorageBinDoubleScan) {
-                this.oScanModel.setProperty("/viewMode", "Location");
-                this.oScanModel.setProperty("/refresh", true);
-                this.oScanModel.setProperty("/ok", true);
-                this.oScanModel.setProperty("/booking", false);
-                this.oScanModel.setProperty("/viewLoc", true);
-            } else {
-                this.oScanModel.setProperty("/viewMode", "LocConf");
-                this.oScanModel.setProperty("/refresh", false);
-                this.oScanModel.setProperty("/viewLocConf", true);
-            }
+        _resetQuantity: function () {
+            // ---- Reset the Quantity view
+            this.oScanModel.setProperty("/viewQuantity", false);
+            this.oScanModel.setProperty("/viewMode", "Location");
+            this.oScanModel.setProperty("/viewLoc", false);
+            this.oScanModel.setProperty("/feedback", true);
+            this.oScanModel.setProperty("/ok", false);
+            this.oScanModel.setProperty("/valueManuallyNo", "");
+
+            this._handleFeedbackData();
         },
 
         _resetAll: function () {
@@ -976,6 +1129,7 @@
                 "showErrText":       "",
                 "showInspectionLot": false,
                 "viewHU":            true,
+                "viewQuantity":      false,
                 "viewLocConf":       false,
                 "viewLoc":           false,
                 "valueManuallyNo":   ""

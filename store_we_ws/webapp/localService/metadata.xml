@@ -72,6 +72,9 @@
                 <Property Name="TargetQuantity" Type="Edm.Decimal" Nullable="false" Precision="31" Scale="14" sap:unicode="false" sap:unit="TargetQuantityUOM" sap:label="Target Qty Bs" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="TargetQuantityUOM" Type="Edm.String" Nullable="false" MaxLength="3" sap:unicode="false" sap:label="Base Unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="unit-of-measure"/>
                 <Property Name="ShipmentNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Shipment Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="DeliveryNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="DocumentNo" Type="Edm.String" Nullable="false" MaxLength="35" sap:unicode="false" sap:label="Document Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="GoodsRecipient" Type="Edm.String" Nullable="false" MaxLength="12" sap:unicode="false" sap:label="Goods Recipient" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="GateNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Suppl. 4" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="GateDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="StatusTaskQuit" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
@@ -91,6 +94,7 @@
                 <Property Name="StorageBinID" Type="Edm.String" Nullable="false" MaxLength="18" sap:unicode="false" sap:label="Storage Bin" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="StorageType" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Storage Type" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="EmptyBin" Type="Edm.Boolean" sap:unicode="false" sap:label="Empty Bin" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="HURequirement" Type="Edm.String" MaxLength="1" sap:unicode="false" sap:label="HU Requirement" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
             </EntityType>
             <EntityType Name="UserParameter" sap:content-version="1">
                 <Key>
@@ -106,7 +110,7 @@
                 </Key>
                 <Property Name="PlantId" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Plant" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="PlantDescription" Type="Edm.String" Nullable="false" MaxLength="30" sap:unicode="false" sap:label="Name 1" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-                <Property Name="ValuationArea" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Valuation area" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="ValuationArea" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Valuation Area" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="CustomerNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Customer No Plant" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="SupplierNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Sppl. No. Plnt" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
                 <Property Name="FactoryCalenderId" Type="Edm.String" Nullable="false" MaxLength="2" sap:unicode="false" sap:label="Factory Calend." sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
