@@ -91,9 +91,31 @@
 									</HBox>
 
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>WarehouseSpecial}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{i18n>WarehouseNo}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
 										<TextArea value="{DisplayModel>/WarehouseNumber}" width="20px"  growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
-										<TextArea value="{DisplayModel>/OpenWarehouseTask}"   width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>Quantity} / {i18n>UOM}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Quantity}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+										<TextArea value="{DisplayModel>/UnitOfMeasurement}" width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>WarehouseTask}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/OpenWarehouseTask}"   width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>Material}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Material}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<TextArea value="{DisplayModel>/MaterialDescription}" width="344px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiLargeMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 
@@ -111,24 +133,13 @@
 
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Quantity} / {i18n>UOM}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/Quantity}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
-										<TextArea value="{DisplayModel>/UnitOfMeasurement}" width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+										<Label text="{i18n>DestStorageLocation}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Book2StorageBin}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>DestStoreLocType}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/Book2StorageBin}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
-										<TextArea value="{DisplayModel>/Book2StorageType}" width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
-									</HBox>
-								</HBox>
 
-								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Material}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/Material}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
-									</HBox>
-									<HBox justifyContent="Start" wrap="Wrap">
-										<TextArea value="{DisplayModel>/MaterialDescription}" width="344px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiLargeMarginBegin sapUiMediumMarginEnd" />
+										<Label text="{i18n>DestStorageType}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Book2StorageType}"   width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 							</VBox>

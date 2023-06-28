@@ -250,6 +250,7 @@
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
@@ -380,6 +381,7 @@
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                // ---- Coding in case of showing Business application Errors
                                 tools.showMessageError(rData.SapMessageText, "");
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -422,6 +424,7 @@
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                // ---- Coding in case of showing Business application Errors
                                 tools.alertMe(rData.SapMessageText, "");
                                 
                                 that._resetAll();
@@ -505,13 +508,14 @@
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
-                                    tools.showMessageError(rData.SapMessageText, "");
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.SapMessageText, "");
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
-                                    tools.alertMe(rData.SapMessageText, "");
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
                                 }
                             }
 
@@ -604,6 +608,7 @@
 		},
 
 		_handleQuantityData: function () {
+            var sErrMesg = this.getResourceBundle().getText("OnlySmallQuantities");
             var iQuantity = parseInt(this.oDisplayModel.getProperty("/Quantity"), 10);
 
             this.oScanModel.setProperty("/showErr", false);
@@ -612,7 +617,16 @@
             if (this.oScanModel.getProperty("/valueManuallyNo") !== "") {
                 var iActualQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
                 
-                if (iActualQuantity !== iQuantity) {
+                if (iActualQuantity > iQuantity) {
+                    tools.alertMe(sErrMesg);
+
+                    this.oScanModel.setProperty("/valueManuallyNo", "");
+               
+                    // ---- Set Focus to default Input field
+                    this._setFocus("idInput_Quantity");
+
+                    return;
+                } else if (iActualQuantity < iQuantity) {
                     this.ActualQuantity = this.oScanModel.getProperty("/valueManuallyNo");
 
                     this.onQuantityScanOpen();
