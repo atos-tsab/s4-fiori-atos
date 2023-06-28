@@ -1,1 +1,83 @@
 /* Enter your custom styles here */
+
+.specialToolbarBorder {
+    border-bottom: 0 !important;
+}
+
+.scanner-laser {
+    position: fixed;
+    margin-top: 68px;
+    margin-bottom: 68px;
+    margin-left: 30px;
+    margin-right: 30px;
+    height: 30px;
+    width: 30px;
+}
+
+.laser-leftTop {
+    top: 0;
+    left: 0;
+    border-top: solid greenyellow 5px;
+    border-left: solid greenyellow 5px;
+}
+
+.laser-leftBottom {
+    bottom: 0;
+    left: 0;
+    border-bottom: solid greenyellow 5px;
+    border-left: solid greenyellow 5px;
+}
+
+.laser-rightTop {
+    top: 0;
+    right: 0;
+    border-top: solid greenyellow 5px;
+    border-right: solid greenyellow 5px;
+}
+
+.laser-rightBottom {
+    bottom: 0;
+    right: 0;
+    border-bottom: solid greenyellow 5px;
+    border-right: solid greenyellow 5px;
+}
+
+.customInputInfo {
+    color: greenyellow;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.customContainer {
+    top: 0;
+    right: 0;
+    left: 0;
+    display: contents;
+}
+
+.customVideo {
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    z-index: -1;
+    width: auto;
+    height: auto;
+}
+
+.atosMInputBaseDisabled {
+    opacity: 1 !important;
+}
+
+.size1 {
+    font-size : 1rem;
+}
+
+.atosOkText {
+    color: black !important;
+    font-weight: bold !important;
+}
+
+.atosErrorText {
+    color: red !important;
+    font-weight: bold !important;
+}
