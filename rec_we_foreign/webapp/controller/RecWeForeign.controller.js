@@ -160,45 +160,17 @@ sap.ui.define([
         },
 
         onPressBooking: function () {
-            var oDisplayModel = this.getView().getModel("DisplayModel");
-            var iDocumentNo   = oDisplayModel.getProperty("/DocumentNo");
-            var iDeliveryNo   = oDisplayModel.getProperty("/DeliveryNo");
-            var sOkMesg       = this.getResourceBundle().getText("OkMesBooking", iDeliveryNo);
-            var check = false;
-            var that  = this
+            var iDocumentNo   = this.oDisplayModel.getProperty("/DocumentNo");
 
             if (this.ScanModus === "A") {
-                this.oScanModel.setProperty("/showOk", true);
-                this.oScanModel.setProperty("/showOkText", sOkMesg);
-
                 this.saveBookingData(iDocumentNo);
-
-                check = true;
             } else {
                 if (this.AllBooked) {
-                    this.oScanModel.setProperty("/showOk", true);
-                    this.oScanModel.setProperty("/showOkText", sOkMesg);
-
                     this.saveBookingData(iDocumentNo);
-    
-                    check = true;
                 } else {
                     this.onBookApprovalOpen(iDocumentNo);
-
-                    check = false;
                 }
             }
-
-            if (check) {
-                var tSTime = this.getResourceBundle().getText("ShowTime");
-
-                setTimeout(function () {
-                    that._resetAll();
-
-                    // ---- Set Focus to main Input field
-                    that._setFocus();
-                }, tSTime);            
-            }         
         },
 
         onPressOk: function () {
@@ -217,6 +189,8 @@ sap.ui.define([
                     var oScanData  = oScanModel.getData();
                     var sManNumber = oScanData.valueManuallyNo;
                     
+                    this.sViewMode = oScanData.viewMode;
+
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oScanData.valueManuallyNo.trim();
                         sManNumber = this._removePrefix(sManNumber);
@@ -226,8 +200,7 @@ sap.ui.define([
                         sManNumber = "";
                     }
 
-                    this.sViewMode = oScanData.viewMode;
-                    this.iScanModusAktiv = 1;
+                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Handling") {
                         this._loadHuData(sManNumber);
@@ -295,8 +268,12 @@ sap.ui.define([
         },
 
         saveBookingData: function (iDocumentNo) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", iDocumentNo);
-            var that = this;
+            var iDocumentNo = this.oDisplayModel.getProperty("/DocumentNo");
+            var iDeliveryNo = this.oDisplayModel.getProperty("/DeliveryNo");
+            var sOkMesg     = this.getResourceBundle().getText("OkMesBooking", iDeliveryNo);
+            var sErrMesg    = this.getResourceBundle().getText("ErrorBooking", iDocumentNo);
+            var tSTime = this.getResourceBundle().getText("ShowTime");
+            var that   = this;
 
             if (this.oDeliveryData !== null && this.oDeliveryData !== undefined && iDocumentNo === this.oDeliveryData.DocumentNo) {
                 var sDeliveryNo = this.oDeliveryData.DocumentNo;
@@ -314,8 +291,16 @@ sap.ui.define([
                         },
                         success: function(rData, oResponse) {
                             if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
                                 // ---- Do nothing -> Good case
-                                that._resetAll();
+                                setTimeout(function () {
+                                    that._resetAll();
+                    
+                                    // ---- Set Focus to main Input field
+                                    that._setFocus("idInput_HU");
+                                }, tSTime);            
                             } else {
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
@@ -350,14 +335,14 @@ sap.ui.define([
                     },
                     success: function(rData, response) {
                         // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                            tools.alertMe(rData.SapMessageText, "");
-                        } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                            // ---- Coding in case of showing Business application Errors
-                            tools.showMessageError(rData.SapMessageText, "");
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+                        if (rData !== null && rData !== undefined) {
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                // ---- Coding in case of showing Business application Errors
+                                tools.showMessageError(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
                         }
 
                         if (rData !== null && rData !== undefined && rData !== "") {
@@ -393,20 +378,22 @@ sap.ui.define([
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
-                        // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
-                            
-                            that._resetAll();
-                            that._setFocus();
-
-                            return;
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
-                        }
-
                         if (rData.results !== null && rData.results !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                    
+                                    that._resetAll();
+                                    that._setFocus();
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
                             if (rData.results.length > 0) {
                                 for (let i = 0; i < rData.results.length; i++) {
                                     let data = rData.results[i];
@@ -424,7 +411,6 @@ sap.ui.define([
         },
 
 	    _loadDeliveryData: function (sDocumentNo, iHU, oData) {
-            var oDisplayModel = new JSONModel();
             var that = this;
 
             // ---- Read the HU Data from the backend
@@ -436,45 +422,45 @@ sap.ui.define([
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
-                        // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                            tools.alertMe(rData.SapMessageText, "");
+                        if (rData !== null && rData !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
+                                tools.showMessageError(rData.SapMessageText, "");
 
-                            return;
-                        } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                            // ---- Coding in case of showing Business application Errors
-                            tools.showMessageError(rData.SapMessageText, "");
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
+                                // ---- Coding in case of showing Business application Errors
+                                tools.showMessageError(rData.SapMessageText, "");
+                                
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+
+                            // ---- Start with showing data
+                            that.oDeliveryData = rData;
+
+                            // ---- Set the Data for the Model and set the Model to the View
+                            rData.HandlingUnit = iHU;
+
+                            that.oDisplayModel.setData(rData);
                             
-                            return;
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
-                        }
+                            // ---- Handle the Scan Modus for the different tables
+                            that.ScanModus = rData.ScanModus;
+                            that.iScanModusAktiv = 0;
 
-                        // ---- Start with showing data
-                        that.oDeliveryData = rData;
+                            if (rData.ScanModus === "A") {
+                                that._setTableDataA(oData);
 
-                        // ---- Set the Data for the Model and set the Model to the View
-                        rData.HandlingUnit = iHU;
+                                that.byId("idScrollContainerTableA").setVisible(true);
+                                that.byId("idScrollContainerTableB").setVisible(false);        
+                            } else {
+                                that._setTableDataB(oData, iHU);
 
-                        oDisplayModel.setData(rData);
-
-                        that.getView().setModel(oDisplayModel, "DisplayModel");
-                        
-                        // ---- Handle the Scan Modus for the different tables
-                        that.ScanModus = rData.ScanModus;
-                        that.iScanModusAktiv = 0;
-
-                        if (rData.ScanModus === "A") {
-                            that._setTableDataA(oData);
-
-                            that.byId("idScrollContainerTableA").setVisible(true);
-                            that.byId("idScrollContainerTableB").setVisible(false);        
-                        } else {
-                            that._setTableDataB(oData, iHU);
-
-                            that.byId("idScrollContainerTableA").setVisible(false);
-                            that.byId("idScrollContainerTableB").setVisible(true);        
+                                that.byId("idScrollContainerTableA").setVisible(false);
+                                that.byId("idScrollContainerTableB").setVisible(true);        
+                            }
                         }
                     }
                 });
@@ -495,20 +481,21 @@ sap.ui.define([
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
-                        // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
-                            
-                            // that._resetAll();
-                            that._setFocus();
-
-                            return;
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
-                        }
-
                         if (rData.results !== null && rData.results !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                    
+                                    that._setFocus();
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
                             that._setTableModel(rData, oTable);
                             
                             if (rData.results.length > 0) {
@@ -587,17 +574,18 @@ sap.ui.define([
                             that.oModel.setUseBatch(false);
                             that.getView().setBusy(false);
 
-                                // ---- Check for complete final booking
-                            if (rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-                                
-                                // that._resetAll();
-                                that._setFocus();
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    tools.alertMe(rData.SapMessageText, "");
+                                    
+                                    that._setFocus();
 
-                                return;
-                            } else if (rData.SapMessageType === "I") {
-                                // ---- Coding in case of showing Business application Informations
-                                tools.alertMe(rData.SapMessageText, "");
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
                             }
 
                             if (iCounter === iODataLength) {
@@ -624,19 +612,25 @@ sap.ui.define([
                     },
                     success: function(rData, oResponse) {
                         // ---- Check for complete final booking
-                        if (rData.SapMessageType === "E") {
-                            tools.alertMe(rData.SapMessageText, "");
-                            
-                            // that._resetAll();
-                            that._setFocus();
-
-                            return;
-                        } else if (rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+                        if (rData !== null && rData !== undefined) {
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                tools.alertMe(rData.SapMessageText, "");
+                                
+                                that._setFocus();
+    
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
                         }
 
-                        that._reloadHuData(oTable);
+                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                            // ---- Reload the HU data
+                            that._reloadHuData(oTable);
+                        } else {
+                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                        }
                     }
                 });
         },
@@ -739,8 +733,8 @@ sap.ui.define([
                 this.AllBooked = false;
             }
     
-            var oDisplayModel = this.getView().getModel("DisplayModel");
-                oDisplayModel.setProperty("/PSDeliveryNote", sNote + " / " + oData.length);
+            // var oDisplayModel = this.getView().getModel("DisplayModel");
+            this.oDisplayModel.setProperty("/PSDeliveryNote", sNote + " / " + oData.length);
 		},
 
 		_handleLessHuData: function (oTable) {
@@ -860,6 +854,8 @@ sap.ui.define([
                     var sManNumber  = oEvent.getParameter("valueManuallyNo");
                     var sScanNumber = oEvent.getParameter("valueScan");
                     
+                    this.sViewMode = oScanModel.getData().viewMode;
+
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oEvent.getParameter("valueManuallyNo").trim()
 
@@ -880,7 +876,6 @@ sap.ui.define([
                         sManNumber = sScanNumber;
                     }
 
-                    this.sViewMode = oScanModel.getData().viewMode;
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Handling") {
@@ -1155,7 +1150,7 @@ sap.ui.define([
             var oModel = new JSONModel([]);
 
             // ---- Reset the Main Model
-            this.oDisplayModel.setData({});
+            this.oDisplayModel.setData([]);
 
             // ---- Reset the Scan Model
             var oData = { 
