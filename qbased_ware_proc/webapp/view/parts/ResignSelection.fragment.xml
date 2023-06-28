@@ -45,7 +45,8 @@
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewHu}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>HU}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" width="160px" class="atosMInputBaseDisabled" />
+										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="160px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('Handling')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
@@ -54,25 +55,18 @@
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewQuantity}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>ActualAmount}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Quantity" value="{ScanModel>/valueManuallyNo}" width="96px" class="atosMInputBaseDisabled" />
+										<Input id="idInput_Quantity" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="96px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('Quantity')" width="auto" class="sapUiTinyMarginBegin" />
-									</HBox>
-								</HBox>
-
-								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLoc}">
-									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>DestStorageLocation}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Location" value="{ScanModel>/valueManuallyNo}" width="160px" class="atosMInputBaseDisabled" />
-										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Location')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
 
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLocConf}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>DestStorageLocation} {i18n>Conf}{i18n>Colon}" width="190px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_LocConf" value="{ScanModel>/valueManuallyNo}" width="110px" class="atosMInputBaseDisabled" />
+										<Input id="idInput_LocConf" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="110px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('LocConf')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
@@ -129,7 +123,7 @@
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>GoodsRecipient}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/GoodsRecipient}? {DisplayModel>/GateNo}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/GoodsRecipient} {DisplayModel>/GateNo}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>TransportShipment}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />

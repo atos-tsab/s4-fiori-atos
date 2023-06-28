@@ -148,9 +148,11 @@
             if (this.sActiveQMode === "H") {
                 this.oScanModel.setProperty("/switchState", true);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleH);
+                this.bExternalQueue = false;
             } else {
                 this.oScanModel.setProperty("/switchState", false);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleW);
+                this.bExternalQueue = true;
             }
 
             this.loadUserData();
@@ -216,9 +218,15 @@
                     var sSource = oEvent.getSource();
 
                     if (oTable !== null && oTable !== undefined && oTable.getBinding("rows").getContexts().length > 0) {
-                        var path = oEvent.getParameter("rowContext").getPath();
-                        var selectedRow= sSource.getModel().getProperty(path);
+                        var path = "";
 
+                        if (oEvent.getParameter("rowContext") !== null && oEvent.getParameter("rowContext") !== undefined) {
+                            path = oEvent.getParameter("rowContext").getPath();
+                        } else {
+                            path = oTable.getBinding("rows").getContexts()[0].getPath();
+                        }
+                       
+                        var selectedRow = sSource.getModel().getProperty(path);
                         var iIndex = sSource.getSelectedIndex();
                         var iEnd   = oModel.getData().length;
 
@@ -291,14 +299,15 @@
                     tools.handleODataRequestFailed(oError, resp, true);
 				},
 				success: function(rData, response) {
-                    // ---- Check for complete final booking
-                    if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                        tools.alertMe(rData.SapMessageText, "");
-                    } else if (rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                        // ---- Coding in case of showing Business application Errors
-                        tools.showMessageError(rData.SapMessageText, "");
-                    } else if (rData.SapMessageType === "I") {
-                        // ---- Coding in case of showing Business application Informations
+					if (rData !== null && rData !== undefined) {
+                        // ---- Check for complete final booking
+                        if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                            // ---- Coding in case of showing Business application Errors
+                            tools.showMessageError(rData.SapMessageText, "");
+                        } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                            // ---- Coding in case of showing Business application Informations
+                            tools.alertMe(rData.SapMessageText, "");
+                        }
                     }
 
 					if (rData !== null && rData !== undefined && rData !== "") {
@@ -458,6 +467,8 @@
                         if (sRoute === "Main") {
                             that.onPressMainOk(sViewMode);
                         }
+
+                        evt.keyCode = null;
 
 						break;			                
                     case 114: // ---- F3 Key

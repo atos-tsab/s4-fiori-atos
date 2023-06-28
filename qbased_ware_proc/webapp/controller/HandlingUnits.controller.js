@@ -208,10 +208,16 @@
                 if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
                     var sSource = oEvent.getSource();
 
-                    if (oTable !== null && oTable !== undefined) {
-                        var path = oEvent.getParameter("rowContext").getPath();
-                        var selectedRow= sSource.getModel().getProperty(path);
+                    if (oTable !== null && oTable !== undefined && oTable.getBinding("rows").getContexts().length > 0) {
+                        var path = "";
 
+                        if (oEvent.getParameter("rowContext") !== null && oEvent.getParameter("rowContext") !== undefined) {
+                            path = oEvent.getParameter("rowContext").getPath();
+                        } else {
+                            path = oTable.getBinding("rows").getContexts()[0].getPath();
+                        }
+
+                        var selectedRow= sSource.getModel().getProperty(path);
                         var iIndex = sSource.getSelectedIndex();
                         var iEnd   = oModel.getData().length;
 
@@ -313,6 +319,19 @@
                         that.getView().setBusy(false);
 
                         if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
                             if (rData.results.length > 0) { 
                                 if (that.sActiveQMode === "H") {
                                     that._setHuTableData(rData.results[0].to_HandlingUnits);
@@ -626,6 +645,8 @@
                             that.onPressHuOk(sViewMode);
                         }
 
+                        evt.keyCode = null;
+
 						break;			                
                     case 114: // ---- F3 Key
                         evt.preventDefault();
@@ -657,7 +678,14 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function () {
-            setTimeout(() => this.byId("idInput_HU").focus());
+            var id = "idInput_HU";
+            var that = this;
+
+            if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
+                setTimeout(() => sap.ui.getCore().byId(id).focus({ preventScroll: true, focusVisible: true }));
+            } else if (this.byId(id) !== null && this.byId(id) !== undefined) {
+                setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
+            }
         },
 
         _resetAll: function () {

@@ -327,6 +327,10 @@ sap.ui.define([
 
         onInputLiveChange: function (oEvent) {
             var iCnt = parseInt(this.getResourceBundle().getText("CountScanLiveInput"), 10);
+            
+            if (this.sScanView === "Quantity") {
+                iCnt = 0;
+            }
 
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
@@ -524,6 +528,7 @@ sap.ui.define([
                 this._oScanModel.setProperty("/labelDialog", lblHu);
                 this._oScanModel.setProperty("/lblWidth", "110px");
             } else if (this.sScanView === "Quantity") {
+                this._oScanModel.setProperty("/okButton", true);
                 this._oScanModel.setProperty("/titleDialog", titleQuantity);
                 this._oScanModel.setProperty("/labelDialog", lblQuantity);
                 this._oScanModel.setProperty("/lblWidth", "75px");
@@ -538,6 +543,8 @@ sap.ui.define([
                 this._oScanModel.setProperty("/labelDialog", lblHu);
                 this._oScanModel.setProperty("/lblWidth", "110px");
             }
+
+            this._oScanModel.refresh();
         },
 
         _onAfterOpen: function () {
@@ -564,7 +571,7 @@ sap.ui.define([
 
                 this._oScanModel.setProperty("/valueManuallyNo", sResultText);
                 // this._oScanModel.setProperty("/valueSuffix", sResultText),
-                this._oScanModel.setProperty("/setProperty", sResultText);
+                this._oScanModel.setProperty("/valueScan", sResultText);
                 this._oScanModel.setProperty("/okButton", true);
                 
                 if (this.getEditMode() === true) {                    
@@ -598,7 +605,6 @@ sap.ui.define([
 
         _showInputDialog: function () {
             this._oScanModel.setProperty("/scanMode", "Input");
-            this._oScanModel.setProperty("/okButton", true);
             
             this._openDialog(this._getInputDialog());
         },
@@ -872,7 +878,7 @@ sap.ui.define([
 		
 		_setKeyboardShortcutsScanner: function() {
             var sRoute = this.sRoute;
-            var that  = this;
+            var that = this;
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
@@ -883,15 +889,13 @@ sap.ui.define([
                     evt.keyCode = undefined;
                 }
 
-                var x = sRoute;
-
                 // ---- Now call the actual event/method for the keyboard keypress
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
                         evt.preventDefault();
 
                         if (that.sScanMode === "Input") {
-                             if (controlF1 && controlF1.getEnabled()) {
+                            if (controlF1 && controlF1.getEnabled()) {
                                 that._oScanModel.setProperty("/iScanModusAktiv", 2);
 
                                 controlF1.firePress();
@@ -1014,9 +1018,14 @@ sap.ui.define([
             this._oScanModel.setProperty("/valueScan", "");
             this._oScanModel.setProperty("/valueSuffix", "");
             this._oScanModel.setProperty("/valueManuallyNo", "");
-            this._oScanModel.setProperty("/okButton", false);
             this._oScanModel.setProperty("/scanMode", "");
             this._oScanModel.setProperty("/iScanModusAktiv", 0);
+
+            if (this.sScanView === "Quantity") {
+                this._oScanModel.setProperty("/okButton", true);
+            } else {
+                this._oScanModel.setProperty("/okButton", false);
+            }
         },
     
         _validateInputs: function () {

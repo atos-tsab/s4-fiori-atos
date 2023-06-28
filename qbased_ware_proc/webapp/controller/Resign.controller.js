@@ -101,7 +101,7 @@ sap.ui.define([
             };
 
 			this.oScanModel    = new JSONModel(oData);
-            this.oDisplayModel = new JSONModel();
+			this.oDisplayModel = new JSONModel([]);
 
             this.getView().setModel(this.oScanModel, "ScanModel");
             this.getView().setModel(this.oDisplayModel, "DisplayModel");
@@ -155,21 +155,6 @@ sap.ui.define([
                 this.sActiveQMode = oEvent.getParameter("arguments").qmode;
                 this.iHU          = oEvent.getParameter("arguments").hu;
                 
-                // ---- Change the Main focus to HU or Warehouse Task
-                // if (this.sActiveQMode === "W") {
-                //     this.oScanModel.setProperty("/viewMode", "Handling");
-                //     this.oScanModel.setProperty("/viewQuantity", false);
-                //     this.oScanModel.setProperty("/viewHu", true);
-
-                //     this._setFocus("idInput_WHT");
-                // } else {
-                //     this.oScanModel.setProperty("/viewMode", "Quantity");
-                //     this.oScanModel.setProperty("/viewQuantity", true);
-                //     this.oScanModel.setProperty("/viewHu", false);
-
-                //     this._setFocus("idInput_Quantity");
-                // }
-
                 this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
             }
         },
@@ -184,13 +169,6 @@ sap.ui.define([
         },
 
         onPressResignOk: function (sViewMode) { 
-            if (sViewMode !== null && sViewMode !== undefined && sViewMode !== "") {
-                this.sViewMode = sViewMode;
-            } else {
-                this.sViewMode = this.oScanModel.getProperty("/viewMode");
-            }
- 
-            // ---- Change the Scan Model
             this._onOkClicked();
         },
 
@@ -209,23 +187,46 @@ sap.ui.define([
                     var oScanData  = oScanModel.getData();
                     var sManNumber = oScanData.valueManuallyNo;
                     
+                    this.sViewMode = oScanData.viewMode;
+                    
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oScanData.valueManuallyNo.trim();
                         sManNumber = this._removePrefix(sManNumber);
+                        sManNumber = sManNumber.toUpperCase();
+
+                        this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     } else {
                         sManNumber = "";
                     }
 
-                    if (this.sViewMode === "LocConf") {
-                        this.iBookCount = 1;
-                    } else if (this.sViewMode === "Location") {
-                        this.iBookCount = 2;
+                    if (this.sViewMode === "Handling" && sManNumber !== "") {
+                        if (this.sActiveQMode === "W") {
+                            this._loadQuantityData(sManNumber);
+                        } else {
+                            var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
+
+                            if (this.iHU === sManNumber) {
+                                this._loadQuantityData(sManNumber);
+                            } else {
+                                this.oScanModel.setProperty("/valueManuallyNo", "");
+                                this._setFocus("idInput_HU");
+
+                                tools.alertMe(sErrMsg);
+
+                                return;
+                            }
+                        }
+                    } else if (this.sViewMode === "Quantity") {
+                        this._handleQuantityData();                           
+                    } else if (this.sViewMode === "LocConf" && sManNumber !== "") {
+                        this._handleFinalData(sManNumber);
                     }
 
                     this.iScanModusAktiv = 1;
-                    this._showResignData(this.sViewMode, sManNumber);
                 }    
             }
+
+            this.oScanModel.setProperty("/valueManuallyNo", "");
 		},
 
 
@@ -243,26 +244,43 @@ sap.ui.define([
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined && this.oDisplayModel.getData()) {
 
                 var sPath = "/WarehouseTask(WarehouseNumber='" + oData.WarehouseNumber + "',WarehouseTaskId='" + oData.WarehouseTaskId + "')";
-                var urlParam = { "WarehouseTaskType": "H", "BookConfirm": true };
+                var urlParam = { "WarehouseTaskType": "H", "BookConfirm": true, "TargetQuantity": oData.ActualQuantity};
     
-                this.oModel.update(sPath, urlParam, {
-                    error: function(oError, resp) {
-                        tools.handleODataRequestFailed(oError, resp, true);
-                    },
-                    success: function(rData, oResponse) {
-                        if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
-                            that.oScanModel.setProperty("/showOk", true);
-                            that.oScanModel.setProperty("/showOkText", sOkMesg);       
+                var oModel = this._getServiceUrl()[0];
+                    oModel.update(sPath, urlParam, {
+                        error: function(oError, resp) {
+                            tools.handleODataRequestFailed(oError, resp, true);
+                        },
+                        success: function(rData, oResponse) {
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.alertMe(rData.SapMessageText, "");
+                                    
+                                    that._resetAll();
+                                    that._setFocus("idInput_HU");
 
-                            setTimeout(function () {
-                                that._resetAll();
-                                that.onNavBack();
-                            }, tSTime);            
-                        } else {
-                            tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
+                            }
+
+                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                                setTimeout(function () {
+                                    that._resetAll();
+                                    that.onNavBack();
+                                }, tSTime);            
+                            } else {
+                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                            }
                         }
-                    }
-                });
+                    });
             } else {
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -303,6 +321,19 @@ sap.ui.define([
 
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results[0].to_WarehouseTasks.results.length > 0) {
+                                if (rData.results.length > 0) {
+                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                        // ---- Coding in case of showing Business application Errors
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
+                                        // ---- Coding in case of showing Business application Errors
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                        // ---- Coding in case of showing Business application Informations
+                                        tools.alertMe(rData.results[0].SapMessageText, "");
+                                    }
+                                }
+    
                                 let data = rData.results[0].to_WarehouseTasks.results;
 
                                 for (let i = 0; i < data.length; i++) {
@@ -310,11 +341,11 @@ sap.ui.define([
 
                                     if (that.sActiveQMode === "H") {
                                         if (item.HandlingUnitId === iHU) {
-                                            that._setWareHouseTableData(item);
+                                            that._setWareHouseTableData(item, iHU);
                                         }
                                     } else if (that.sActiveQMode === "W") {
                                         if (item.WarehouseTaskId === iHU) {
-                                            that._setWareHouseTableData(item);
+                                            that._setWareHouseTableData(item, iHU);
                                         }
                                     }
                                 }
@@ -330,200 +361,83 @@ sap.ui.define([
             var sViewMode = this.oScanModel.getProperty("/viewMode");
 
             // ---- Reset the Display Model
-            this.oDisplayModel.setData({});
+            this.oDisplayModel.setData([]);
             this.oDisplayModel.setData(oData);
 
             this.iScanModusAktiv = 0;
 
-                // ---- Change the Main focus to HU or Warehouse Task
-                if (this.sActiveQMode === "W") {
-                    this.oScanModel.setProperty("/viewMode", "Handling");
-                    // this.oScanModel.setProperty("/viewQuantity", false);
-                    // this.oScanModel.setProperty("/viewHu", true);
-
-                    // this._setFocus("idInput_WHT");
-                } else {
-                    this.oScanModel.setProperty("/viewMode", "Quantity");
-                    // this.oScanModel.setProperty("/viewQuantity", true);
-                    // this.oScanModel.setProperty("/viewHu", false);
-
-                    // this._setFocus("idInput_Quantity");
-                }
-
-            this._changeScanModel(sViewMode, sManNumber);
-
-            // this._setFocus("idInput_HU");
-        },
-
-		_showResignData: function (sViewMode, sManNumber) {
-            // ---- Reset the Error Headlines
-            this.oScanModel.setProperty("/showErr", false);
-            this.oScanModel.setProperty("/showErrText", "");
-
-            // if (sViewMode === "Handling") {
-            //     if (this.sActiveQMode === "H") {
-            //         this._setFocus("idInput_Quantity");
-            //     } else {
-            //         this._setFocus("idInput_HU");
-            //     }
-
-            //     this._loadQuantityData(sManNumber);
-            // } else if (sViewMode === "Quantity") {
-            //     this._loadLocConfData(sManNumber);
-            // } else if (sViewMode === "LocConf") {
-            //     if (sManNumber !== "") {
-            //         this._handleFinalData(sManNumber);
-            //     }
-            // }
-
-            this._changeScanModel(sViewMode, sManNumber);
-            this.oScanModel.setProperty("/valueManuallyNo", "");
-		},
-
-        _changeScanModel: function(sViewMode, sManNumber) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking");
-            var id    = "idInput_HU";
-            var check = false;
-            var that  = this;
-
-            // ---- Change the Scan Model
-            var oData = {
-                "viewMode":     "",
-                "booking":      false,
-                "refresh":      true,
-                "ok":           true,
-                "showOk":       false,
-                "showErr":      false,
-                "showOkText":   "",
-                "showErrText":  "",
-                "viewStorage":  false,
-                "viewHu":       false,
-                "viewMat":      false,
-                "viewWHT":      false,
-                "viewQuantity": false,
-                "viewLocConf":  false,
-                "viewLoc":      false,
-                "valueSuffix":  this.sSuffix
-            };
-
             // ---- Change the Main focus to HU or Warehouse Task
             if (this.sActiveQMode === "W") {
-                // oData.viewMode = "WarehouseTask";
-                // oData.viewWHT  = true;
-
-                id = "idInput_WHT";
+                this._handleHandlingUnitData(sViewMode, sManNumber);
             } else {
-                // oData.viewMode     = "Handling";
-                // oData.viewQuantity = true;
-                // oData.viewMat      = true;
-
-                id = "idInput_Quantity";
+                this._handleHandlingUnitData(sViewMode, sManNumber);
+                // this._loadQuantityData(sViewMode, sManNumber);
             }
-
-            if (sViewMode === "LocConf" && sManNumber !== "") {
-                check = this._checkDestStorageLocation(sManNumber);
-            }
-
-            switch (sViewMode) {
-                case "Handling":
-                    id = "idInput_Quantity";
-                    oData.viewMode     = "Quantity";
-                    oData.viewQuantity = true;
-
-                    break;
-                case "WarehouseTask":
-                    id = "idInput_WHT";
-                    oData.viewMode = "WarehouseTask";
-                    oData.viewWHT  = true;
-
-                    break;
-                case "Quantity":
-                    id = "idInput_LocConf";
-                    oData.viewMode     = "LocConf";
-                    oData.viewQuantity = false;
-                    oData.viewLocConf  = true;
-
-                    break;
-                case "Location":
-                    id = "idInput_LocConf";
-                    oData.viewMode     = "LocConf";
-                    oData.viewLocation = false;
-                    oData.viewQuantity = false;
-                    oData.viewLocConf  = true;
-                    // oData.refresh      = false;
-
-                    break;
-                case "LocConf":
-                    if (check) {
-                        id = "idButtonBookHU";
-                        oData.viewQuantity = false;
-                        oData.booking      = true;
-                        oData.refresh      = false;
-                        oData.ok           = false;
-                    } else {
-                        id = "idInput_Location";
-                        // oData.viewQuantity = false;
-                        // oData.viewMode     = "Location";
-                        // oData.viewLoc      = true;
-                        // oData.showErr      = true;
-                        // oData.showErrText  = sErrMesg;
-                    }
-
-                    break;
-                default:
-                    break;
-            }
-
-            this.oScanModel.setData(oData);
-
-            this.byId(id).focus();
-
-            setTimeout(function () {
-                that.byId(id).focus();
-            }, 300);            
         },
 
-        // --------------------------------------------------------------------------------------------------------------------
-
-        _handleHandlingUnitData: function (sViewMode, sManNumber) {
-            this._setFocus("idInput_HU");
-
+        _handleHandlingUnitData: function (sManNumber) {
             this.oScanModel.setProperty("/viewMode", "Handling");
             this.oScanModel.setProperty("/viewQuantity", false);
             this.oScanModel.setProperty("/viewHu", true);
+
+            this._setFocus("idInput_HU");
         },
 
-        _loadQuantityData: function (sViewMode, sManNumber) {
-            this._setFocus("idInput_Quantity");
-
+        _loadQuantityData: function (sManNumber) {
             this.oScanModel.setProperty("/viewMode", "Quantity");
             this.oScanModel.setProperty("/viewQuantity", true);
             this.oScanModel.setProperty("/viewHu", false);
 
-            return;
+            this._setFocus("idInput_Quantity");
         },
 
-        _loadLocConfData: function (sManNumber) {
-            this._setFocus("idInput_LocConf");
+		_handleQuantityData: function () {
+            var sErrMesg = this.getResourceBundle().getText("OnlySmallQuantities");
+            var iQuantity = parseInt(this.oDisplayModel.getProperty("/TargetQuantity"), 10);
 
-            this.oScanModel.setProperty("/viewMode", "LocConf");
-            this.oScanModel.setProperty("/viewLocConf", true);
-            this.oScanModel.setProperty("/viewQuantity", false);
+            this.oScanModel.setProperty("/showErr", false);
+            this.oScanModel.setProperty("/showErrText", "");
 
-            if (sManNumber !== "") {
-                this.oDisplayModel.setProperty("/ActualQuantity", sManNumber);
+            if (this.oScanModel.getProperty("/valueManuallyNo") !== "") {
+                var iActualQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
+                
+                if (iActualQuantity > iQuantity) {
+                    tools.alertMe(sErrMesg);
+
+                    this.oScanModel.setProperty("/valueManuallyNo", "");
+               
+                    // ---- Set Focus to default Input field
+                    this._setFocus("idInput_Quantity");
+
+                    return;
+                } else if (iActualQuantity < iQuantity) {
+                    this.ActualQuantity = this.oScanModel.getProperty("/valueManuallyNo");
+
+                    this.onQuantityScanOpen();
+                } else if (iActualQuantity === iQuantity) {
+                    this.ActualQuantity = this.oDisplayModel.getProperty("/TargetQuantity");
+                    this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
+               
+                    // ---- Set Focus to default Input field
+                    this.oScanModel.setProperty("/valueManuallyNo", "");
+                    this._setFocus("idInput_Quantity");
+                }
             } else {
-                this.oDisplayModel.setProperty("/ActualQuantity", this.oDisplayModel.getProperty("/TargetQuantity"));
+                this.ActualQuantity = this.oDisplayModel.getProperty("/TargetQuantity");
+                this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
             }
-
-            return;
-        },
+           
+            // ---- Set Focus to default Input field
+            this.oScanModel.setProperty("/valueManuallyNo", "");
+            this._setFocus("idInput_Quantity");
+            this._resetQuantity();
+		},
 
         _handleFinalData: function (sManNumber) {
             var sErrMesg  = this.getResourceBundle().getText("StorageBinErr", sManNumber);
             var tSTime    = this.getResourceBundle().getText("ShowTime");
             var check = false;
-            var id    = "idInput_Location";
+            var id    = "idInput_LocConf";
             var that  = this
 
             check = this._checkDestStorageLocation(sManNumber);
@@ -538,11 +452,12 @@ sap.ui.define([
                 this.oScanModel.setProperty("/refresh", false);
                 this.oScanModel.setProperty("/ok", false);
             } else {
-                id = "idInput_Location";
+                id = "idInput_LocConf";
 
                 this.oScanModel.setProperty("/viewLocConf", true);
                 this.oScanModel.setProperty("/booking", false);
                 this.oScanModel.setProperty("/refresh", true);
+                this.oScanModel.setProperty("/ok", true);
 
                 this.oScanModel.setProperty("/showErr", true);
                 this.oScanModel.setProperty("/showErrText", sErrMesg);
@@ -556,190 +471,6 @@ sap.ui.define([
                     that._setFocus(id);
                 }, tSTime);            
             }         
-        },
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-		_handleResignData: function (sViewMode, sManNumber) {
-            // var sErrMesg  = this.getResourceBundle().getText("ErrorHuScan", sManNumber);
-            // var tSTime    = this.getResourceBundle().getText("ShowTime");
-            // var iHU   = sManNumber;
-            // var check = false;
-            // var id    = "";
-            // var that  = this
-
-            // if (this.iHU !== iHU && sViewMode === "Handling") {
-            //     this.oScanModel.setProperty("/showErr", true);
-            //     this.oScanModel.setProperty("/showErrText", sErrMesg);
-
-            //     this.byId("idInput_HU").setValue("");
-                
-            //     id = "idInput_HU";
-            // } else if (this.iHU !== iHU && sViewMode === "WarehouseTask") {
-            //     this.oScanModel.setProperty("/showErr", true);
-            //     this.oScanModel.setProperty("/showErrText", sErrMesg);
-
-            //     this.byId("idInput_WHT").setValue("");
-
-            //     id = "idInput_WHT";
-            // } else {
-            //     this.oScanModel.setProperty("/showErr", false);
-            //     this.oScanModel.setProperty("/showErrText", "");
-
-            //     // ---- Get the Data for all not empty values
-            //     if (iHU !== null && iHU !== undefined && iHU !== "") {
-            //         if (sViewMode === "Handling") {
-            //             id = "idInput_HU";
-
-            //             this.oDisplayModel.setProperty("/HandlingUnitId", iHU);
-            //         } else if (sViewMode === "WarehouseTask") {
-            //             id = "idInput_WHT";
-
-            //             this.oDisplayModel.setProperty("/WarehouseTaskId", iHU);
-            //         } else if (sViewMode === "Quantity") {
-            //             id = "idInput_Quantity";
-
-            //             this.oDisplayModel.setProperty("/ActualQuantity", sManNumber);
-            //         } else if (sViewMode === "Location") {
-            //             id = "idInput_Location";
-
-            //             this.oDisplayModel.setProperty("/DestinationStorageBin", sManNumber);
-            //         } else if (sViewMode === "LocConf") {
-            //             id = "idInput_LocConf";
-
-            //             this.oDisplayModel.setProperty("/DestinationStorageBin", sManNumber);
-            //         }
-            //     } else {
-            //         if (sViewMode === "Handling") {
-            //             id = "idInput_HU";
-            //         } else if (sViewMode === "WarehouseTask") {
-            //             id = "idInput_WHT";
-            //         } else if (sViewMode === "Quantity") {
-            //             id = "idInput_Quantity";
-
-            //             this.oDisplayModel.setProperty("/ActualQuantity", this.oDisplayModel.getProperty("/TargetQuantity"));
-            //         } else if (sViewMode === "Location") {
-            //             id = "idInput_Location";
-            //         } else if (sViewMode === "LocConf") {
-            //             id = "idInput_LocConf";
-            //         }
-            //     }
-
-            //     // ---- Change the Scan Model
-            //     this._changeScanModel(sViewMode, sManNumber);
-
-            //     check = true;                
-            // }
-
-            // this.oScanModel.setProperty("/valueManuallyNo", "");
-            // // this.byId(id).focus();
-
-            // if (!check) {
-            //     setTimeout(function () {
-            //         that.oScanModel.setProperty("/showErr", false);
-            //         that.oScanModel.setProperty("/showErrText", "");
-    
-            //         // ---- Set Focus to main Input field
-            //         that._setFocus(id);
-            //     }, tSTime);            
-            // }         
-		},
-
-		_oldchangeScanModel: function(sViewMode, sManNumber) {
-            // var sErrMesg = this.getResourceBundle().getText("ErrorBooking");
-            // var id    = "idInput_HU";
-            // var check = false;
-            // var that  = this;
-
-            // // ---- Change the Scan Model
-            // var oData = {
-            //     "viewMode":     "",
-            //     "booking":      false,
-            //     "refresh":      true,
-            //     "ok":           true,
-            //     "showOk":       false,
-            //     "showErr":      false,
-            //     "showOkText":   "",
-            //     "showErrText":  "",
-            //     "viewStorage":  false,
-            //     "viewHu":       false,
-            //     "viewMat":      false,
-            //     "viewWHT":      false,
-            //     "viewQuantity": false,
-            //     "viewLocConf":  false,
-            //     "viewLoc":      false,
-            //     "valueSuffix":  this.sSuffix
-            // };
-
-            // // ---- Change the Main focus to HU or Warehouse Task
-            // if (this.sActiveQMode === "W") {
-            //     oData.viewMode = "WarehouseTask";
-            //     oData.viewWHT  = true;
-
-            //     id = "idInput_WHT";
-            // } else {
-            //     oData.viewMode     = "Quantity";
-            //     oData.viewQuantity = true;
-            //     oData.viewMat      = true;
-
-            //     id = "idInput_Quantity";
-            // }
-
-            // if (sViewMode === "LocConf") {
-            //     check = this._checkDestStorageLocation(sManNumber);
-            // }
-
-            // switch (sViewMode) {
-            //     case "Handling":
-            //         id = "idInput_Quantity";
-            //         oData.viewMode     = "Quantity";
-            //         oData.viewQuantity = true;
-            //         break;
-            //     case "WarehouseTask":
-            //         id = "idInput_Quantity";
-            //         oData.viewMode     = "Quantity";
-            //         oData.viewQuantity = true;
-            //         break;
-            //     case "Quantity":
-            //         id = "idInput_LocConf";
-            //         oData.viewMode     = "LocConf";
-            //         oData.viewQuantity = false;
-            //         oData.viewLocConf  = true;
-            //         break;
-            //     case "Location":
-            //         id = "idInput_LocConf";
-            //         oData.viewMode     = "LocConf";
-            //         oData.viewQuantity = false;
-            //         oData.viewLocConf  = false;
-            //         oData.refresh      = false;
-            //         break;
-            //     case "LocConf":
-            //         if (check) {
-            //             id = "idButtonBookHU";
-            //             oData.viewQuantity = false;
-            //             oData.booking      = true;
-            //             oData.refresh      = false;
-            //             oData.ok           = false;
-            //         } else {
-            //             id = "idInput_Location";
-            //             oData.viewQuantity = false;
-            //             oData.viewMode     = "Location";
-            //             oData.viewLoc      = true;
-            //             oData.showErr      = true;
-            //             oData.showErrText  = sErrMesg;
-            //         }
-            //         break;
-            //     default:
-            //         break;
-            // }
-
-            // this.oScanModel.setData(oData);
-
-            // this.byId(id).focus();
-
-            // setTimeout(function () {
-            //     that.byId(id).focus();
-            // }, 300);            
         },
 
         _checkDestStorageLocation: function (sManNumber) {
@@ -760,135 +491,90 @@ sap.ui.define([
             return check;
         },
 
-
-        // --------------------------------------------------------------------------------------------------------------------
-        // ---- Table Functions
-        // --------------------------------------------------------------------------------------------------------------------
-
-		_handleHuData: function (oTable) {
-            var oData = oTable.getModel().getData();
-            var sNote = 0;
-
-            if (oData.length > 0) {
-                for (let i = 0; i < oData.length; i++) {
-                    var data = oData[i];
- 
-                    if (data.StatusUnload === true) {
-                        sNote = sNote + 1;
-                    }
-                }
-            }
-
-            if (sNote === oData.length) {
-                this.AllBooked = true;
-            } else {
-                this.AllBooked = false;
-            }
+        onInputChanged: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
     
-            var oDisplayModel = this.getView().getModel("DisplayModel");
-                oDisplayModel.setProperty("/PSDeliveryNote", sNote + " / " + oData.length);
-		},
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
 
-		_handleLessHuData: function (oTable) {
-            var oData = oTable.getModel().getData();
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                       this.oScanModel.setProperty("/valueManuallyNo", "");
+                    }
+                }
 
-            if (oData.length > 0) {
-                for (let i = 0; i < oData.length; i++) {
-                    var data = oData[i];
- 
-                    if (data.StatusUnload === false) {
-                        data.BookMissing = true;
-                        data.Status = "Error";
-                    } else if (data.StatusUnload === true) {
-                        data.Status = "Success";
+                this._onOkClicked();
+            }
+        },
+
+        onInputLiveChange: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
+
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                        this.oScanModel.setProperty("/valueManuallyNo", "");
                     }
                 }
             }
-
-            oTable.getModel().setData(oData);
-		},
-
-		_resetLessHuData: function (oTable) {
-            var oData = oTable.getModel().getData();
-
-            if (oData.length > 0) {
-                for (let i = 0; i < oData.length; i++) {
-                    var data = oData[i];
- 
-                    if (data.StatusUnload === false) {
-                        data.BookMissing = false;
-                        data.Status = "None";
-                    } else if (data.StatusUnload === true) {
-                        data.Status = "Success";
-                    }
-                }
-            }
-
-            oTable.getModel().setData(oData);
-		},
+        },
 
 
-		// --------------------------------------------------------------------------------------------------------------------
-		// ---- Dialog Functions
-		// --------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Dialog Functions
+        // --------------------------------------------------------------------------------------------------------------------
 
-		onBookApprovalOpen: function (sceneNumber, activeStatus) {
-			var fragmentFile = _fragmentPath + "DialogApproveBooking";
-            var oTable = this.PackageListTable;
+		onQuantityScanOpen: function () {
+			var fragmentFile = _fragmentPath + "DialogQuantityScan";
 			var oView = this.getView();
 			var that = this;
 			
-            // ---- Mark all HU's which are not delivered (under booking)
-            this._handleLessHuData(oTable);
-
             // ---- Starts the Bookung Dialog for Handling Units
-			if (!this.getView().dialogApproveBooking) {
+			if (!this.getView().dialogQuantityScan) {
 				sap.ui.core.Fragment.load({
 					id: oView.getId(),
 					name: fragmentFile,
 					controller: this
 				}).then(function (oDialog) {
 					oView.addDependent(oDialog);
-					oView.dialogApproveBooking = oDialog;
-					oView.dialogApproveBooking.addStyleClass(that.getOwnerComponent().getContentDensityClass());
-                    oView.dialogApproveBooking.open();
+					oView.dialogQuantityScan = oDialog;
+					oView.dialogQuantityScan.addStyleClass(that.getOwnerComponent().getContentDensityClass());
+                    oView.dialogQuantityScan.open();
 				});
 			} else {
-                oView.dialogApproveBooking.open();
+                oView.dialogQuantityScan.open();
             }
  		},
 
-		onBookApprovalClose: function () {
-            var oTable = this.PackageListTable;
-
-            if (this.getView().dialogApproveBooking) {
-				this.getView().dialogApproveBooking.close();
+        onQuantityScanClose: function () {
+            if (this.getView().dialogQuantityScan) {
+				this.getView().dialogQuantityScan.close();
 			}
 
-            // ---- Unmark all HU's which are not delivered (reset under booking)
-            this._resetLessHuData(oTable);
+            this.ActualQuantity = this.oDisplayModel.getProperty("/TargetQuantity");
+            this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
+            this._resetQuantity();
+        },
 
-            this._setFocus("idInput_HU");
+		onQuantityScanAfterClose: function () {
+            this._setFocus("idInput_LocConf");
 		},
 
-		onBookApprovalAfterClose: function () {
-            this._setFocus("idInput_HU");
-		},
-
-		onBookApprovalSave: function () {
-			if (this.getView().dialogApproveBooking) {
-				this.getView().dialogApproveBooking.close();
+		onQuantityScanSave: function () {
+			if (this.getView().dialogQuantityScan) {
+				this.getView().dialogQuantityScan.close();
 			}
 
-            // ---- Remove all not found Handling Units from the Delivery
-            var oTable = this.PackageListTable;
-
-            // ---- Unmark all HU's which are not delivered (reset under booking) and start booking
-            this._resetLessHuData(oTable);
-            this._bookHuMissingData(oTable);
-
-            // ---- Set Focus to default Input field
-            this._setFocus("idInput_HU");
+            this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
+            this._resetQuantity();
 		},
 
 
@@ -906,14 +592,17 @@ sap.ui.define([
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                         sManNumber = oEvent.getParameter("valueManuallyNo").trim()
+                        sManNumber = sManNumber.toUpperCase();
 
                         this.oScanModel.setProperty("/valueSuffix", oEvent.getParameter("valueSuffix"));
                         this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
 
                         this.sSuffix = oEvent.getParameter("valueSuffix");
                     }
+                    
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
                         sScanNumber = oEvent.getParameter("valueScan").trim()
+                        sScanNumber = sManNumber.toUpperCase();
                         
                         // ---- Check for Data Matix Code
                         var check = tools.checkForDataMatrixArray(sScanNumber);
@@ -926,12 +615,7 @@ sap.ui.define([
                         this.oScanModel.setProperty("/valueManuallyNo", sScanNumber);
 
                         this.sSuffix = oEvent.getParameter("valueSuffix");
-                    }
-
-                    if (this.sViewMode === "LocConf") {
-                        this.iBookCount = 1;
-                    } else if (this.sViewMode === "Location") {
-                        this.iBookCount = 2;
+                        sManNumber = sScanNumber;
                     }
 
                     if (iScanAktiv !== null && iScanAktiv !== undefined && iScanAktiv !== "") {
@@ -940,7 +624,28 @@ sap.ui.define([
                         this.iScanModusAktiv = 2;
                     }
 
-                    this._showResignData(this.sViewMode, this.oScanModel.getProperty("/valueManuallyNo"));
+                    if (this.sViewMode === "Handling" && this.oScanModel.getProperty("/valueManuallyNo") !== "") {
+                        if (this.sActiveQMode === "W") {
+                            this._loadQuantityData(sManNumber);
+                        } else {
+                            var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
+
+                            if (this.iHU === sManNumber) {
+                                this._loadQuantityData(sManNumber);
+                            } else {
+                                this.oScanModel.setProperty("/valueManuallyNo", "");
+                                this._setFocus("idInput_HU");
+
+                                tools.alertMe(sErrMsg);
+
+                                return;
+                            }
+                        }
+                    } else if (this.sViewMode === "Quantity") {
+                         this._handleQuantityData();                           
+                    } else if (this.sViewMode === "LocConf" && this.oScanModel.getProperty("/valueManuallyNo") !== "") {
+                        this._handleFinalData(sManNumber);
+                    }
                 }    
             }
 
@@ -1079,10 +784,12 @@ sap.ui.define([
 		
 		_setKeyboardShortcutsResign: function() {
             var sRoute = "Resign";
-            var that  = this;
+            var that = this;
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
+                var controlF2 = that.byId("idInput_HU");
+
                 // ---- Now call the actual event/method for the keyboard keypress
                 switch (evt.keyCode) {
 			        case 13: // ---- Enter Key
@@ -1090,12 +797,14 @@ sap.ui.define([
 
                         if (sRoute === "Resign") {
                             if (that.iScanModusAktiv < 2) {
-                                that.onPressResignOk(undefined);
+                                that.onPressResignOk();
                             } else {
                                 that.iScanModusAktiv = 0;
                             }
                         }
-                        
+
+                        evt.keyCode = null;
+
 						break;			                
 			        case 112: // ---- F1 Key
                         evt.preventDefault();
@@ -1113,13 +822,15 @@ sap.ui.define([
  
                         if (sRoute === "Resign") {
                             if (that.iScanModusAktiv < 2) {
-                                that.onPressResignOk(that.sViewMode);
-                            } else {
-                                that.iScanModusAktiv = 0;
+                                if (controlF2 && controlF2.getEnabled()) {
+                                    controlF2.fireChange();
+                                }
                             }
                         }
-                        
-						break;			                
+
+                        evt.keyCode = null;
+
+                        break;			                
                     case 114: // ---- F3 Key
                         evt.preventDefault();
 
@@ -1149,8 +860,12 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function (id) {
+            var that = this;
+
             if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
                 setTimeout(() => sap.ui.getCore().byId(id).focus({ preventScroll: true, focusVisible: true }));
+            } else if (this.byId(id) !== null && this.byId(id) !== undefined) {
+                setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
         },
 
@@ -1172,9 +887,18 @@ sap.ui.define([
             return str;
         },
 
+        _resetQuantity: function () {
+            // ---- Reset the Quantity view
+            this.oScanModel.setProperty("/viewQuantity", false);
+            this.oScanModel.setProperty("/viewMode", "LocConf");
+            this.oScanModel.setProperty("/viewLocConf", true);
+            this.oScanModel.setProperty("/ok", false);
+            this.oScanModel.setProperty("/valueManuallyNo", "");
+        },
+
         _resetAll: function () {
             // ---- Reset the Main Model
-            this.oDisplayModel.setData({});
+            this.oDisplayModel.setData([]);
 
             // ---- Reset the Scan Model
             var oData = { 
@@ -1199,21 +923,6 @@ sap.ui.define([
 
             this.oScanModel.setData(oData);
                 
-            // ---- Change the Main focus to HU or Warehouse Task
-            // if (this.sActiveQMode === "W") {
-            //     this.oScanModel.setProperty("/viewMode", "Handling");
-            //     this.oScanModel.setProperty("/viewQuantity", false);
-            //     this.oScanModel.setProperty("/viewHu", true);
-
-            //     this._setFocus("idInput_WHT");
-            // } else {
-            //     this.oScanModel.setProperty("/viewMode", "Quantity");
-            //     this.oScanModel.setProperty("/viewQuantity", true);
-            //     this.oScanModel.setProperty("/viewHu", false);
-
-            //     this._setFocus("idInput_Quantity");
-            // }
-
             this.sScanType  = "";
             this.iBookCount = 0;
         }

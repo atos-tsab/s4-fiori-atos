@@ -1,0 +1,33 @@
+<core:FragmentDefinition
+	xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core" 
+	class="sapUiSizeCompact"
+	xmlns="sap.m">
+	
+	<Dialog 
+		id="idDialogQuantityScan" 
+		class="sapThemeHighlight-asColor"
+		contentHeight="80px"
+		contentWidth="auto"
+		resizable="false"
+		type="Message"
+		state="Warning"
+		afterClose="onQuantityScanAfterClose"
+		title="{i18n>QuantityScanTitle}">
+		<content>
+			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
+				<HBox>
+					<Label text="{i18n>QuantityScanContent}" width="auto" />
+				</HBox>
+			</VBox>
+		</content>
+		
+		<beginButton>
+			<Button text="{i18n>Yes}" type="Emphasized" press="onQuantityScanSave" />
+		</beginButton>
+		<endButton>
+			<Button text="{i18n>No}" type="Default" press="onQuantityScanClose" />
+		</endButton>
+		
+	</Dialog>
+</core:FragmentDefinition>
