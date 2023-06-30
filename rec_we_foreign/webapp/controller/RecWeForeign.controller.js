@@ -89,6 +89,7 @@ sap.ui.define([
                 "viewMode":        "Handling",
                 "booking":         false,
                 "refresh":         true,
+                "storno":          false,
                 "ok":              true,
                 "showOk":          false,
                 "showErr":         false,
@@ -177,6 +178,10 @@ sap.ui.define([
             this._onOkClicked();
         },
 
+        onPressCancellation: function () {
+            this.onCancellationApprovalOpen();
+        },
+        
         onPressRefresh: function () {
             this._resetAll();
         },
@@ -306,6 +311,75 @@ sap.ui.define([
                             }
                         }
                     });
+            } else {
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
+            }
+        },
+
+        _CancelHuData: function (oTable) {
+            var sOkMesg  = this.getResourceBundle().getText("OkMesCancellation");
+            var sErrMesg = this.getResourceBundle().getText("ErrorCancellation");
+            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var oData    = oTable.getModel().getData();
+            var iODataLength = oData.length;
+            var iCounter = 1;
+
+            // ---- Update the HU Data to the backend
+            if (oData.length > 0) {
+                this.oModel.setDeferredGroups(["huListGroup"]);
+                this.oModel.setUseBatch(true);
+                this.getView().setBusy(true);
+
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+
+                    if (data.StatusUnload === true) {
+                        var sPath = "/DeliveryHU(WarehouseNumber='" + data.WarehouseNumber + "',HandlingUnit='" + data.HandlingUnit + "')";
+                        var that  = this;
+
+                        var urlParam = { "BookUnloadCancel": true };
+
+                        this.oModel.update(sPath, urlParam, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
+
+                        this.oModel.submitChanges({
+                            groupId: "huListGroup",
+                            error: function (oError, resp) {
+                                that.oModel.setUseBatch(false);
+                                that.getView().setBusy(false);
+                                
+                                tools.handleODataRequestFailed(oError, resp, true);
+                            },
+                            success: function (rData, oResponse) {
+                                that.oModel.setUseBatch(false);
+                                that.getView().setBusy(false);
+
+                                if (iCounter === iODataLength) {
+                                    if (parseInt(oResponse.statusCode, 10) === 202 && (oResponse.statusText === "Accepted" || oResponse.statusText === "")) {
+                                        that.oScanModel.setProperty("/showOk", true);
+                                        that.oScanModel.setProperty("/showOkText", sOkMesg);       
+        
+                                        // ---- Do nothing -> Good case
+                                        setTimeout(function () {
+                                            that._resetAll();
+                            
+                                            // ---- Set Focus to main Input field
+                                            that._setFocus("idInput_HU");
+                                        }, tSTime);            
+                                    } else {
+                                        tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                                    }
+                                }
+
+                                iCounter = iCounter + 1;
+                            }
+                        }); 
+                    } else {
+                        iODataLength = iODataLength - 1;
+                    }
+                }
             } else {
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -696,6 +770,7 @@ sap.ui.define([
 		},
 
 		_handleScanModelData: function (type, oTable) {
+            this.oScanModel.setProperty("/storno", true);
             if (oTable.getModel().getData().length > 0) {
                 this.oScanModel.setProperty("/booking", true);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -834,6 +909,59 @@ sap.ui.define([
             // ---- Unmark all HU's which are not delivered (reset under booking) and start booking
             this._resetLessHuData(oTable);
             this._bookHuMissingData(oTable);
+
+            // ---- Set Focus to default Input field
+            this._setFocus();
+		},
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        onCancellationApprovalOpen: function () {
+			var fragmentFile = _fragmentPath + "dialogApproveCancellation";
+			var oView = this.getView();
+			var that = this;
+			
+            // ---- Starts the Bookung Dialog for Handling Units
+			if (!this.getView().dialogApproveCancellation) {
+				sap.ui.core.Fragment.load({
+					id: oView.getId(),
+					name: fragmentFile,
+					controller: this
+				}).then(function (oDialog) {
+					oView.addDependent(oDialog);
+					oView.dialogApproveCancellation = oDialog;
+					oView.dialogApproveCancellation.addStyleClass(that.getOwnerComponent().getContentDensityClass());
+                    oView.dialogApproveCancellation.open();
+				});
+			} else {
+                oView.dialogApproveCancellation.open();
+            }
+ 		},
+
+		onCancellationApprovalClose: function () {
+            var oTable = this.PackageListTable;
+
+            if (this.getView().dialogApproveCancellation) {
+				this.getView().dialogApproveCancellation.close();
+			}
+
+            this._setFocus();
+		},
+
+		onCancellationkApprovalAfterClose: function () {
+            this._setFocus();
+		},
+
+		onCancellationApprovalSave: function () {
+			if (this.getView().dialogApproveCancellation) {
+				this.getView().dialogApproveCancellation.close();
+			}
+
+            // ---- Remove all not found Handling Units from the Delivery
+            var oTable = this.PackageListTable;
+
+            // ---- Unmark all HU's which are not delivered (reset under Cancellation)
+            this._CancelHuData(oTable);
 
             // ---- Set Focus to default Input field
             this._setFocus();
@@ -1096,6 +1224,10 @@ sap.ui.define([
                         evt.preventDefault();
 						that.onPressRefresh();						
 						break;			                
+                    case 116: // ---- F5 Key
+                        evt.preventDefault();
+						that.onPressCancellation();						
+						break;			                
 					default: 
 					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
                         break;
@@ -1157,6 +1289,7 @@ sap.ui.define([
                 "viewMode":        "Handling",
                 "booking":         false,
                 "refresh":         true,
+                "storno":          false,
                 "ok":              true,
                 "showOk":          false,
                 "showErr":         false,
