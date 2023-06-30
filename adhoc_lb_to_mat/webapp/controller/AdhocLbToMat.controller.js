@@ -61,8 +61,9 @@ sap.ui.define([
             // ---- Define variables for the Mobile App
             this.oView = this.getView();
 
-            this.sWN  = "";
-            this.iMat = "";
+            this.sWN    = "";
+            this.iMat   = "";
+            this.sLType = "";
             this.sViewMode       = "Material";
             this.sShellSource    = "#Shell-home";
             this.iScanModusAktiv = 0;
@@ -292,6 +293,8 @@ sap.ui.define([
 
 	    loadUserDataWN: function () {
             var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sLType1 = this.getResourceBundle().getText("LType1");
+            var sLType2 = this.getResourceBundle().getText("LType2");
             var sParam = encodeURIComponent("/SCWM/LGN");
             var that   = this;
 
@@ -317,13 +320,21 @@ sap.ui.define([
                     }
 
 					if (rData !== null && rData !== undefined && rData !== "") {
-                        that.sWN = rData.ParameterValue;
-
                         // ---- Check for Warehouse Number
-                        if (that.sWN === "") {
+                        if (rData.ParameterValue === "") {
                             tools.showMessageError(sWarehouseNumberErr, "");
                             
                             return;
+                        }
+
+                        that.sWN = rData.ParameterValue;
+
+                        if (that.sWN === "L007") {
+                            that.sLType = sLType1;
+                        } else if (that.sWN === "L009") {
+                            that.sLType = sLType2;
+                        } else {
+                            that.sLType = "";
                         }
                     }
 				}
@@ -351,6 +362,7 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter("Material", sap.ui.model.FilterOperator.EQ, this.iMat));
                 aFilters.push(new sap.ui.model.Filter("StatusOpenWarehouseTask", sap.ui.model.FilterOperator.EQ, false));
                 aFilters.push(new sap.ui.model.Filter("StockTypeLocn", sap.ui.model.FilterOperator.EQ, sStockType));
+                aFilters.push(new sap.ui.model.Filter("StorageType", sap.ui.model.FilterOperator.EQ, this.sLType));
                 
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/HandlingUnit", {
