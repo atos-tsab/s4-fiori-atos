@@ -201,7 +201,7 @@ sap.ui.define([
 
                     if (this.sViewMode === "Handling" && sManNumber !== "") {
                         if (this.sActiveQMode === "W") {
-                            this._loadQuantityData(sManNumber);
+                            this._loadHuData(sManNumber);
                         } else {
                             var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
 
@@ -244,7 +244,7 @@ sap.ui.define([
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined && this.oDisplayModel.getData()) {
 
                 var sPath = "/WarehouseTask(WarehouseNumber='" + oData.WarehouseNumber + "',WarehouseTaskId='" + oData.WarehouseTaskId + "')";
-                var urlParam = { "WarehouseTaskType": "H", "BookConfirm": true, "TargetQuantity": oData.ActualQuantity};
+                var urlParam = { "WarehouseTaskType": "H", "BookConfirm": true, "HandlingUnitId": oData.HandlingUnitId, "TargetQuantity": oData.ActualQuantity};
     
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, urlParam, {
@@ -293,6 +293,89 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Loading / Set Functions
         // --------------------------------------------------------------------------------------------------------------------
+
+	    _loadHuData: function (sManNumber) {
+            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var that = this;
+
+            this.iHU = sManNumber;
+
+            // ---- Check for Warehouse Number
+            if (this.iWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            // ---- Read the HU Data from the backend
+            var sPath = "/HandlingUnit(WarehouseNumber='" + this.iWN + "',HandlingUnitId='" + this.iHU + "')";
+            
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    urlParameters: {
+                        "$expand": "to_WarehouseTask"
+                    },
+                    success: function(rData, response) {
+                        if (rData !== null && rData !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                // ---- Coding in case of showing Business application Errors
+                                tools.alertMe(rData.SapMessageText, "");
+                                
+                                that._resetAll();
+                                that._setFocus("idInput_HU");
+
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+
+                            // ---- Check for QS relevant HU
+                            if (rData.InspectionLot !== "" && rData.InspectionType !== "") {
+                                that.QsRelevantHU = true;
+                            } else {
+                                that.QsRelevantHU = false;
+                            }
+
+                            that.StatusOpenWarehouseTask = rData.StatusOpenWarehouseTask;
+                            that._setHuData(rData, sManNumber);
+                        } else {
+                            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+
+                            tools.alertMe(sErrMsg, "");
+                        }
+                    }
+                });
+        },
+
+	    _setHuData: function (oData, sManNumber) {
+            if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
+                var sMaterial = oData.to_WarehouseTask.MaterialNo;
+
+                if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
+                    this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+                } else {
+                    var sErrNoIndentMaterial = this.getResourceBundle().getText("NoIndentMaterial", sMaterial);
+
+                    tools.alertMe(sErrNoIndentMaterial);
+
+                    return;
+                }
+            } else {
+                var sErrNoHuData = this.getResourceBundle().getText("NoHuData", sManNumber);
+
+                tools.alertMe(sErrNoHuData);
+
+                return;
+            }
+
+            // ---- Change the Scan Model
+            this._loadQuantityData(sManNumber);
+        },
 
 	    _loadWareHouseData: function (iWHN, sQueue, iHU) {
             var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", iHU);
@@ -626,7 +709,7 @@ sap.ui.define([
 
                     if (this.sViewMode === "Handling" && this.oScanModel.getProperty("/valueManuallyNo") !== "") {
                         if (this.sActiveQMode === "W") {
-                            this._loadQuantityData(sManNumber);
+                            this._loadHuData(sManNumber);
                         } else {
                             var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
 
@@ -892,7 +975,7 @@ sap.ui.define([
             this.oScanModel.setProperty("/viewQuantity", false);
             this.oScanModel.setProperty("/viewMode", "LocConf");
             this.oScanModel.setProperty("/viewLocConf", true);
-            this.oScanModel.setProperty("/ok", false);
+            this.oScanModel.setProperty("/ok", true);
             this.oScanModel.setProperty("/valueManuallyNo", "");
         },
 
