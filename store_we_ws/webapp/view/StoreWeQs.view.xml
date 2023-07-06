@@ -10,11 +10,11 @@
 			<Toolbar>
 				<Title text="{ScanModel>/viewTitle}" titleStyle="H5" class="sapUiSmallMarginBegin" />
 				<ToolbarSpacer />
-					<Button id="idButtonBook_STORE_WE_QS" press="onPressBooking" text="{i18n>Book}" type="Reject" width="100px" enabled="{ScanModel>/booking}" />
+					<Button id="idButtonBook_STORE_WE_QS" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
 					<ToolbarSeparator />
-					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>OkF2}" type="Success" width="100px" enabled="{ScanModel>/ok}" />
+					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
 					<ToolbarSeparator />
-					<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="100px" enabled="{ScanModel>/refresh}" class="sapUiSmallMarginEnd" />
+					<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" class="sapUiSmallMarginEnd" />
 			</Toolbar>
 		</customHeader>
 
