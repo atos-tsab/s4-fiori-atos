@@ -132,9 +132,9 @@
         _onObjectMatched: function (oEvent) {
             var sViewTitleH = this.getResourceBundle().getText("CaptureQueue");
             var sViewTitleW = this.getResourceBundle().getText("CaptureShipping");
+            var that = this;
 
-			// ---- Enable the Function key solution
-			this._setKeyboardShortcutsMain();
+			// this._setKeyboardShortcutsQueue();
 
             this._getShellSource();
             this._resetAll();
@@ -164,7 +164,7 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onPressMainOk: function (sViewMode, route) {
-            this.sViewMode = sViewMode;
+            // this.sViewMode = sViewMode;
 
             this.onNavToHandlingUnits(this.sActiveQueue);
         },
@@ -451,7 +451,7 @@
 		// ---- Hotkey Function
 		// --------------------------------------------------------------------------------------------------------------------
 		
-		_setKeyboardShortcutsMain: function() {
+		_setKeyboardShortcutsQueue: function() {
             var sRoute = "Main";
             var that = this;
 
@@ -460,29 +460,29 @@
                 var sViewMode = that.oScanModel.getData().viewMode;
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-                    case 113: // ---- F2 Key
-                        evt.preventDefault();
+                if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                    switch (evt.keyCode) {
+                        case 113: // ---- F2 Key
+                            evt.preventDefault();
 
-                        if (sRoute === "Main") {
-                            that.onPressMainOk(sViewMode);
-                        }
+                            if (sRoute === "Main") {
+                                that.onPressMainOk(sViewMode);
+                            }
 
-                        evt.keyCode = null;
+                            break;			                
+                        case 114: // ---- F3 Key
+                            evt.preventDefault();
 
-						break;			                
-                    case 114: // ---- F3 Key
-                        evt.preventDefault();
-
-                        if (sRoute === "Main") {
-                            that.onNavBack();
-                        }
-                        
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+                            if (sRoute === "Main") {
+                                that.onNavBack();
+                            }
+                            
+                            break;			                
+                        default: 
+                            // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                            break;
+                    }
+                }
 			}, this));
 		},
 

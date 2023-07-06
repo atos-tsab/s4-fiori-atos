@@ -66,9 +66,9 @@
 										<OverflowToolbar width="800px" class="sapUiSmallMarginBegin">
 											<Label text="{i18n>Toolbar}{i18n>Colon}" />
 											<ToolbarSpacer/>
-											<Button press="onHandleLocation($event,'next')" text="{i18n>F7Next}" type="Emphasized" width="70px" enabled="{ScanModel>/next}" />
+											<Button press="onHandleLocation($event,'next')" text="{i18n>Next}"     type="Emphasized" width="60px" enabled="{ScanModel>/next}" />
 											<ToolbarSeparator />
-											<Button press="onHandleLocation($event,'back')" text="{i18n>F8Back}" type="Emphasized" width="70px" enabled="{ScanModel>/back}" />
+											<Button press="onHandleLocation($event,'back')" text="{i18n>Previous}" type="Emphasized" width="60px" enabled="{ScanModel>/back}" />
 										</OverflowToolbar>
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">

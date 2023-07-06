@@ -157,7 +157,7 @@
             var sTableTitleC = this.getResourceBundle().getText("WarehouseTask");
 
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcutsHU();
+			// this._setKeyboardShortcutsHU();
 
             // ---- Reset all components 
             this._resetAll();
@@ -171,13 +171,13 @@
                 if (this.sActiveQMode === "H") {
                     this.oScanModel.setProperty("/captionList", sViewTitleH);
                     this.oScanModel.setProperty("/captionTable", sTableTitleH);
-                    this.oScanModel.setProperty("/captionColumn", sTableTitleH);
+                    this.oScanModel.setProperty("/captionVisble", true);
                     this.oScanModel.setProperty("/lblWidth", "110px");
                     this.oScanModel.setProperty("/viewMat", false);
                 } else {
                     this.oScanModel.setProperty("/captionList", sViewTitleM);
                     this.oScanModel.setProperty("/captionTable", sTableTitleM);
-                    this.oScanModel.setProperty("/captionColumn", sTableTitleC);
+                    this.oScanModel.setProperty("/captionVisble", false);
                     this.oScanModel.setProperty("/lblWidth", "80px");
                     this.oScanModel.setProperty("/viewMat", true);
                 }
@@ -222,7 +222,12 @@
                         var iEnd   = oModel.getData().length;
 
                         this.iActiveHU = iIndex;
-                        this.sActiveHU = selectedRow.HandlingUnitId;
+
+                        if (this.sActiveQMode === "H") {
+                            this.sActiveHU = selectedRow.HandlingUnitId;
+                        } else {
+                            this.sActiveHU = selectedRow.WarehouseTaskId;
+                        }
 
                         if (iIndex === 0) {
                             if (iEnd > 1) {
@@ -288,7 +293,7 @@
 
 	    loadHuData: function (iWHN, sQueue) {
             var sErrMsg = this.getResourceBundle().getText("QueueErr");
-            var sNavTo  = "to_HandlingUnits";
+            var sNavTo  = "to_HandlingUnits,to_WarehouseTasks";
             var that = this;
 
             // ---- Read the HU Data from the backend 
@@ -298,8 +303,6 @@
             
                 if (this.sActiveQMode === "W") {
                     aFilters.push(new sap.ui.model.Filter("ReadMode", sap.ui.model.FilterOperator.EQ, this.sActiveQMode));
-
-                    sNavTo = "to_WarehouseTasks";
                 }
 
             this.getView().setBusy(true);
@@ -334,7 +337,7 @@
 
                             if (rData.results.length > 0) { 
                                 if (that.sActiveQMode === "H") {
-                                    that._setHuTableData(rData.results[0].to_HandlingUnits);
+                                    that._setHuTableData(rData.results[0].to_WarehouseTasks);
                                 } else {
                                     that._setWhtTableData(rData.results[0].to_WarehouseTasks);
                                 }
@@ -356,10 +359,11 @@
                     data.Status = "None";
                     data.Booked = false;
 
+                    data.WarehouseTaskId       = item.WarehouseTaskId;
                     data.HandlingUnitId        = item.HandlingUnitId;
-                    data.Material              = item.Material;
-                    data.SourceStorageLocation = item.StorageBin;
-                    data.SourceStorageType     = item.StorageType;
+                    data.Material              = item.MaterialNo;
+                    data.SourceStorageLocation = item.SourceStorageBin;
+                    data.SourceStorageType     = item.SourceStorageType;
 
                 oListData.push(data);
             } 
@@ -382,7 +386,7 @@
                     data.Status = "None";
                     data.Booked = false;
 
-                    data.HandlingUnitId        = item.WarehouseTaskId;
+                    data.WarehouseTaskId       = item.WarehouseTaskId;
                     data.Material              = item.MaterialNo;
                     data.SourceStorageLocation = item.SourceStorageBin;
                     data.SourceStorageType     = item.SourceStorageType;
@@ -625,50 +629,52 @@
                 var sViewMode = that.oScanModel.getData().viewMode;
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-			        case 13: // ---- Enter Key
-                        evt.preventDefault();
-
-                        if (sRoute === "HU") {
-                            if (this.sActiveQMode === "H") {
-                                that.onPressHuOk(sViewMode);
-                            } else {
-                                that._onOkClicked();
-                            }
-                        }
-                        
-						break;			                
-                    case 113: // ---- F2 Key
-                        evt.preventDefault();
-
-                        if (sRoute === "HU") {
-                            that.onPressHuOk(sViewMode);
-                        }
-
-                        evt.keyCode = null;
-
-						break;			                
-                    case 114: // ---- F3 Key
-                        evt.preventDefault();
-
-                        if (sRoute === "HU") {
-                            that.onNavBack();
-                        }
-
-                        that.onNavBack();
-						break;			                
-                    case 115: // ---- F4 Key
-                        evt.preventDefault();
-
-                        if (sRoute === "HU") {
-                            that.onPressRefresh();
-                        }
-
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+                // if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                //     switch (evt.keyCode) {
+                //         case 13: // ---- Enter Key
+                //             evt.preventDefault();
+    
+                //             if (sRoute === "HU") {
+                //                 if (this.sActiveQMode === "H") {
+                //                     that.onPressHuOk(sViewMode);
+                //                 } else {
+                //                     that._onOkClicked();
+                //                 }
+                //             }
+    
+                //             evt.keyCode = null;
+                            
+                //             break;			                
+                //         case 113: // ---- F2 Key
+                //             evt.preventDefault();
+    
+                //             if (sRoute === "HU") {
+                //                 that.onPressHuOk(sViewMode);
+                //             }
+    
+                //             break;			                
+                //         case 114: // ---- F3 Key
+                //             evt.preventDefault();
+    
+                //             if (sRoute === "HU") {
+                //                 that.onNavBack();
+                //             }
+    
+                //             that.onNavBack();
+                //             break;			                
+                //         case 115: // ---- F4 Key
+                //             evt.preventDefault();
+    
+                //             if (sRoute === "HU") {
+                //                 that.onPressRefresh();
+                //             }
+    
+                //             break;			                
+                //         default: 
+                //             // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                //             break;
+                //     }
+                // }
 			}, this));
 		},
 

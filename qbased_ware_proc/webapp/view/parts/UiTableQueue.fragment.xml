@@ -23,7 +23,7 @@
 					<ui:customData>
 						<core:CustomData key="p13nData" value='\{"columnKey": "No", "columnIndex":"0", "leadingProperty": "No"}' />
 					</ui:customData>
-					<Label text="{i18n>No}" textAlign="Center" width="100%" />
+					<Label text="{i18n>Nom}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{No}" />
 					</ui:template>

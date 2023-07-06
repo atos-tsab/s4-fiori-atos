@@ -143,7 +143,7 @@ sap.ui.define([
 
         _onObjectMatched: function (oEvent) {
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcutsResign();
+			this._setKeyboardShortcuts();
 
             // ---- Reset all components
             this._resetAll();
@@ -190,9 +190,12 @@ sap.ui.define([
                     this.sViewMode = oScanData.viewMode;
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oScanData.valueManuallyNo.trim();
-                        sManNumber = this._removePrefix(sManNumber);
+                        // ---- Check for DMC All parameter
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim();
                         sManNumber = sManNumber.toUpperCase();
+                        sManNumber = this._removePrefix(sManNumber);
 
                         this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     } else {
@@ -294,6 +297,87 @@ sap.ui.define([
         // ---- Loading / Set Functions
         // --------------------------------------------------------------------------------------------------------------------
 
+	    _loadWareHouseData: function (iWHN, sQueue, iHU) {
+            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", iHU);
+            var that = this;
+
+            // ---- Read the WareHouse Data from the backend
+			var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, iWHN));
+                aFilters.push(new sap.ui.model.Filter("QueueId", sap.ui.model.FilterOperator.EQ, sQueue));
+
+            this.getView().setBusy(true);
+
+            var oModel = this._getServiceUrl()[0];
+                oModel.read("/Queue", {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        that.getView().setBusy(false);
+
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    urlParameters: {
+                        "$expand": "to_WarehouseTasks"
+                    },
+                    success: function(rData, response) {
+                        that.getView().setBusy(false);
+
+                        if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results[0].to_WarehouseTasks.results.length > 0) {
+                                if (rData.results.length > 0) {
+                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                        // ---- Coding in case of showing Business application Errors
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
+                                        // ---- Coding in case of showing Business application Errors
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                        // ---- Coding in case of showing Business application Informations
+                                        tools.alertMe(rData.results[0].SapMessageText, "");
+                                    }
+                                }
+    
+                                let data = rData.results[0].to_WarehouseTasks.results;
+
+                                for (let i = 0; i < data.length; i++) {
+                                    let item = data[i];
+
+                                    if (that.sActiveQMode === "H") {
+                                        if (item.HandlingUnitId === iHU) {
+                                            that._setWareHouseTableData(item, iHU);
+                                        }
+                                    } else if (that.sActiveQMode === "W") {
+                                        if (item.WarehouseTaskId === iHU) {
+                                            that._setWareHouseTableData(item, iHU);
+                                        }
+                                    }
+                                }
+                            } else {
+                                tools.alertMe(sErrMsg, "");
+                            }
+                        }
+                    }
+                });
+        },
+
+	    _setWareHouseTableData: function (oData, sManNumber) {
+            var sViewMode = this.oScanModel.getProperty("/viewMode");
+
+            // ---- Reset the Display Model
+            this.oDisplayModel.setData([]);
+            this.oDisplayModel.setData(oData);
+
+            this.iScanModusAktiv = 0;
+
+            // ---- Change the Main focus to HU or Warehouse Task
+            if (this.sActiveQMode === "W") {
+                this._handleHandlingUnitData(sViewMode, sManNumber);
+            } else {
+                this._handleHandlingUnitData(sViewMode, sManNumber);
+                // this._loadQuantityData(sViewMode, sManNumber);
+            }
+        },
+
 	    _loadHuData: function (sManNumber) {
             var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
             var that = this;
@@ -375,87 +459,6 @@ sap.ui.define([
 
             // ---- Change the Scan Model
             this._loadQuantityData(sManNumber);
-        },
-
-	    _loadWareHouseData: function (iWHN, sQueue, iHU) {
-            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", iHU);
-            var that = this;
-
-            // ---- Read the WareHouse Data from the backend
-			var aFilters = [];
-                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, iWHN));
-                aFilters.push(new sap.ui.model.Filter("QueueId", sap.ui.model.FilterOperator.EQ, sQueue));
-
-            this.getView().setBusy(true);
-
-            var oModel = this._getServiceUrl()[0];
-                oModel.read("/Queue", {
-                    filters: aFilters,
-                    error: function(oError, resp) {
-                        that.getView().setBusy(false);
-
-                        tools.handleODataRequestFailed(oError, resp, true);
-                    },
-                    urlParameters: {
-                        "$expand": "to_WarehouseTasks"
-                    },
-                    success: function(rData, response) {
-                        that.getView().setBusy(false);
-
-                        if (rData.results !== null && rData.results !== undefined) {
-                            if (rData.results[0].to_WarehouseTasks.results.length > 0) {
-                                if (rData.results.length > 0) {
-                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
-                                        // ---- Coding in case of showing Business application Errors
-                                        tools.showMessageError(rData.results[0].SapMessageText, "");
-                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
-                                        // ---- Coding in case of showing Business application Errors
-                                        tools.showMessageError(rData.results[0].SapMessageText, "");
-                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
-                                        // ---- Coding in case of showing Business application Informations
-                                        tools.alertMe(rData.results[0].SapMessageText, "");
-                                    }
-                                }
-    
-                                let data = rData.results[0].to_WarehouseTasks.results;
-
-                                for (let i = 0; i < data.length; i++) {
-                                    let item = data[i];
-
-                                    if (that.sActiveQMode === "H") {
-                                        if (item.HandlingUnitId === iHU) {
-                                            that._setWareHouseTableData(item, iHU);
-                                        }
-                                    } else if (that.sActiveQMode === "W") {
-                                        if (item.WarehouseTaskId === iHU) {
-                                            that._setWareHouseTableData(item, iHU);
-                                        }
-                                    }
-                                }
-                            } else {
-                                tools.alertMe(sErrMsg, "");
-                            }
-                        }
-                    }
-                });
-        },
-
-	    _setWareHouseTableData: function (oData, sManNumber) {
-            var sViewMode = this.oScanModel.getProperty("/viewMode");
-
-            // ---- Reset the Display Model
-            this.oDisplayModel.setData([]);
-            this.oDisplayModel.setData(oData);
-
-            this.iScanModusAktiv = 0;
-
-            // ---- Change the Main focus to HU or Warehouse Task
-            if (this.sActiveQMode === "W") {
-                this._handleHandlingUnitData(sViewMode, sManNumber);
-            } else {
-                this._handleHandlingUnitData(sViewMode, sManNumber);
-                // this._loadQuantityData(sViewMode, sManNumber);
-            }
         },
 
         _handleHandlingUnitData: function (sManNumber) {
@@ -674,8 +677,12 @@ sap.ui.define([
                     var iScanAktiv  = oEvent.getParameter("iScanModusAktiv");
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oEvent.getParameter("valueManuallyNo").trim()
+                        // ---- Check for Data Matix Code
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim()
                         sManNumber = sManNumber.toUpperCase();
+                        sManNumber = this._removePrefix(sManNumber);
 
                         this.oScanModel.setProperty("/valueSuffix", oEvent.getParameter("valueSuffix"));
                         this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
@@ -684,16 +691,12 @@ sap.ui.define([
                     }
                     
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
-                        sScanNumber = oEvent.getParameter("valueScan").trim()
-                        sScanNumber = sManNumber.toUpperCase();
-                        
                         // ---- Check for Data Matix Code
-                        var check = tools.checkForDataMatrixArray(sScanNumber);
+                        sScanNumber = this._handleDMC(this.sViewMode, sScanNumber);
 
-                        if (check[0]) {
-                            var sScanNumber = check[1];
-                        }
-
+                        sScanNumber = sScanNumber.trim()
+                        sScanNumber = sScanNumber.toUpperCase();
+                        
                         this.oScanModel.setProperty("/valueSuffix", oEvent.getParameter("valueSuffix"));
                         this.oScanModel.setProperty("/valueManuallyNo", sScanNumber);
 
@@ -865,75 +868,77 @@ sap.ui.define([
 		// ---- Hotkey Function
 		// --------------------------------------------------------------------------------------------------------------------
 		
-		_setKeyboardShortcutsResign: function() {
+		_setKeyboardShortcuts: function() {
             var sRoute = "Resign";
             var that = this;
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
-                var controlF2 = that.byId("idInput_HU");
+                // var controlF2 = that.byId("idInput_HU");
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-			        case 13: // ---- Enter Key
-                        evt.preventDefault();
+                if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                    switch (evt.keyCode) {
+                        case 13: // ---- Enter Key
+                            evt.preventDefault();
 
-                        if (sRoute === "Resign") {
-                            if (that.iScanModusAktiv < 2) {
-                                that.onPressResignOk();
-                            } else {
-                                that.iScanModusAktiv = 0;
-                            }
-                        }
-
-                        evt.keyCode = null;
-
-						break;			                
-			        case 112: // ---- F1 Key
-                        evt.preventDefault();
-                        var controlF1 = that.BookButton;
-
-                        if (sRoute === "Resign") {
-                            if (controlF1 && controlF1.getEnabled()) {
-                                that.onPressBooking();
-                            }
-                        }
-						
-						break;			                
-                    case 113: // ---- F2 Key
-                        evt.preventDefault();
- 
-                        if (sRoute === "Resign") {
-                            if (that.iScanModusAktiv < 2) {
-                                if (controlF2 && controlF2.getEnabled()) {
-                                    controlF2.fireChange();
+                            if (sRoute === "Resign") {
+                                if (that.iScanModusAktiv < 2) {
+                                    that.onPressResignOk();
+                                } else {
+                                    that.iScanModusAktiv = 0;
                                 }
                             }
-                        }
 
-                        evt.keyCode = null;
+                            evt.keyCode = null;
 
-                        break;			                
-                    case 114: // ---- F3 Key
-                        evt.preventDefault();
+                            break;			                
+                        case 112: // ---- F1 Key
+                            // evt.preventDefault();
+                            // var controlF1 = that.BookButton;
 
-                        if (sRoute === "Resign") {
-                            that.onNavBack();
-                        }
+                            // if (sRoute === "Resign") {
+                            //     if (controlF1 && controlF1.getEnabled()) {
+                            //         that.onPressBooking();
+                            //     }
+                            // }
+                            
+                            break;			                
+                        case 113: // ---- F2 Key
+                            // evt.preventDefault();
+    
+                            // if (sRoute === "Resign") {
+                            //     if (that.iScanModusAktiv < 2) {
+                            //         if (controlF2 && controlF2.getEnabled()) {
+                            //             controlF2.fireChange();
+                            //         }
+                            //     }
+                            // }
 
-                        break;			                
-                    case 115: // ---- F4 Key
-                        evt.preventDefault();
+                            // evt.keyCode = null;
 
-                        if (sRoute === "Resign") {
-                            that.onPressRefresh();
-                        }
-                        
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+                            break;			                
+                        case 114: // ---- F3 Key
+                            // evt.preventDefault();
+
+                            // if (sRoute === "Resign") {
+                            //     that.onNavBack();
+                            // }
+
+                            break;			                
+                        case 115: // ---- F4 Key
+                            // evt.preventDefault();
+
+                            // if (sRoute === "Resign") {
+                            //     that.onPressRefresh();
+                            // }
+                            
+                            break;			                
+                        default: 
+                            // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                            break;
+                    }
+                }
 			}, this));
 		},
 
@@ -951,6 +956,32 @@ sap.ui.define([
                 setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
         },
+
+		_handleDMC: function (sViewMode, sManNumber) {
+            var sDMC = "";
+
+            if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
+                // ---- Check for Data Matix Code
+                var check = tools.checkForDataMatrixArray(sManNumber);
+
+                // ---- Check for DMC All parameter
+                if (check[0] === true) {
+                    if (sViewMode === "Material") {
+                        sDMC = check[1];
+                    } else if (sViewMode === "Quantity") {
+                        sDMC = check[3];                 
+                    } else if (sViewMode === "Handling") {
+                        sDMC = check[5];                 
+                    } else {
+                        sDMC = sManNumber;
+                    }
+                } else {
+                    sDMC = sManNumber;
+                }
+            }
+
+            return sDMC;
+		},
 
         _removePrefix: function (key) {
             let str = key;

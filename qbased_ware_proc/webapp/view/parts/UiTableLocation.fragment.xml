@@ -23,23 +23,32 @@
 					<ui:customData>
 						<core:CustomData key="p13nData" value='\{"columnKey": "No", "columnIndex":"0", "leadingProperty": "No"}' />
 					</ui:customData>
-					<Label text="{i18n>No}" textAlign="Center" width="100%" />
+					<Label text="{i18n>Nom}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{No}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnitId", "columnIndex":"1", "leadingProperty": "HandlingUnitId"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "WarehouseTaskId", "columnIndex":"1", "leadingProperty": "WarehouseTaskId"}' />
 					</ui:customData>
-					<Label text="{ScanModel>/captionColumn}" textAlign="Center" width="100%" />
+					<Label text="{i18n>WarehouseTask}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{WarehouseTaskId}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="{ScanModel>/captionVisble}" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnitId", "columnIndex":"2", "leadingProperty": "HandlingUnitId"}' />
+					</ui:customData>
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{HandlingUnitId}" />
 					</ui:template>
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"2", "leadingProperty": "Material"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"3", "leadingProperty": "Material"}' />
 					</ui:customData>
 					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -48,7 +57,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "StorageBin", "columnIndex":"3", "leadingProperty": "StorageBin"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "StorageBin", "columnIndex":"4", "leadingProperty": "StorageBin"}' />
 					</ui:customData>
 					<Label text="{i18n>SourceStorageLocation}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -57,7 +66,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "StorageType", "columnIndex":"4", "leadingProperty": "StorageType"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "StorageType", "columnIndex":"5" "leadingProperty": "StorageType"}' />
 					</ui:customData>
 					<Label text="{i18n>SourceStorageType}" textAlign="Center" width="100%" />
 					<ui:template>

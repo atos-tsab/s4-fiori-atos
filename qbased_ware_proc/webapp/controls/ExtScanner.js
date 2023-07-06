@@ -890,39 +890,41 @@ sap.ui.define([
                 }
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-			        case 13: // ---- Enter Key
-                        evt.preventDefault();
+                if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                    switch (evt.keyCode) {
+                        case 13: // ---- Enter Key
+                            evt.preventDefault();
 
-                        if (that.sScanMode === "Input") {
+                            if (that.sScanMode === "Input") {
+                                if (controlF1 && controlF1.getEnabled()) {
+                                    that._oScanModel.setProperty("/iScanModusAktiv", 2);
+
+                                    controlF1.firePress();
+                                }
+                            } else if (that.sScanMode === "Scanner") {
+                                if (controlF2 && controlF2.getEnabled()) {
+                                    that._oScanModel.setProperty("/iScanModusAktiv", 2);
+
+                                    controlF2.firePress();
+                                }
+                            } else {
+                                that._oScanModel.setProperty("/iScanModusAktiv", 1);
+                            }
+                            
+                            break;			                
+                        case 112: // ---- F1 Key
+                            evt.preventDefault();
+    
                             if (controlF1 && controlF1.getEnabled()) {
-                                that._oScanModel.setProperty("/iScanModusAktiv", 2);
-
                                 controlF1.firePress();
                             }
-                        } else if (that.sScanMode === "Scanner") {
-                            if (controlF2 && controlF2.getEnabled()) {
-                                that._oScanModel.setProperty("/iScanModusAktiv", 2);
-
-                                controlF2.firePress();
-                            }
-                        } else {
-                            that._oScanModel.setProperty("/iScanModusAktiv", 1);
-                        }
-						
-						break;			                
-			        case 112: // ---- F1 Key
-                        evt.preventDefault();
- 
-				        if (controlF1 && controlF1.getEnabled()) {
-                            controlF1.firePress();
-                        }
-						
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+                            
+                            break;			                
+                        default: 
+                            // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                            break;
+                    }
+                }
 			}, this));
 		},
 
