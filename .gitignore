@@ -10,3 +10,4 @@
 **_mta_build_tmp
 .vscode/
 **/ui5-deploy.yaml
+bpw-ca.cer

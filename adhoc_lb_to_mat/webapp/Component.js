@@ -18,7 +18,7 @@
  ************************************************************************/
 
 
- sap.ui.define([
+sap.ui.define([
     "sap/ui/core/UIComponent",
     "sap/ui/Device",
     "z/adhoclbtomat/model/models",
