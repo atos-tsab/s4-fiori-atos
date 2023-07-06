@@ -176,8 +176,14 @@
                     var sManNumber = oScanData.valueManuallyNo;
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oScanData.valueManuallyNo.trim();
+                        // ---- Check for DMC All parameter
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim();
+                        sManNumber = sManNumber.toUpperCase();
                         sManNumber = this._removePrefix(sManNumber);
+
+                        this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     } else {
                         sManNumber = "";
                     }
@@ -366,21 +372,23 @@
                     var iScanAktiv  = oEvent.getParameter("iScanModusAktiv");
                     
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oEvent.getParameter("valueManuallyNo").trim()
+                        // ---- Check for Data Matix Code
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim()
+                        sManNumber = sManNumber.toUpperCase();
+                        sManNumber = this._removePrefix(sManNumber);
 
                         oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     }
 
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
-                        sScanNumber = oEvent.getParameter("valueScan").trim()
-                        
                         // ---- Check for Data Matix Code
-                        var check = tools.checkForDataMatrixArray(sScanNumber);
+                        sScanNumber = this._handleDMC(this.sViewMode, sScanNumber);
 
-                        if (check[0]) {
-                            var sScanNumber = check[1];
-                        }
-
+                        sScanNumber = sScanNumber.trim()
+                        sScanNumber = sScanNumber.toUpperCase();
+                        
                         oScanModel.setProperty("/valueManuallyNo", sScanNumber);
                         sManNumber = sScanNumber;
                     }
@@ -566,48 +574,50 @@
                 var controlF2 = that.byId("idInput_Mat");
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-			        case 13: // ---- Enter Key
-                        evt.preventDefault();
+                if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                    switch (evt.keyCode) {
+                        case 13: // ---- Enter Key
+                            evt.preventDefault();
 
-                        if (that.iScanModusAktiv < 2) {
-                            that.onPressOk(sViewMode);
-                        } else {
-                            that.iScanModusAktiv = 0;
-                        }
-
-						break;			                
-			        case 112: // ---- F1 Key
-                        evt.preventDefault();
-                        var controlF1 = that.BookButton;
-
-				        if (controlF1 && controlF1.getEnabled()) {
-                            that.onPressBooking();
-                        }
-						
-						break;			                
-                    case 113: // ---- F2 Key
-                        evt.preventDefault();
- 
-                        if (that.iScanModusAktiv < 2) {
-                            if (controlF2 && controlF2.getEnabled()) {
-                                controlF2.fireChange();
+                            if (that.iScanModusAktiv < 2) {
+                                that.onPressOk(sViewMode);
+                            } else {
+                                that.iScanModusAktiv = 0;
                             }
-                        }
-                        
-						break;			                
-                    case 114: // ---- F3 Key
-                        evt.preventDefault();
-                        that.onNavBack();
-						break;			                
-                    case 115: // ---- F4 Key
-                        evt.preventDefault();
-						that.onPressRefresh();						
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+
+                            break;			                
+                        case 112: // ---- F1 Key
+                            // evt.preventDefault();
+                            // var controlF1 = that.BookButton;
+
+                            // if (controlF1 && controlF1.getEnabled()) {
+                            //     that.onPressBooking();
+                            // }
+                            
+                            break;			                
+                        case 113: // ---- F2 Key
+                            // evt.preventDefault();
+    
+                            // if (that.iScanModusAktiv < 2) {
+                            //     if (controlF2 && controlF2.getEnabled()) {
+                            //         controlF2.fireChange();
+                            //     }
+                            // }
+                            
+                            break;			                
+                        case 114: // ---- F3 Key
+                            // evt.preventDefault();
+                            // that.onNavBack();
+                            break;			                
+                        case 115: // ---- F4 Key
+                            // evt.preventDefault();
+                            // that.onPressRefresh();						
+                            break;			                
+                        default: 
+                            // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                            break;
+                    }
+                }
 			}, this));
 		},
 
@@ -626,6 +636,32 @@
                 setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
         },
+
+		_handleDMC: function (sViewMode, sManNumber) {
+            var sDMC = "";
+
+            if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
+                // ---- Check for Data Matix Code
+                var check = tools.checkForDataMatrixArray(sManNumber);
+
+                // ---- Check for DMC All parameter
+                if (check[0] === true) {
+                    if (sViewMode === "Material") {
+                        sDMC = check[1];
+                    } else if (sViewMode === "Quantity") {
+                        sDMC = check[3];                 
+                    } else if (sViewMode === "Handling") {
+                        sDMC = check[5];                 
+                    } else {
+                        sDMC = sManNumber;
+                    }
+                } else {
+                    sDMC = sManNumber;
+                }
+            }
+
+            return sDMC;
+		},
 
         _removePrefix: function (key) {
             let str = key;

@@ -842,22 +842,30 @@ sap.ui.define([
         },
 
         checkForDataMatrixArray: function (sScanNumber) {
-            // ---- Check for Data Matix Code "0321225900'01'000010'        '2304000002'000000000145"
+            // ---- Check for Data Matix Code
             var sDataMatrixSeperator = this.getResourceBundle().getText("DataMatrixSeperator");
-            var sDataMatrixLePLace   = parseInt(this.getResourceBundle().getText("DataMatrixLePLace"), 10);
             var sScanDataMatrixNo = "";
             var check = false;
 
-            var aArray = this.splitStringIntoArray(sScanNumber, sDataMatrixSeperator);
+            var aArraySplit = this.splitStringIntoArray(sScanNumber, sDataMatrixSeperator);
 
-            if (aArray !== null && aArray !== undefined && aArray.length > 0) {
-                sScanDataMatrixNo = aArray[sDataMatrixLePLace];
+            if (aArraySplit !== null && aArraySplit !== undefined && aArraySplit.length > 0) {
+                var aArray = [true];
+
+                for (let i = 0; i < aArraySplit.length; i++) {
+                    var item = aArraySplit[i];
+
+                    aArray.push(item);
+                    
+                }
+
+                sScanDataMatrixNo = aArray;
                 check = true;
             } else {
                 sScanDataMatrixNo = sScanNumber;
             }
 
-            return [check, sScanDataMatrixNo];
+            return sScanDataMatrixNo;
         },
 
         getResourceBundle: function (ownerComponent) {
