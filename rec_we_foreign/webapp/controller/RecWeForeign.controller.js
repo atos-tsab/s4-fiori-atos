@@ -197,10 +197,16 @@ sap.ui.define([
                     this.sViewMode = oScanData.viewMode;
 
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oScanData.valueManuallyNo.trim();
+                        // ---- Check for DMC All parameter
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim();
+                        sManNumber = sManNumber.toUpperCase();
                         sManNumber = this._removePrefix(sManNumber);
                         
                         this.iHU = sManNumber;
+
+                        this.oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     } else {
                         sManNumber = "";
                     }
@@ -319,13 +325,22 @@ sap.ui.define([
             }
         },
 
-        _CancelHuData: function (oTable) {
+        _CancelHuData: function () {
             var sOkMesg  = this.getResourceBundle().getText("OkMesCancellation");
             var sErrMesg = this.getResourceBundle().getText("ErrorCancellation");
             var tSTime   = this.getResourceBundle().getText("ShowTime");
-            var oData    = oTable.getModel().getData();
+            var oTable;
+
+            // ---- Get Table data
+            if (this.ScanModus === "A") {
+                oTable = this.MaterialInfoTable;
+            } else {
+                oTable = this.PackageListTable;
+            }
+
+            var oData        = oTable.getModel().getData();
             var iODataLength = oData.length;
-            var iCounter = 1;
+            var iCounter     = 1;
 
             // ---- Update the HU Data to the backend
             if (oData.length > 0) {
@@ -360,6 +375,8 @@ sap.ui.define([
                                     if (parseInt(oResponse.statusCode, 10) === 202 && (oResponse.statusText === "Accepted" || oResponse.statusText === "")) {
                                         that.oScanModel.setProperty("/showOk", true);
                                         that.oScanModel.setProperty("/showOkText", sOkMesg);       
+                                        
+                                        that._resetCanceledHuData(oTable);
         
                                         // ---- Do nothing -> Good case
                                         setTimeout(function () {
@@ -808,7 +825,6 @@ sap.ui.define([
                 this.AllBooked = false;
             }
     
-            // var oDisplayModel = this.getView().getModel("DisplayModel");
             this.oDisplayModel.setProperty("/PSDeliveryNote", sNote + " / " + oData.length);
 		},
 
@@ -844,6 +860,21 @@ sap.ui.define([
                     } else if (data.StatusUnload === true) {
                         data.Status = "Success";
                     }
+                }
+            }
+
+            oTable.getModel().setData(oData);
+		},
+
+		_resetCanceledHuData: function (oTable) {
+            var oData = oTable.getModel().getData();
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+                        data.StatusUnload = false;
+                        data.BookMissing = false;
+                        data.Status = "None";
                 }
             }
 
@@ -985,21 +1016,23 @@ sap.ui.define([
                     this.sViewMode = oScanModel.getData().viewMode;
 
                     if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
-                        sManNumber = oEvent.getParameter("valueManuallyNo").trim()
+                        // ---- Check for Data Matix Code
+                        sManNumber = this._handleDMC(this.sViewMode, sManNumber);
+
+                        sManNumber = sManNumber.trim()
+                        sManNumber = sManNumber.toUpperCase();
+                        sManNumber = this._removePrefix(sManNumber);
 
                         oScanModel.setProperty("/valueManuallyNo", sManNumber);
                     }
 
                     if (sScanNumber !== null && sScanNumber !== undefined && sScanNumber !== "") {
-                        sScanNumber = oEvent.getParameter("valueScan").trim()
-                        
                         // ---- Check for Data Matix Code
-                        var check = tools.checkForDataMatrixArray(sScanNumber);
+                        sScanNumber = this._handleDMC(this.sViewMode, sScanNumber);
 
-                        if (check[0]) {
-                            var sScanNumber = check[1];
-                        }
-
+                        sScanNumber = sScanNumber.trim()
+                        sScanNumber = sScanNumber.toUpperCase();
+                        
                         oScanModel.setProperty("/valueManuallyNo", sScanNumber);
                         sManNumber = sScanNumber;
                     }
@@ -1179,59 +1212,61 @@ sap.ui.define([
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
-                var controlF2 = that.byId("idInput_HU");
+                // var controlF2 = that.byId("idInput_HU");
 
                 // ---- Now call the actual event/method for the keyboard keypress
-                switch (evt.keyCode) {
-			        case 13: // ---- Enter Key
-                        evt.preventDefault();
+                if (evt.keyCode !== null && evt.keyCode !== undefined) {
+                    switch (evt.keyCode) {
+                        case 13: // ---- Enter Key
+                            evt.preventDefault();
 
-                        if (that.iScanModusAktiv < 2) {
-                            that.onPressOk();
-                        } else {
-                            that.iScanModusAktiv = 0;
-                        }
-
-                        evt.keyCode = null;
-                        					
-						break;			                
-			        case 112: // ---- F1 Key
-                        evt.preventDefault();
-                        var controlF1 = that.BookButton;
-
-				        if (controlF1 && controlF1.getEnabled()) {
-                            that.onPressBooking();
-                        }
-						
-						break;			                
-                    case 113: // ---- F2 Key
-                        evt.preventDefault();
-        
-                        if (that.iScanModusAktiv < 2) {
-                            if (controlF2 && controlF2.getEnabled()) {
-                                controlF2.fireChange();
+                            if (that.iScanModusAktiv < 2) {
+                                that.onPressOk();
+                            } else {
+                                that.iScanModusAktiv = 0;
                             }
-                        }
 
-                        evt.keyCode = null;
+                            evt.keyCode = null;
+                                                
+                            break;			                
+                        case 112: // ---- F1 Key
+                            // evt.preventDefault();
+                            // var controlF1 = that.BookButton;
 
-                        break;			                
-                    case 114: // ---- F3 Key
-                        evt.preventDefault();
-                        that.onNavBack();
-						break;			                
-                    case 115: // ---- F4 Key
-                        evt.preventDefault();
-						that.onPressRefresh();						
-						break;			                
-                    case 116: // ---- F5 Key
-                        evt.preventDefault();
-						that.onPressCancellation();						
-						break;			                
-					default: 
-					    // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
-                        break;
-				}
+                            // if (controlF1 && controlF1.getEnabled()) {
+                            //     that.onPressBooking();
+                            // }
+                            
+                            break;			                
+                        case 113: // ---- F2 Key
+                            // evt.preventDefault();
+            
+                            // if (that.iScanModusAktiv < 2) {
+                            //     if (controlF2 && controlF2.getEnabled()) {
+                            //         controlF2.fireChange();
+                            //     }
+                            // }
+
+                            // evt.keyCode = null;
+
+                            break;			                
+                        case 114: // ---- F3 Key
+                            // evt.preventDefault();
+                            // that.onNavBack();
+                            break;			                
+                        case 115: // ---- F4 Key
+                            // evt.preventDefault();
+                            // that.onPressRefresh();						
+                            break;			                
+                        case 116: // ---- F5 Key
+                            // evt.preventDefault();
+                            // that.onPressCancellation();						
+                            break;			                
+                        default: 
+                            // ---- For other SHORTCUT cases: refer link - https://css-tricks.com/snippets/javascript/javascript-keycodes/   
+                            break;
+                    }
+                }
 			}, this));
 		},
 
@@ -1250,6 +1285,32 @@ sap.ui.define([
                 setTimeout(() => that.getView().byId(id).focus({ preventScroll: true, focusVisible: true }));
             }
         },
+
+		_handleDMC: function (sViewMode, sManNumber) {
+            var sDMC = "";
+
+            if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
+                // ---- Check for Data Matix Code
+                var check = tools.checkForDataMatrixArray(sManNumber);
+
+                // ---- Check for DMC All parameter
+                if (check[0] === true) {
+                    if (sViewMode === "Material") {
+                        sDMC = check[1];
+                    } else if (sViewMode === "Quantity") {
+                        sDMC = check[3];                 
+                    } else if (sViewMode === "Handling") {
+                        sDMC = check[5];                 
+                    } else {
+                        sDMC = sManNumber;
+                    }
+                } else {
+                    sDMC = sManNumber;
+                }
+            }
+
+            return sDMC;
+		},
 
         _removePrefix: function (key) {
             let str = key;
