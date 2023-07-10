@@ -1,0 +1,169 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:card="sap.f.cards"
+ 	xmlns:core="sap.ui.core"
+	xmlns:u="sap.ui.unified" 
+	xmlns:l="sap.ui.layout" 
+    displayBlock="true"
+	xmlns:f="sap.f"
+    xmlns="sap.m">
+
+	<Panel accessibleRole="Form" height="auto" class="sapUiTinyMarginTop">
+		<content>
+			<f:GridContainer>
+				<f:layout>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="5px" />
+				</f:layout>
+				<f:layoutXS>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="5px" />
+				</f:layoutXS>
+				<f:items>
+					<f:Card width="100%">
+						<f:layoutData>
+							<f:GridContainerItemLayoutData columns="4" />
+						</f:layoutData>
+						<f:header>
+							<card:Header title="{i18n>Capture}" />
+						</f:header>
+						<f:content>
+
+							<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showOk}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showOkText}" width="auto" wrapping="true" class="atosOkText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+			 					<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showErr}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showErrText}" width="auto" wrapping="true" class="atosErrorText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewHU}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>HU}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="160px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScan('Handling')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewQuantity}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>Quantity}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_Quantity" value="{ScanModel>/valueManuallyNo}" change="wonInputChanged" liveChange="onInputLiveChange" 
+											   width="96px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScan('Quantity')" width="auto" class="sapUiTinyMarginBegin" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLoc}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>DestStorageLocation}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_Location" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="160px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScan('Location')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewLocConf}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>DestStorageLocation} {i18n>Conf}{i18n>Colon}" width="190px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInput_LocConf" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="110px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScan('LocConf')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>HU}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/HandlingUnitId}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>WarehouseNo}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/WarehouseNumber}" width="20px"  growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>Quantity} / {i18n>UOM}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Quantity}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+										<TextArea value="{DisplayModel>/UnitOfMeasurement}" width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>WarehouseTask}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/OpenWarehouseTask}"   width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>Material}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Material}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<TextArea value="{DisplayModel>/MaterialDescription}" width="344px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiLargeMarginBegin sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/showInspectionLot}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>InspectionLot}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/InspectionLot}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>QSrelevant}{i18n>Colon}" width="140px" class="atosBold sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{i18n>Yes}" width="20px" class="atosErrorText sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>DestStorageLocation}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Book2StorageBin}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>DestStorageType}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Book2StorageType}"   width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+									</HBox>
+								</HBox>
+							</VBox>
+
+						</f:content>
+					</f:Card>
+				</f:items>
+			</f:GridContainer>
+		</content>
+	</Panel>
+
+	<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+		<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="true">
+			<VBox justifyContent="Start" wrap="Wrap">
+				<Label text="1000011306" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+
+<!-- 				<Label text="Produkt 00.53.755.002" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 01.031.93.63.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.001.00.44.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.179.07.12.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.340.00.01.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+ -->			
+ 			</VBox>
+		</HBox>
+	</VBox>
+
+</core:FragmentDefinition>
