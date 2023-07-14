@@ -22,8 +22,9 @@ sap.ui.define([
     "z/wafromhhu/utils/tools",
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
     "sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -159,10 +160,19 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onPressBooking: function () {
+            var sOpenWarehouseTaskErr = this.getResourceBundle().getText("OpenWarehouseTaskErr");
+            var sWhtType = "H";
+
+            if (this.HU_Requirement === "Y") {
+                sWhtType = "U";
+            }
+
             if (this.StatusOpenWarehouseTask) {
-                this._updateWarehouseTask();
+                tools.showMessageError(sOpenWarehouseTaskErr, "");
+
+                return;
             } else {
-                this._createWarehouseTask();
+                this._createWarehouseTask(sWhtType);
             }
         },
 
@@ -221,13 +231,15 @@ sap.ui.define([
         // ---- Booking Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-        _createWarehouseTask: function () {
+        _createWarehouseTask: function (sWhtType) {
             var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
             var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
             var tSTime   = this.getResourceBundle().getText("ShowTime");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
 
                 var sPath   = "/WarehouseTask";
@@ -236,7 +248,7 @@ sap.ui.define([
                     "HandlingUnitId":        oData.HandlingUnitId,
                     "BookConfirm":           true,
                     "BookMoveHu":            true,
-                    "WarehouseTaskType":     "H",
+                    "WarehouseTaskType":     sWhtType,
                     "TargetQuantity":        oData.Quantity,
                     "DestinationStorageBin": oData.Book2StorageBin
                 };
@@ -245,10 +257,12 @@ sap.ui.define([
                 var oModel = this._getServiceUrl()[0];
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
-                            tools.handleODataRequestFailed(oError, resp, true);
-
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
+
+                            BusyIndicator.hide();
+
+                            tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -260,6 +274,8 @@ sap.ui.define([
                                     that._resetAll();
                                     that._setFocus("idInput_HU");
     
+                                    BusyIndicator.hide();
+
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -276,85 +292,21 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
-                that.oScanModel.setProperty("/showOk", false);
-                that.oScanModel.setProperty("/showOkText", "");
-                that.oScanModel.setProperty("/showErr", true);
-                that.oScanModel.setProperty("/showErrText", sErrMesg);
-            }
-        },
+                BusyIndicator.hide();
 
-        _updateWarehouseTask: function () {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
-            var that = this;
-
-            if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
-                var oData = this.oDisplayModel.getData();
-                    oData.to_WarehouseTask.BookConfirm = true;
-                    oData.to_WarehouseTask.BookMoveHu  = true;
-                    oData.to_WarehouseTask.HandlingUnitId         = oData.HandlingUnitId;
-                    oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
-                    oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
-                    oData.to_WarehouseTask.TargetQuantity         = oData.Quantity;
-                    oData.to_WarehouseTask.WarehouseTaskType      = "H";
-
-                var sWarehouseNumber = oData.to_WarehouseTask.WarehouseNumber;
-                var sWarehouseTask   = oData.to_WarehouseTask.WarehouseTaskId;
-
-                var sPath = "/WarehouseTask(WarehouseNumber='" + sWarehouseNumber + "',WarehouseTaskId='" + sWarehouseTask + "')";
-
-                // ---- Update an existing Warehouse Task
-                var oModel = this._getServiceUrl()[0];
-                    oModel.update(sPath, oData.to_WarehouseTask, {
-                        error: function(oError, resp) {
-                            tools.handleODataRequestFailed(oError, resp, true);
-                            
-                            that._resetQuantity();
-                            that.oScanModel.setProperty("/refresh", true);
-                        },
-                        success: function(rData, oResponse) {
-                            // ---- Check for complete final booking
-                            if (rData !== null && rData !== undefined) {
-                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                    tools.alertMe(rData.SapMessageText, "");
-                                    
-                                    that._resetAll();
-                                    that._setFocus("idInput_HU");
-    
-                                    return;
-                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                                    // ---- Coding in case of showing Business application Informations
-                                    tools.alertMe(rData.SapMessageText, "");
-                                }
-                            }
-
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
-                                that.oScanModel.setProperty("/showOk", true);
-                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
-
-                                // ---- Do nothing -> Good case
-                                setTimeout(function () {
-                                    that._resetAll();
-                    
-                                    // ---- Set Focus to main Input field
-                                    that._setFocus("idInput_HU");
-                                }, tSTime);            
-                            } else {
-                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
-                            }
-                        }
-                    });
-            } else {
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -416,9 +368,13 @@ sap.ui.define([
             // ---- Read the HU Data from the backend
             var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',HandlingUnitId='" + this.iHU + "')";
             
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     urlParameters: {
@@ -434,6 +390,8 @@ sap.ui.define([
                                 that._resetAll();
                                 that._setFocus("idInput_HU");
 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -447,10 +405,13 @@ sap.ui.define([
                                 that.QsRelevantHU = false;
                             }
 
-                            that.StatusOpenWarehouseTask = rData.StatusOpenWarehouseTask;
                             that._setHuData(rData, sManNumber);
+
+                            BusyIndicator.hide();
                         } else {
                             var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+
+                            BusyIndicator.hide();
 
                             tools.alertMe(sErrMsg, "");
                         }
@@ -501,10 +462,14 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("StorageBinID", sap.ui.model.FilterOperator.EQ, this.sStorageBin));
 
+                BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/StorageBin", {
                     filters: aFilters,
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -514,9 +479,17 @@ sap.ui.define([
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    BusyIndicator.hide();
+
+                                    return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    BusyIndicator.hide();
+
+                                    return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
                                     tools.alertMe(rData.results[0].SapMessageText, "");
@@ -538,8 +511,12 @@ sap.ui.define([
                                         that._setStorageBinData(data);
                                     }
                                 }
+
+                                BusyIndicator.hide();
                             } else {
-                               tools.alertMe(sErrMsg, "");
+                                BusyIndicator.hide();
+
+                                tools.alertMe(sErrMsg, "");
                             }
                         }
                     }
@@ -548,6 +525,8 @@ sap.ui.define([
 
 		_setStorageBinData: function (oData) {
             var oDisplayData = this.oDisplayModel.getData();
+
+            this.HU_Requirement = oData.HU_Requirement;
 
             // ---- Set the Data for the Model and set the Model to the View
             if (this.sViewMode === "Location") {
@@ -694,7 +673,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/viewMode", "Handling");
                 this.oScanModel.setProperty("/viewLocConf", false);
                 this.oScanModel.setProperty("/booking", true);
-                this.oScanModel.setProperty("/refresh", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/ok", false);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
             } else {
@@ -703,6 +682,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/viewMode", "Location");
                 this.oScanModel.setProperty("/viewLoc", true);
                 this.oScanModel.setProperty("/viewLocConf", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/showErr", true);
                 this.oScanModel.setProperty("/showErrText", sErrMesg);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
