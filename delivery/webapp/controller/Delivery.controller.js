@@ -22,8 +22,9 @@
     "z/delivery/utils/tools",
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
     "sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -225,6 +226,8 @@
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
  
                 var sPath   = "/Shipment";
@@ -240,9 +243,9 @@
                 var oModel = this._getServiceUrl()[0];
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
-                            tools.handleODataRequestFailed(oError, resp, true);
+                            BusyIndicator.hide();
 
-                            // that._resetByLocation();
+                            tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -251,8 +254,9 @@
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.SapMessageText, "");
                                     
-                                    // that._resetAll();
                                     that._setFocus("idInput_Gate");
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -270,15 +274,21 @@
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_Gate");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -293,6 +303,8 @@
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
 
                 var urlData = {
@@ -309,11 +321,13 @@
                 // ---- Update an existing Warehouse Task
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, urlData, {
-                        error: function(oError, resp) {
-                            tools.handleODataRequestFailed(oError, resp, true);
-                            
+                        error: function(oError, resp) {                            
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
+
+                            BusyIndicator.hide();
+
+                            tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -322,8 +336,9 @@
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.SapMessageText, "");
                                     
-                                    // that._resetAll();
                                     that._setFocus("idInput_Gate");
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -340,15 +355,21 @@
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_Gate");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -363,6 +384,8 @@
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
  
                 var sPath   = "/Delivery";
@@ -377,9 +400,9 @@
                 var oModel = this._getServiceUrl()[0];
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
-                            tools.handleODataRequestFailed(oError, resp, true);
+                            BusyIndicator.hide();
 
-                            // that._resetByLocation();
+                            tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -390,6 +413,8 @@
                                     
                                     // that._resetAll();
                                     that._setFocus("idInput_Material");
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -407,15 +432,21 @@
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_Material");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -464,11 +495,15 @@
 
             this.sTPP = "";
 
+            BusyIndicator.show(1);
+
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
 			this.oModel.read(sPath, {
 				error: function(oError, resp) {
+                    BusyIndicator.hide();
+
                     tools.handleODataRequestFailed(oError, resp, true);
 				},
 				success: function(rData, response) {
@@ -476,6 +511,10 @@
                     if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                         // ---- Coding in case of showing Business application Errors
                         tools.showMessageError(rData.SapMessageText, "");
+
+                        BusyIndicator.hide();
+
+                        return;
                     } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                         // ---- Coding in case of showing Business application Informations
                         tools.alertMe(rData.SapMessageText, "");
@@ -483,6 +522,8 @@
 
 					if (rData !== null && rData !== undefined && rData !== "") {
                         that.sTPP = rData.ParameterValue;
+
+                        BusyIndicator.hide();
                     }
 				}
 			});
@@ -510,12 +551,16 @@
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the Gate Data from the backend
             var sPath = "/Gate(GateNo='" + this.sGate + "',TransportationPlanningPoint='" + this.sTPP + "')";
 
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -526,6 +571,8 @@
                                 // ---- Coding in case of showing Business application Errors
                                 tools.showMessageError(rData.SapMessageText, "");
                                 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -533,7 +580,11 @@
                             }
 
                             that._setGateData(rData, sManNumber);
+
+                            BusyIndicator.hide();
                         } else {
+                            BusyIndicator.hide();
+
                             tools.alertMe(sErrMsg, "");
                         }
                     }
@@ -578,12 +629,16 @@
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the HU Data from the backend
             var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',HandlingUnit='" + this.sActiveHU + "',GateNo='" + this.sGate + "')";
             
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -595,6 +650,8 @@
                                 that._resetAll();
                                 that._setFocus("idInput_Gate");
 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -603,8 +660,12 @@
 
                             if (rData !== "") {
                                 that._setHuData(rData, sManNumber);
+
+                                BusyIndicator.hide();
                             } else {
                                 var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
+
+                                BusyIndicator.hide();
 
                                 tools.alertMe(sErrMsg, "");
                             }
@@ -616,6 +677,7 @@
 	    _setHuData: function (oData, sManNumber) {
             this.oScanModel.setProperty("/saving", true);
             this.oScanModel.setProperty("/booking", true);
+            this.oScanModel.setProperty("/refresh", true);
             
             // ---- Add data to the Display Model
             var data = this.oDisplayModel.getData();
@@ -831,7 +893,7 @@
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }
