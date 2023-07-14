@@ -22,8 +22,9 @@ sap.ui.define([
 	"z/recweforeign/utils/tools",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -233,9 +234,10 @@ sap.ui.define([
 
             // ---- Update the HU Data to the backend
             if (oData.length > 0) {
+                BusyIndicator.show(1);
+
                 this.oModel.setDeferredGroups(["huListGroup"]);
                 this.oModel.setUseBatch(true);
-                this.getView().setBusy(true);
 
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
@@ -252,13 +254,13 @@ sap.ui.define([
                             groupId: "huListGroup",
                             error: function (oError, resp) {
                                 that.oModel.setUseBatch(false);
-                                that.getView().setBusy(false);
                                 
+                                BusyIndicator.hide();
+
                                 tools.handleODataRequestFailed(oError, resp, true);
                             },
                             success: function (rData, oResponse) {
                                 that.oModel.setUseBatch(false);
-                                that.getView().setBusy(false);
     
                                 if (iCounter === iODataLength) {
                                     that.oScanModel.setProperty("/showOk", true);
@@ -269,9 +271,13 @@ sap.ui.define([
                                 }
     
                                 iCounter = iCounter + 1;
+
+                                BusyIndicator.hide();
                             }
                         }); 
                     } else {
+                        BusyIndicator.hide();
+
                         iODataLength = iODataLength - 1;
                     }
                 }
@@ -287,6 +293,8 @@ sap.ui.define([
             var that   = this;
 
             if (this.oDeliveryData !== null && this.oDeliveryData !== undefined && iDocumentNo === this.oDeliveryData.DocumentNo) {
+                BusyIndicator.show(1);
+
                 var sDeliveryNo = this.oDeliveryData.DocumentNo;
                 
                 delete this.oDeliveryData.HandlingUnit;
@@ -298,6 +306,8 @@ sap.ui.define([
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, that.oDeliveryData, {
                         error: function(oError, resp) {
+                            BusyIndicator.hide();
+
                             tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
@@ -309,15 +319,21 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -344,9 +360,10 @@ sap.ui.define([
 
             // ---- Update the HU Data to the backend
             if (oData.length > 0) {
+                BusyIndicator.show(1);
+
                 this.oModel.setDeferredGroups(["huListGroup"]);
                 this.oModel.setUseBatch(true);
-                this.getView().setBusy(true);
 
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
@@ -363,13 +380,13 @@ sap.ui.define([
                             groupId: "huListGroup",
                             error: function (oError, resp) {
                                 that.oModel.setUseBatch(false);
-                                that.getView().setBusy(false);
-                                
+
+                                BusyIndicator.hide();
+
                                 tools.handleODataRequestFailed(oError, resp, true);
                             },
                             success: function (rData, oResponse) {
                                 that.oModel.setUseBatch(false);
-                                that.getView().setBusy(false);
 
                                 if (iCounter === iODataLength) {
                                     if (parseInt(oResponse.statusCode, 10) === 202 && (oResponse.statusText === "Accepted" || oResponse.statusText === "")) {
@@ -378,6 +395,8 @@ sap.ui.define([
                                         
                                         that._resetCanceledHuData(oTable);
         
+                                        BusyIndicator.hide();
+
                                         // ---- Do nothing -> Good case
                                         setTimeout(function () {
                                             that._resetAll();
@@ -386,6 +405,8 @@ sap.ui.define([
                                             that._setFocus("idInput_HU");
                                         }, tSTime);            
                                     } else {
+                                        BusyIndicator.hide();
+
                                         tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                                     }
                                 }
@@ -395,9 +416,17 @@ sap.ui.define([
                         }); 
                     } else {
                         iODataLength = iODataLength - 1;
+
+                        BusyIndicator.hide();
                     }
                 }
+
+                if (iODataLength === 0) {
+                    tools.alertMe(sErrMesg);
+                }
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -419,9 +448,13 @@ sap.ui.define([
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
 			    oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -430,6 +463,10 @@ sap.ui.define([
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 // ---- Coding in case of showing Business application Errors
                                 tools.showMessageError(rData.SapMessageText, "");
+
+                                BusyIndicator.hide();
+
+                                return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
                                 tools.alertMe(rData.SapMessageText, "");
@@ -439,6 +476,8 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined && rData !== "") {
                             that.iWN = rData.ParameterValue;
                         }
+
+                        BusyIndicator.hide();
                     }
                 });
         },
@@ -462,10 +501,14 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
                 aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
 
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/DeliveryHU", {
                     filters: aFilters,
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -477,6 +520,8 @@ sap.ui.define([
                                     
                                     that._resetAll();
                                     that._setFocus();
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -490,10 +535,14 @@ sap.ui.define([
                                     let data = rData.results[i];
                                     
                                     if (data.HandlingUnit === that.iHU) {                                    
+                                        BusyIndicator.hide();
+
                                         that._loadDeliveryData(data.DocumentNo, that.iHU, rData);
                                     }
                                 }
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.alertMe(sErrMsg, "");
                             }
                         }
@@ -507,9 +556,13 @@ sap.ui.define([
             // ---- Read the HU Data from the backend
 			var sPath = "/Delivery('" + sDocumentNo + "')?$expand=to_HUs";
 
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -518,11 +571,15 @@ sap.ui.define([
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
                                 tools.showMessageError(rData.SapMessageText, "");
 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
                                 // ---- Coding in case of showing Business application Errors
                                 tools.showMessageError(rData.SapMessageText, "");
                                 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -552,6 +609,8 @@ sap.ui.define([
                                 that.byId("idScrollContainerTableA").setVisible(false);
                                 that.byId("idScrollContainerTableB").setVisible(true);        
                             }
+
+                            BusyIndicator.hide();
                         }
                     }
                 });
@@ -642,9 +701,10 @@ sap.ui.define([
 
             // ---- Update the HU Data to the backend
             if (oData.results.length > 0) {
+                BusyIndicator.show(1);
+
                 this.oModel.setDeferredGroups(["huListGroup"]);
                 this.oModel.setUseBatch(true);
-                this.getView().setBusy(true);
 
                 for (let i = 0; i < oData.results.length; i++) {
                     var data = oData.results[i];
@@ -657,13 +717,13 @@ sap.ui.define([
                         groupId: "huListGroup",
                         error: function (oError, resp) {
                             that.oModel.setUseBatch(false);
-                            that.getView().setBusy(false);
+
+                            BusyIndicator.hide();
 
                             tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function (rData, oResponse) {
                             that.oModel.setUseBatch(false);
-                            that.getView().setBusy(false);
 
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
@@ -671,6 +731,8 @@ sap.ui.define([
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._setFocus();
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -684,6 +746,8 @@ sap.ui.define([
                             }
 
                             iCounter = iCounter + 1;
+
+                            BusyIndicator.hide();
                         }
                     }); 
                 }
@@ -696,9 +760,13 @@ sap.ui.define([
             var sPath    = "/DeliveryHU(WarehouseNumber='" + this.iWN + "',HandlingUnit='" + this.iHU + "')";
             var urlParam = { "BookUnload": true };
 
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.update(sPath, urlParam, { 
                     error: function (oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, oResponse) {
@@ -709,6 +777,8 @@ sap.ui.define([
                                 
                                 that._setFocus();
     
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -719,7 +789,11 @@ sap.ui.define([
                         if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
                             // ---- Reload the HU data
                             that._reloadHuData(oTable);
+
+                            BusyIndicator.hide();
                         } else {
+                            BusyIndicator.hide();
+
                             tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                         }
                     }
@@ -788,6 +862,7 @@ sap.ui.define([
 
 		_handleScanModelData: function (type, oTable) {
             this.oScanModel.setProperty("/storno", true);
+
             if (oTable.getModel().getData().length > 0) {
                 this.oScanModel.setProperty("/booking", true);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -799,7 +874,7 @@ sap.ui.define([
                     this.sScanType = "B";
                     this.oScanModel.setProperty("/ok", true);
                 }
-             } else {
+            } else {
                 this.oScanModel.setProperty("/booking", false);
                 this.oScanModel.setProperty("/ok", true);
             }
@@ -1172,7 +1247,7 @@ sap.ui.define([
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }

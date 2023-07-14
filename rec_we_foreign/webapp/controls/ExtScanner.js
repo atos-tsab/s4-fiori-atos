@@ -489,7 +489,26 @@ sap.ui.define([
                 oDialog.setStretch(false);
             }
 
+            // ---- Redefine Titles
+            this._redefineTitles();
+
             oDialog.open();
+        },
+
+        _redefineTitles: function () {
+            var titleHU = this.getResourceBundle().getText("TitleInputDialog");
+            var lblHU   = this.getResourceBundle().getText("HandlingUnit");
+            
+            this._oScanModel.setProperty("/okButton", false);
+            this._oScanModel.setProperty("/lblWidth", "120px");
+
+            if (this.sScanView === "Handling") {
+                this._oScanModel.setProperty("/titleDialog", titleHU);
+                this._oScanModel.setProperty("/labelDialog", lblHU);
+            } else {
+                this._oScanModel.setProperty("/titleDialog", titleHU);
+                this._oScanModel.setProperty("/labelDialog", lblHU);
+            }
         },
 
         _onAfterOpen: function () {
