@@ -22,8 +22,9 @@ sap.ui.define([
 	"z/confstorage/utils/tools",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -229,6 +230,8 @@ sap.ui.define([
             var that = this;
                 that.ConfirmationCount = 0;
 
+            BusyIndicator.show(1);
+
             // ---- First step: Get the internal Proposal data
             this._getProposalData().then ( function (oProposalData) {
                 if (oProposalData !== null && oProposalData !== undefined) {
@@ -239,21 +242,22 @@ sap.ui.define([
                             that.ConfirmationCount = oProdnOrdConfData.ConfirmationCount;
 
                             that._updateOrderHU().then(() => {
-                                that.getView().setBusy(false);
+                                BusyIndicator.hide();
+
                             }).catch((oError) => {
-                                that.getView().setBusy(false);
-                
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oError.message, "");
                             })
                         }             
                     }).catch((oError) => {
-                        that.getView().setBusy(false);
-        
+                        BusyIndicator.hide();
+
                         tools.showMessageError(oError.message, "");
                     })
                 }             
             }).catch((oError) => {
-                that.getView().setBusy(false);
+                BusyIndicator.hide();
 
                 tools.showMessageError(oError.message, "");
             })
@@ -262,6 +266,8 @@ sap.ui.define([
         _getProposalData: function () {
 			var errorMes = this.getResourceBundle().getText("errorText");
 			var that = this;
+
+            BusyIndicator.show(1);
 
 			// ---- Get Configuration Proposal
 			var oProposalData = { 
@@ -275,26 +281,24 @@ sap.ui.define([
 
 			return new Promise((resolve, reject) => {
 				try {
-                    this.getView().setBusy(true);
-
                     var oModel = this._getServiceUrl()[0];
                         oModel.callFunction("/GetConfProposal", { 
                             urlParameters: oProposalData, 
                             method: "POST", 
                             error: function(oError, resp) {
-                                that.getView().setBusy(false);
-        
+                                BusyIndicator.hide();
+
                                 reject(oError);
                             },
                             success: function(oData, oResponse) {
                                 resolve(oData);
-        
-                                that.getView().setBusy(false);
+
+                                BusyIndicator.hide();
                             }
                     });
 				} catch (error) {
-                    that.getView().setBusy(false);
-        
+                    BusyIndicator.hide();
+
 					tools.showMessageError(errorMes);
 				}
 			});
@@ -302,6 +306,8 @@ sap.ui.define([
 
 		_createProdnOrdConfData: function (oProposalData) {
 			var that = this;
+
+            BusyIndicator.show(1);
 
             // ---- Set Data model for the Resources
             if (oProposalData.WorkQuantityUnit1ISOCode === "") { oProposalData.WorkQuantityUnit1SAPCode = ""; }
@@ -318,24 +324,22 @@ sap.ui.define([
             // ---- Create new Production Order
 			return new Promise((resolve, reject) => {
 				try {
-                    this.getView().setBusy(true);
-
                     var oModel = this._getServiceUrl()[0];
                         oModel.create(sPath, oProposalData, {
                             error: function(oError, resp) {
-                                that.getView().setBusy(false);
-            
+                                BusyIndicator.hide();
+
                                 reject(oError);
                             },
                             success: function(rData, oResponse) {
                                 resolve(rData);
-            
-                                that.getView().setBusy(false);
+
+                                BusyIndicator.hide();
                             }
                         });
                 } catch (error) { 
-                    that.getView().setBusy(false);
-        
+                    BusyIndicator.hide();
+
 					tools.showMessageError(errorMes);
 				}
 			});
@@ -348,6 +352,8 @@ sap.ui.define([
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
 
                 var sPath = "/OrderHU(WarehouseNumber='" + oData.WarehouseNumber + "',HandlingUnitId='" + oData.HandlingUnitId + "')";
@@ -359,13 +365,12 @@ sap.ui.define([
                 // ---- Create new Production Order
                 return new Promise((resolve, reject) => {
                     try {
-                        this.getView().setBusy(true);
-
                         var oModel = this._getServiceUrl()[0];                        
                             oModel.update(sPath, urlData, {
                                 method: "POST", 
                                 error: function(oError, resp) {
-                                    that.getView().setBusy(false);
+                                    BusyIndicator.hide();
+
                                     that.oScanModel.setProperty("/refresh", true);
 
                                     tools.handleODataRequestFailed(oError, resp, true);
@@ -374,7 +379,7 @@ sap.ui.define([
                                     // ---- Check for complete final booking
                                     if (rData !== null && rData !== undefined) {
                                         if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                            that.getView().setBusy(false);
+                                            BusyIndicator.hide();
 
                                             tools.showMessageError(rData.SapMessageText, "");
                                             
@@ -394,26 +399,26 @@ sap.ui.define([
                                         setTimeout(function () {
                                             that._handleFeedbackData();
 
-                                            that.getView().setBusy(false);
-                            
+                                            BusyIndicator.hide();
+
                                             // ---- Set Focus to main Input field
                                             that._setFocus("idInput_HU");
                                         }, tSTime);            
                                     } else {
-                                        that.getView().setBusy(false);
+                                        BusyIndicator.hide();
 
                                         tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                                     }
                                 }
                             });
                     } catch (error) {
-                        that.getView().setBusy(false);
-            
+                        BusyIndicator.hide();
+
                         tools.showMessageError(errorMes);
                     }
                 });
             } else {
-                that.getView().setBusy(false);
+                BusyIndicator.hide();
 
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -430,6 +435,8 @@ sap.ui.define([
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
                 var sWTT  = "";
 
@@ -454,12 +461,10 @@ sap.ui.define([
                 };
 
                 // ---- Create new Warehouse Task
-                this.getView().setBusy(true);
-
                 var oModel = this._getServiceUrl()[0];                        
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
-                            that.getView().setBusy(false);
+                            BusyIndicator.hide();
 
                             tools.handleODataRequestFailed(oError, resp, true);
 
@@ -470,7 +475,7 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                    that.getView().setBusy(false);
+                                    BusyIndicator.hide();
 
                                     tools.showMessageError(rData.SapMessageText, "");
                                     
@@ -484,8 +489,96 @@ sap.ui.define([
                                 }
                             }
                             
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
-                                parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
+                            if (parseInt(oResponse.statusCode, 10) === 201 || parseInt(oResponse.statusCode, 10) === 204) {
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                                if (sWTT === "P") {
+                                    that._createWarehouseHuMove("H");
+                                } else {
+                                    // ---- Do nothing -> Good case
+                                    setTimeout(function () {
+                                        that._resetAll();
+
+                                        BusyIndicator.hide();
+
+                                        // ---- Set Focus to main Input field
+                                        that._setFocus("idInput_HU");
+                                    }, tSTime);            
+                                }
+                            } else {
+                                BusyIndicator.hide();
+
+                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                            }
+                        }
+                    });
+            } else {
+                BusyIndicator.hide();
+
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
+            }
+        },
+
+        _createWarehouseHuMove: function (sWTT) {
+            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
+            var sPackNo  = this.getResourceBundle().getText("MaterialPackagingNo");
+            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var that = this;
+
+            if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
+                var oData = this.oDisplayModel.getData();
+ 
+                var sPath   = "/WarehouseTask";
+                var urlData = {
+                    "WarehouseNumber":           oData.WarehouseNumber,
+                    "WarehouseTaskType":         sWTT,
+                    "MaterialNo":                oData.Material,
+                    "MaterialPackagingNo":       sPackNo,
+                    "HandlingUnitId":            oData.HandlingUnitId,
+                    "BookConfirm":               true,
+                    "BookMoveHu":                true,
+                    "TargetQuantity":            oData.Quantity,
+                    "TargetQuantityUOM":         oData.UnitOfMeasurement,
+                    "DestinationStorageBin":     oData.DestStorageLocation
+                };
+
+                // ---- Create new Warehouse Task
+                var oModel = this._getServiceUrl()[0];                        
+                    oModel.create(sPath, urlData, {
+                        error: function(oError, resp) {
+                            BusyIndicator.hide();
+
+                            tools.handleODataRequestFailed(oError, resp, true);
+
+                            that._resetQuantity();
+                            that.oScanModel.setProperty("/refresh", true);
+                        },
+                        success: function(rData, oResponse) {
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                    
+                                    that._resetAll();
+                                    that._setFocus("idInput_HU");
+                                    
+                                    BusyIndicator.hide();
+
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
+                            }
+                            
+                            if (parseInt(oResponse.statusCode, 10) === 201 || parseInt(oResponse.statusCode, 10) === 204) {
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -493,20 +586,20 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
 
-                                    that.getView().setBusy(false);
-                    
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
-                                that.getView().setBusy(false);
+                                BusyIndicator.hide();
 
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
-                that.getView().setBusy(false);
+                BusyIndicator.hide();
 
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
@@ -566,12 +659,16 @@ sap.ui.define([
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the HU Data from the backend
             var sPath = "/OrderHU(WarehouseNumber='" + this.sWN + "',HandlingUnitId='" + this.sActiveHU + "')";
             
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -583,6 +680,8 @@ sap.ui.define([
                                 that._resetAll();
                                 that._setFocus("idInput_HU");
 
+                                BusyIndicator.hide();
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -593,8 +692,12 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             if (rData !== "") {
                                 that._setHuData(rData, sManNumber);
+
+                                BusyIndicator.hide();
                             } else {
                                 var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
+
+                                BusyIndicator.hide();
 
                                 tools.alertMe(sErrMsg, "");
                             }
@@ -631,6 +734,8 @@ sap.ui.define([
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the HU Data from the backend
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
@@ -640,6 +745,8 @@ sap.ui.define([
                 oModel.read("/StorageBin", {
                     filters: aFilters,
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -649,6 +756,10 @@ sap.ui.define([
                                 if (rData.results[0] !== null && rData.results[0] !== undefined && rData.results[0].SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.SapMessageText, "");
+
+                                    BusyIndicator.hide();
+
+                                    return;
                                 } else if (rData.results[0] !== null && rData.results[0] !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
                                     tools.alertMe(rData.SapMessageText, "");
@@ -663,7 +774,11 @@ sap.ui.define([
                                         that._setStorageBinData(data);
                                     }
                                 }
+
+                                BusyIndicator.hide();
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.alertMe(sErrMsg, "");
                             }
                         }
@@ -801,7 +916,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/viewMode", "Handling");
                 this.oScanModel.setProperty("/viewLocConf", false);
                 this.oScanModel.setProperty("/booking", true);
-                this.oScanModel.setProperty("/refresh", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/ok", false);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
             } else {
@@ -810,6 +925,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/viewMode", "Location");
                 this.oScanModel.setProperty("/viewLoc", true);
                 this.oScanModel.setProperty("/viewLocConf", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/showErr", true);
                 this.oScanModel.setProperty("/showErrText", sErrMesg);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -1084,7 +1200,7 @@ sap.ui.define([
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }
