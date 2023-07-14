@@ -297,6 +297,8 @@
             var that = this;
 
             // ---- Read the HU Data from the backend 
+            BusyIndicator.show(1);
+
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, iWHN));
                 aFilters.push(new sap.ui.model.Filter("QueueId", sap.ui.model.FilterOperator.EQ, sQueue));
@@ -305,13 +307,11 @@
                     aFilters.push(new sap.ui.model.Filter("ReadMode", sap.ui.model.FilterOperator.EQ, this.sActiveQMode));
                 }
 
-            this.getView().setBusy(true);
-
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/Queue", {
                     filters: aFilters,
                     error: function(oError, resp) {
-                        that.getView().setBusy(false);
+                        BusyIndicator.hide();
 
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
@@ -319,7 +319,7 @@
                         "$expand": sNavTo
                     },
                     success: function(rData, response) {
-                        that.getView().setBusy(false);
+                        BusyIndicator.hide();
 
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {

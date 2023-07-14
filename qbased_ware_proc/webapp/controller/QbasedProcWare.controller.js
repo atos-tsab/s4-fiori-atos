@@ -331,27 +331,27 @@
             }
 
             // ---- Read the HU Data from the backend
+            BusyIndicator.show(1);
+
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
                 aFilters.push(new sap.ui.model.Filter("NoOfOpenTasks", sap.ui.model.FilterOperator.GT, 0));
                 aFilters.push(new sap.ui.model.Filter("ExternalQueue", sap.ui.model.FilterOperator.EQ, this.bExternalQueue));
 
-            this.getView().setBusy(true);
-
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/Queue", {
                     filters: aFilters,
                     error: function(oError, resp) {
-                        that.getView().setBusy(false);
+                        BusyIndicator.hide();
 
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
-                        that.getView().setBusy(false);
-
                         if (rData.results !== null && rData.results !== undefined) {
                             that._setQueueTableData(rData.results);
                         }
+
+                        BusyIndicator.hide();
                     }
                 });
         },
@@ -416,7 +416,7 @@
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }
