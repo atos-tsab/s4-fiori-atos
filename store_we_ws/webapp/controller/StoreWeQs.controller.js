@@ -22,8 +22,9 @@
 	"z/storewews/utils/tools",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -228,6 +229,8 @@
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
 
                 var sPath   = "/WarehouseTask";
@@ -249,6 +252,8 @@
 
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
+
+                            BusyIndicator.hide();
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -260,6 +265,8 @@
                                     that._resetAll();
                                     that._setFocus("idInput_HU");
     
+                                    BusyIndicator.hide();
+
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -276,15 +283,21 @@
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -299,6 +312,8 @@
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
+                BusyIndicator.show(1);
+
                 var oData = this.oDisplayModel.getData();
                     oData.to_WarehouseTask.BookConfirm = true;
                     oData.to_WarehouseTask.BookMoveHu  = true;
@@ -321,6 +336,8 @@
                             
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
+
+                            BusyIndicator.hide();
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
@@ -331,6 +348,8 @@
                                     that._resetAll();
                                     that._setFocus("idInput_HU");
     
+                                    BusyIndicator.hide();
+
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -346,15 +365,21 @@
                                 setTimeout(function () {
                                     that._resetAll();
                     
+                                    BusyIndicator.hide();
+
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -413,12 +438,16 @@
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the HU Data from the backend
             var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',HandlingUnitId='" + this.iHU + "')";
             
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     urlParameters: {
@@ -433,6 +462,8 @@
                                 
                                 that._resetAll();
                                 that._setFocus("idInput_HU");
+
+                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -449,8 +480,12 @@
 
                             that.StatusOpenWarehouseTask = rData.StatusOpenWarehouseTask;
                             that._setHuData(rData, sManNumber);
+
+                            BusyIndicator.hide();
                         } else {
                             var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+
+                            BusyIndicator.hide();
 
                             tools.alertMe(sErrMsg, "");
                         }
@@ -501,10 +536,14 @@
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("StorageBinID", sap.ui.model.FilterOperator.EQ, this.sStorageBin));
 
+            BusyIndicator.show(1);
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read("/StorageBin", {
                     filters: aFilters,
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -514,9 +553,17 @@
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    BusyIndicator.hide();
+
+                                    return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    BusyIndicator.hide();
+
+                                    return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
                                     tools.alertMe(rData.results[0].SapMessageText, "");
@@ -538,8 +585,12 @@
                                         that._setStorageBinData(data);
                                     }
                                 }
+
+                                BusyIndicator.hide();
                             } else {
-                               tools.alertMe(sErrMsg, "");
+                                BusyIndicator.hide();
+
+                                tools.alertMe(sErrMsg, "");
                             }
                         }
                     }
@@ -694,7 +745,7 @@
                 this.oScanModel.setProperty("/viewMode", "Handling");
                 this.oScanModel.setProperty("/viewLocConf", false);
                 this.oScanModel.setProperty("/booking", true);
-                this.oScanModel.setProperty("/refresh", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/ok", false);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
             } else {
@@ -703,6 +754,7 @@
                 this.oScanModel.setProperty("/viewMode", "Location");
                 this.oScanModel.setProperty("/viewLoc", true);
                 this.oScanModel.setProperty("/viewLocConf", false);
+                this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/showErr", true);
                 this.oScanModel.setProperty("/showErrText", sErrMesg);
                 this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -991,7 +1043,7 @@
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }

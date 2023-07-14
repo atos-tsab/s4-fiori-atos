@@ -22,8 +22,9 @@
 	"z/stockdisplay/utils/tools",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, Controller) {
+], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
@@ -244,6 +245,8 @@
                 return;
             }
 
+            BusyIndicator.show(1);
+
             // ---- Read the HU Data from the backend
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNo", sap.ui.model.FilterOperator.EQ, this.iWN));
@@ -253,6 +256,8 @@
                 oModel.read("/OverviewStock", {
                     filters: aFilters,
                     error: function(oError, resp) {
+                        BusyIndicator.hide();
+
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
                     success: function(rData, response) {
@@ -261,6 +266,8 @@
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                     tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -274,7 +281,11 @@
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {
                                 that._setStockOverviewData(rData);
+
+                                BusyIndicator.hide();
                             } else {
+                                BusyIndicator.hide();
+
                                 tools.alertMe(sErrMsg, "");
                             }
                         }
@@ -530,7 +541,7 @@
                     if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                         this.sShellSource = sSpaceHome;
                     } else {
-                        this.sShellSource = sShellHome;
+                        this.sShellSource = sSpaceHome;
                     }
                 }    
             }
