@@ -2,17 +2,18 @@
     "name": "wa_from_hhu",
     "version": "0.0.1",
     "private": true,
-    "description": "Warehouse task from HHU application",
+    "description": "Warehouse task from HHU application.",
     "keywords": [
         "ui5",
         "openui5",
         "sapui5"
     ],
     "main": "webapp/index.html",
+    "dependencies": {},
     "devDependencies": {
-        "@sap-ux/ui5-middleware-fe-mockserver": "2",
-        "@sap/ux-ui5-tooling": "^1.10.2",
         "@ui5/cli": "^3.0.0",
+        "@sap/ux-ui5-tooling": "1",
+        "@sap-ux/ui5-middleware-fe-mockserver": "2",
         "rimraf": "^3.0.2",
         "ui5-task-flatten-library": "0.2.5"
     },
@@ -31,12 +32,10 @@
         "undeploy": "fiori undeploy --config ui5-deploy.yaml",
         "deploy-test": "npm run build && fiori deploy --config ui5-deploy.yaml --testMode true"
     },
+    "sapuxLayer": "CUSTOMER_BASE",
     "ui5": {
         "dependencies": [
-            "@sap/ux-ui5-tooling",
-            "@sap-ux/ui5-middleware-fe-mockserver",
             "ui5-task-flatten-library"
         ]
-    },
-    "sapuxLayer": "CUSTOMER_BASE"
+    }
 }

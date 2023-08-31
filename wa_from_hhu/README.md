@@ -1,25 +1,25 @@
 ## Application Details
 |               |
 | ------------- |
-|**Generation Date and Time**<br>Mon Jul 03 2023 12:24:11 GMT+0200 (Central European Summer Time)|
+|**Generation Date and Time**<br>Wed Aug 23 2023 15:04:36 GMT+0200 (Central European Summer Time)|
 |**App Generator**<br>@sap/generator-fiori-freestyle|
 |**App Generator Version**<br>1.9.4|
 |**Generation Platform**<br>Visual Studio Code|
 |**Template Used**<br>simple|
 |**Service Type**<br>SAP System (ABAP On Premise)|
-|**Service URL**<br>http://bpw-s4d.bpw.internal:8000/sap/opu/odata/sap/Z_EEWM_HU_OPERATION_SRV
+|**Service URL**<br>https://bpw-s4d.bpw.internal:44300/sap/opu/odata/sap/Z_EEWM_HU_OPERATION_SRV
 |**Module Name**<br>wa_from_hhu|
 |**Application Title**<br>Warehouse task from HHU|
 |**Namespace**<br>z|
 |**UI5 Theme**<br>sap_horizon|
-|**UI5 Version**<br>1.108.0|
+|**UI5 Version**<br>1.107.1|
 |**Enable Code Assist Libraries**<br>False|
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>False|
 
 ## wa_from_hhu
 
-eEWM Mobile Fiori Apps
+Warehouse task from HHU application.
 
 ### Starting the generated app
 

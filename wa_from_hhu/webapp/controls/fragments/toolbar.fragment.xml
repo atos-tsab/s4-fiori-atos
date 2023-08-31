@@ -3,7 +3,7 @@
     xmlns="sap.m">
 
     <Toolbar>
-        <Input id="idScannedInput" change="onScanInputChanged" value="{scanModel>/valueScan}" placeholder="{i18n>scannedValue}" width="100%" />
+        <Input id="idScannedInput" submit="onScannerOkPress" change="onScanInputChanged" value="{scanModel>/valueScan}" placeholder="{i18n>scannedValue}" width="100%" />
 
         <ToolbarSpacer />
 

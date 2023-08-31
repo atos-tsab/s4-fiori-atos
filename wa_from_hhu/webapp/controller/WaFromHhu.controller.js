@@ -16,25 +16,27 @@
 
 
 sap.ui.define([
-    "z/wafromhhu/controller/BaseController",
     "z/wafromhhu/controls/ExtScanner",
     "z/wafromhhu/model/formatter",
     "z/wafromhhu/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
     "sap/ui/core/BusyIndicator",
     "sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
     // ---- The app namespace is to be define here!
+    var _sAppPath       = "z.wafromhhu.";
     var _fragmentPath   = "z.wafromhhu.view.fragments.";
 	var _sAppModulePath = "z/wafromhhu/";
+
     var APP = "WA_FROM_HHU";
 
 
-    return BaseController.extend("z.wafromhhu.controller.WaFromHhu", {
+    return Controller.extend("z.wafromhhu.controller.WaFromHhu", {
 
         // ---- Implementation of formatter functions
         formatter: formatter,
@@ -48,10 +50,22 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -71,10 +85,16 @@ sap.ui.define([
 
             // ---- Define the Booking Button
             this.BookButton = this.byId("idButtonBook_" + APP);
+
+            // ---- Define the Input Fields
+            this.InputHU       = this.byId("idInput_HU");
+            this.InputQuantity = this.byId("idInput_Quantity");
+            this.InputLocation = this.byId("idInput_Location");
+            this.InputLocConf  = this.byId("idInput_LocConf");
         },
 
         _initLocalModels: function () {
-            var sTitle = this.getResourceBundle().getText("title");
+            var sTitle = this.oResourceBundle.getText("title");
 
             // ---- Get the Main Models.
             this.oModel = this.getOwnerComponent().getModel();
@@ -112,14 +132,12 @@ sap.ui.define([
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -134,24 +152,33 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
+            this.InputHU.onsapenter       = ((oEvent) => { this._onOkClicked(); });
+            this.InputQuantity.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this.InputLocation.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this.InputLocConf.onsapenter  = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-            if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+            if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
+
+            if (this.byId("idInput_HU"))       { this.byId("idInput_HU").destroy();       }
+            if (this.byId("idInput_Quantity")) { this.byId("idInput_Quantity").destroy(); }
+            if (this.byId("idInput_Location")) { this.byId("idInput_Location").destroy(); }
+            if (this.byId("idInput_LocConf"))  { this.byId("idInput_LocConf").destroy();  }
         },
 
         _onObjectMatched: function (oEvent) {
+            this.sViewMode = this.oScanModel.getProperty("/viewMode");
+
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcuts();
+			// this._setKeyboardShortcuts();
 
             this._getShellSource();
             this._resetAll();
             this.loadUserData();
 
             // ---- Set Focus to main Input field
-            this._setFocus("idInput_HU");
+            this._handleFocus();
         },
 
       
@@ -160,7 +187,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onPressBooking: function () {
-            var sOpenWarehouseTaskErr = this.getResourceBundle().getText("OpenWarehouseTaskErr");
+            var sOpenWarehouseTaskErr = this.oResourceBundle.getText("OpenWarehouseTaskErr");
             var sWhtType = "H";
 
             if (this.HU_Requirement === "Y") {
@@ -232,9 +259,9 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _createWarehouseTask: function (sWhtType) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iHU);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
@@ -353,7 +380,7 @@ sap.ui.define([
         },
 
 	    _loadHuData: function (sManNumber) {
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
             var that = this;
 
             this.iHU = sManNumber;
@@ -409,7 +436,7 @@ sap.ui.define([
 
                             BusyIndicator.hide();
                         } else {
-                            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+                            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", that.iHU);
 
                             BusyIndicator.hide();
 
@@ -446,8 +473,8 @@ sap.ui.define([
 	    _loadStorageBinData: function (sManNumber) {
             this.sStorageBin = sManNumber.toUpperCase();
 
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
-            var sErrMsg = this.getResourceBundle().getText("StorageBinErr", this.sStorageBin);
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var sErrMsg = this.oResourceBundle.getText("StorageBinErr", this.sStorageBin);
             var that = this;
 
             // ---- Check for Warehouse Number
@@ -464,8 +491,10 @@ sap.ui.define([
 
                 BusyIndicator.show(1);
 
+            var sPath = "/StorageBin";
+
             var oModel = this._getServiceUrl()[0];
-                oModel.read("/StorageBin", {
+                oModel.read(sPath, {
                     filters: aFilters,
                     error: function(oError, resp) {
                         BusyIndicator.hide();
@@ -548,9 +577,9 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
 		_handleHuData: function (sManNumber) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorHuScan", sManNumber);
-            var sTitle1  = this.getResourceBundle().getText("title1");
-            var sTitle2  = this.getResourceBundle().getText("title2");
+            var sErrMesg = this.oResourceBundle.getText("ErrorHuScan", sManNumber);
+            var sTitle1  = this.oResourceBundle.getText("title1");
+            var sTitle2  = this.oResourceBundle.getText("title2");
             var id    = "idInput_Quantity";
             var oData = this.oDisplayModel.getData();
                 oData.viewTitle = sTitle1;
@@ -591,7 +620,7 @@ sap.ui.define([
 		},
 
 		_handleQuantityData: function () {
-            var sErrMesg = this.getResourceBundle().getText("OnlySmallQuantities");
+            var sErrMesg = this.oResourceBundle.getText("OnlySmallQuantities");
             var iQuantity = parseInt(this.oDisplayModel.getProperty("/Quantity"), 10);
 
             this.oScanModel.setProperty("/showErr", false);
@@ -653,7 +682,7 @@ sap.ui.define([
         },
 
         _handleLocConfData: function (sManNumber) {
-            var sErrMesg     = this.getResourceBundle().getText("ErrorBooking");
+            var sErrMesg     = this.oResourceBundle.getText("ErrorBooking");
             var oDisplayData = this.oDisplayModel.getData();
             var check = false;
             var id    = "idInput_HU";
@@ -695,7 +724,7 @@ sap.ui.define([
 		// --------------------------------------------------------------------------------------------------------------------
 
         _showBookingError: function () {
-            var sErrMesg   = this.getResourceBundle().getText("ErrorBooking");
+            var sErrMesg   = this.oResourceBundle.getText("ErrorBooking");
             var oScanModel = this.oScanModel;
 
             var oScanData  = oScanModel.getData();
@@ -732,8 +761,6 @@ sap.ui.define([
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        key = this._removePrefix(key);
-
                         this.oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
                         this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -958,8 +985,8 @@ sap.ui.define([
         },
 
 		_getShellSource: function (oEvent) {
-			var spaceID = this.getResourceBundle().getText("SpaceId");
-			var pageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
@@ -979,9 +1006,6 @@ sap.ui.define([
 
 		_getServiceUrl: function () {
             var sService = "";
-
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
 
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
@@ -1017,15 +1041,15 @@ sap.ui.define([
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 13: // ---- Enter Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (that.iScanModusAktiv < 2) {
-                                that.onPressOk();
-                            } else {
-                                that.iScanModusAktiv = 0;
-                            }
+                            // if (that.iScanModusAktiv < 2) {
+                            //     that.onPressOk();
+                            // } else {
+                            //     that.iScanModusAktiv = 0;
+                            // }
 
-                            evt.keyCode = null;
+                            // evt.keyCode = null;
 
                             break;			                
                         case 112: // ---- F1 Key
@@ -1067,8 +1091,54 @@ sap.ui.define([
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
+
+        _handleFocus: function () {
+            // ---- Set Focus to main Input field
+            var id = "idInput_HU";
+
+            if (this.sViewMode === "Handling") { 
+                id = "idInput_HU";
+            } else if (this.sViewMode === "Quantity") {
+                id = "idInput_Quantity";                       
+            } else if (this.sViewMode === "Location") {
+                id = "idInput_Location";
+            } else if (this.sViewMode === "LocConf") {
+                id = "idInput_LocConf";
+            }
+
+            this._setFocus(id);
+        },
 
         _setFocus: function (id) {
             var that = this;
@@ -1137,7 +1207,7 @@ sap.ui.define([
         },
 
         _resetAll: function () {
-            var sTitle = this.getResourceBundle().getText("title");
+            var sTitle = this.oResourceBundle.getText("title");
 
             // ---- Reset the Main Model
             this.oDisplayModel.setData([]);
@@ -1168,6 +1238,9 @@ sap.ui.define([
             this.QsRelevantHU            = false;
             this.StorageBinDoubleScan    = true;
             this.StatusOpenWarehouseTask = false;
+
+            // ---- Set Focus to main Input field
+            this._setFocus("idInput_HU");
         }
 
 
