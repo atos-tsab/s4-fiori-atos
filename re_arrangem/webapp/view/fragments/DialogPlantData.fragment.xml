@@ -1,0 +1,37 @@
+<core:FragmentDefinition
+	xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core" 
+	class="sapUiSizeCompact"
+	xmlns="sap.m">
+	
+	<Dialog 
+		id="idDialogPlantData" 
+		class="sapThemeHighlight-asColor"
+		contentHeight="100px"
+		contentWidth="auto"
+		resizable="false"
+		type="Message"
+		state="Warning"
+		afterClose="onPlantDataAfterClose"
+		title="{i18n>PlantTitle}">
+		<content>
+			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
+				<HBox justifyContent="Start" wrap="Wrap">
+					<HBox justifyContent="Start" wrap="Wrap">
+						<Label id="idLabelPlantContent" text="{i18n>PlantContent}" width="auto" class="sapUiTinyMarginTop" />
+						<TextArea id="idTextAreaPlant" value="{DisplayModel>/Plant}" width="20px"  growing="false" rows="1" 
+								  change="onInputPlantChanged" liveChange="onInputPlantLiveChange" class="atosMInputBaseDisabled sapUiSmallMarginBegin" />
+					</HBox>
+				</HBox>
+			</VBox>
+		</content>
+		
+		<beginButton>
+			<Button text="{i18n>TakeOver}" type="Emphasized" press="onPlantDataSave" enabled="{ScanModel>/saveButton}" />
+		</beginButton>
+		<endButton>
+			<Button text="{i18n>Cancel}" type="Default" press="onPlantDataClose" />
+		</endButton>
+		
+	</Dialog>
+</core:FragmentDefinition>

@@ -2,6 +2,7 @@ node_modules/
 dist/
 .scp/
 .env
+nwabap
 Makefile*.mta
 mta_archives
 mta-*
