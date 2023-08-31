@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
 
-specVersion: "2.5"
+specVersion: "2.6"
 metadata:
   name: z.recweforeign
 type: application
@@ -18,7 +18,7 @@ server:
         backend:
           - path: /sap
             url: https://bpw-s4d.bpw.internal:44300
-            client: '501'
+            client: '100'
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:

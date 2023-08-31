@@ -1,9 +1,9 @@
 ## Application Details
 |               |
 | ------------- |
-|**Generation Date and Time**<br>Fri Mar 10 2023 14:33:13 GMT+0100 (Central European Standard Time)|
+|**Generation Date and Time**<br>Wed Aug 23 2023 13:49:01 GMT+0200 (Central European Summer Time)|
 |**App Generator**<br>@sap/generator-fiori-freestyle|
-|**App Generator Version**<br>1.8.6|
+|**App Generator Version**<br>1.9.4|
 |**Generation Platform**<br>Visual Studio Code|
 |**Template Used**<br>simple|
 |**Service Type**<br>SAP System (ABAP On Premise)|
@@ -11,8 +11,8 @@
 |**Module Name**<br>rec_we_foreign|
 |**Application Title**<br>Recording WE-Foreign|
 |**Namespace**<br>z|
-|**UI5 Theme**<br>sap_fiori_3|
-|**UI5 Version**<br>1.96.6|
+|**UI5 Theme**<br>sap_horizon|
+|**UI5 Version**<br>1.107.1|
 |**Enable Code Assist Libraries**<br>False|
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>False|

@@ -16,25 +16,27 @@
 
 
 sap.ui.define([
-    "z/recweforeign/controller/BaseController",
 	"z/recweforeign/controls/ExtScanner",
 	"z/recweforeign/model/formatter",
 	"z/recweforeign/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
     "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.recweforeign.";
     var _fragmentPath   = "z.recweforeign.view.fragments.";
 	var _sAppModulePath = "z/recweforeign/";
+
     var APP = "REC_WE_FORN";
  
  
-    return BaseController.extend("z.recweforeign.controller.RecWeForeign", {
+    return Controller.extend("z.recweforeign.controller.RecWeForeign", {
 
  		// ---- Implementation of formatter functions
         formatter: formatter,
@@ -48,10 +50,22 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -74,10 +88,13 @@ sap.ui.define([
             // ---- Define the UI Tables
             this.MaterialInfoTable = this.byId("idTableMaterialInfo");
             this.PackageListTable  = this.byId("idTablePackageList");
+
+            // ---- Define the Input Fields
+            this.InputHU = this.byId("idInput_HU");
         },
 
         _initLocalModels: function () {
-            var sTitle = this.getResourceBundle().getText("title");
+            var sTitle = this.oResourceBundle.getText("title");
 
             // ---- Get the Main Models.
             this.oModel = this.getOwnerComponent().getModel();
@@ -111,14 +128,12 @@ sap.ui.define([
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -133,17 +148,20 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
+            this.InputHU.onsapenter = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
+
+            if (this.byId("idInput_HU")) { this.byId("idInput_HU").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
+            this.sViewMode = this.oScanModel.getProperty("/viewMode");
+
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcuts();
+			// this._setKeyboardShortcuts();
 
             this._getShellSource();
             this._resetAll();
@@ -227,7 +245,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _bookHuMissingData: function (oTable) {
-            var smallAmountHint = this.getResourceBundle().getText("HandlingSmallAmountHint");
+            var smallAmountHint = this.oResourceBundle.getText("HandlingSmallAmountHint");
             var oData = oTable.getModel().getData();
             var iODataLength = oData.length;
             var iCounter     = 1;
@@ -287,9 +305,9 @@ sap.ui.define([
         saveBookingData: function (iDocumentNo) {
             var iDocumentNo = this.oDisplayModel.getProperty("/DocumentNo");
             var iDeliveryNo = this.oDisplayModel.getProperty("/DeliveryNo");
-            var sOkMesg     = this.getResourceBundle().getText("OkMesBooking", iDeliveryNo);
-            var sErrMesg    = this.getResourceBundle().getText("ErrorBooking", iDocumentNo);
-            var tSTime = this.getResourceBundle().getText("ShowTime");
+            var sOkMesg     = this.oResourceBundle.getText("OkMesBooking", iDeliveryNo);
+            var sErrMesg    = this.oResourceBundle.getText("ErrorBooking", iDocumentNo);
+            var tSTime = this.oResourceBundle.getText("ShowTime");
             var that   = this;
 
             if (this.oDeliveryData !== null && this.oDeliveryData !== undefined && iDocumentNo === this.oDeliveryData.DocumentNo) {
@@ -311,7 +329,7 @@ sap.ui.define([
                             tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function(rData, oResponse) {
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                            if (parseInt(oResponse.statusCode, 10) === 202 || parseInt(oResponse.statusCode, 10) === 204) {
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -341,10 +359,10 @@ sap.ui.define([
             }
         },
 
-        _CancelHuData: function () {
-            var sOkMesg  = this.getResourceBundle().getText("OkMesCancellation");
-            var sErrMesg = this.getResourceBundle().getText("ErrorCancellation");
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+        _CancelHuData: async function () {
+            var sOkMesg  = this.oResourceBundle.getText("OkMesCancellation");
+            var sErrMesg = this.oResourceBundle.getText("ErrorCancellation");
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var oTable;
 
             // ---- Get Table data
@@ -362,9 +380,6 @@ sap.ui.define([
             if (oData.length > 0) {
                 BusyIndicator.show(1);
 
-                this.oModel.setDeferredGroups(["huListGroup"]);
-                this.oModel.setUseBatch(true);
-
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
 
@@ -374,46 +389,39 @@ sap.ui.define([
 
                         var urlParam = { "BookUnloadCancel": true };
 
-                        this.oModel.update(sPath, urlParam, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
+                        // ---- First step: Get the internal asyncron data
+                        await this._genericUpdateOData(sPath, urlParam).then ( function (oResponse) {
+                            // ---- Check for complete final booking
+                            if (iCounter === iODataLength) {
+                                if (parseInt(oResponse.statusCode, 10) === 202 || parseInt(oResponse.statusCode, 10) === 204) {
+                                    that.oScanModel.setProperty("/showOk", true);
+                                    that.oScanModel.setProperty("/showOkText", sOkMesg);       
+                                    
+                                    that._resetCanceledHuData(oTable);
+    
+                                    BusyIndicator.hide();
 
-                        this.oModel.submitChanges({
-                            groupId: "huListGroup",
-                            error: function (oError, resp) {
-                                that.oModel.setUseBatch(false);
+                                    // ---- Do nothing -> Good case
+                                    setTimeout(function () {
+                                        that._resetAll();
+                        
+                                        // ---- Set Focus to main Input field
+                                        that._setFocus("idInput_HU");
+                                    }, tSTime);            
+                                } else {
+                                    BusyIndicator.hide();
 
-                                BusyIndicator.hide();
-
-                                tools.handleODataRequestFailed(oError, resp, true);
-                            },
-                            success: function (rData, oResponse) {
-                                that.oModel.setUseBatch(false);
-
-                                if (iCounter === iODataLength) {
-                                    if (parseInt(oResponse.statusCode, 10) === 202 && (oResponse.statusText === "Accepted" || oResponse.statusText === "")) {
-                                        that.oScanModel.setProperty("/showOk", true);
-                                        that.oScanModel.setProperty("/showOkText", sOkMesg);       
-                                        
-                                        that._resetCanceledHuData(oTable);
-        
-                                        BusyIndicator.hide();
-
-                                        // ---- Do nothing -> Good case
-                                        setTimeout(function () {
-                                            that._resetAll();
-                            
-                                            // ---- Set Focus to main Input field
-                                            that._setFocus("idInput_HU");
-                                        }, tSTime);            
-                                    } else {
-                                        BusyIndicator.hide();
-
-                                        tools.showMessageError(oResponse.statusText, oResponse.statusCode);
-                                    }
+                                    tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                                 }
-
-                                iCounter = iCounter + 1;
                             }
-                        }); 
+
+                            iCounter = iCounter + 1;
+                        }).catch((oError) => {
+                            BusyIndicator.hide();
+            
+                            tools.showMessageError(oError.message);
+                            // tools.handleODataRequestFailed(oError, oError.responseText, true); 
+                        })
                     } else {
                         iODataLength = iODataLength - 1;
 
@@ -434,6 +442,34 @@ sap.ui.define([
             }
         },
 
+        _genericUpdateOData: async function (sPath, data) {
+            BusyIndicator.show(1);
+
+            // ---- Create new Production Order
+			return new Promise((resolve, reject) => {
+				try {
+                    var oModel = this._getServiceUrl()[0];
+                        oModel.update(sPath, data, {
+                            error: function(oError, resp) {
+                                reject(oError);
+                            },
+                            success: function(rData, oResponse) {
+                                if (rData !== null && rData !== undefined) {
+                                    resolve(rData);
+                                } else if (oResponse !== null && oResponse !== undefined) {
+                                    resolve(oResponse);
+                                } else {
+                                    resolve("Success");
+                                }
+                            }
+                        });
+                } catch (oError) { 
+                    BusyIndicator.hide();
+
+                    tools.handleODataRequestFailed(oError, oError.responseText, true);
+				}
+			});
+        },
 
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Loading / Set Functions
@@ -483,8 +519,8 @@ sap.ui.define([
         },
 
 	    _loadHuData: function (sManNumber) {
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
-            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", this.iHU);
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", this.iHU);
             var that = this;
 
             this.iHU = sManNumber;
@@ -543,6 +579,8 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 tools.alertMe(sErrMsg, "");
                             }
                         }
@@ -562,6 +600,8 @@ sap.ui.define([
                 oModel.read(sPath, {
                     error: function(oError, resp) {
                         BusyIndicator.hide();
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
 
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
@@ -694,7 +734,7 @@ sap.ui.define([
             this._setFocus();
         },
 
-        _updateStatusAllHUs: function (oTable, oData) {
+        _updateStatusAllHUs: async function (oTable, oData) {
             var iODataLength = oData.results.length;
             var iCounter     = 1;
             var that = this;
@@ -703,53 +743,43 @@ sap.ui.define([
             if (oData.results.length > 0) {
                 BusyIndicator.show(1);
 
-                this.oModel.setDeferredGroups(["huListGroup"]);
-                this.oModel.setUseBatch(true);
-
                 for (let i = 0; i < oData.results.length; i++) {
                     var data = oData.results[i];
                         data.BookUnload = true;
 
                     var sPath = "/DeliveryHU(WarehouseNumber='" + data.WarehouseNumber + "',HandlingUnit='" + data.HandlingUnit + "')";
 
-                    this.oModel.update(sPath, data, { groupId: "huListGroup", success: function(rData, oResponse) {}, error: function(oError, resp) {} });
-                    this.oModel.submitChanges({
-                        groupId: "huListGroup",
-                        error: function (oError, resp) {
-                            that.oModel.setUseBatch(false);
+                    // ---- First step: Get the internal asyncron data
+                    await this._genericUpdateOData(sPath, data).then ( function (rData) {
+                        // ---- Check for complete final booking
+                        if (rData !== null && rData !== undefined) {
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                tools.alertMe(rData.SapMessageText, "");
+                                
+                                that._setFocus();
 
-                            BusyIndicator.hide();
+                                BusyIndicator.hide();
 
-                            tools.handleODataRequestFailed(oError, resp, true);
-                        },
-                        success: function (rData, oResponse) {
-                            that.oModel.setUseBatch(false);
-
-                            // ---- Check for complete final booking
-                            if (rData !== null && rData !== undefined) {
-                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                    tools.alertMe(rData.SapMessageText, "");
-                                    
-                                    that._setFocus();
-
-                                    BusyIndicator.hide();
-
-                                    return;
-                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                                    // ---- Coding in case of showing Business application Informations
-                                    tools.alertMe(rData.SapMessageText, "");
-                                }
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
                             }
-
-                            if (iCounter === iODataLength) {
-                                that._reloadHuData(oTable);
-                            }
-
-                            iCounter = iCounter + 1;
-
-                            BusyIndicator.hide();
                         }
-                    }); 
+
+                        if (iCounter === iODataLength) {
+                            that._reloadHuData(oTable);
+                        }
+
+                        iCounter = iCounter + 1;
+
+                        BusyIndicator.hide();
+
+                    }).catch((oError) => {
+                        BusyIndicator.hide();
+        
+                        tools.handleODataRequestFailed(oError, oError.responseText, true);
+                    })
                 }
             }
         },
@@ -766,6 +796,8 @@ sap.ui.define([
                 oModel.update(sPath, urlParam, { 
                     error: function (oError, resp) {
                         BusyIndicator.hide();
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
 
                         tools.handleODataRequestFailed(oError, resp, true);
                     },
@@ -793,6 +825,8 @@ sap.ui.define([
                             BusyIndicator.hide();
                         } else {
                             BusyIndicator.hide();
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
 
                             tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                         }
@@ -826,8 +860,6 @@ sap.ui.define([
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        key = this._removePrefix(key);
-
                         this.oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
                         this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -850,7 +882,7 @@ sap.ui.define([
     	},
 
 		_changeTableSettings: function (oTable, iLength) {
-            var iMaxRowCount = parseInt(this.getResourceBundle().getText("MaxRowCount"), 10);
+            var iMaxRowCount = parseInt(this.oResourceBundle.getText("MaxRowCount"), 10);
             var iRowCount    = parseInt((iLength + 1), 10);
 
             if (iRowCount > iMaxRowCount) {
@@ -1234,8 +1266,8 @@ sap.ui.define([
         },
 
 		_getShellSource: function (oEvent) {
-			var spaceID = this.getResourceBundle().getText("SpaceId");
-			var pageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
@@ -1255,9 +1287,6 @@ sap.ui.define([
 
 		_getServiceUrl: function () {
             var sService = "";
-
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
 
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
@@ -1293,15 +1322,15 @@ sap.ui.define([
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 13: // ---- Enter Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (that.iScanModusAktiv < 2) {
-                                that.onPressOk();
-                            } else {
-                                that.iScanModusAktiv = 0;
-                            }
+                            // if (that.iScanModusAktiv < 2) {
+                            //     that.onPressOk();
+                            // } else {
+                            //     that.iScanModusAktiv = 0;
+                            // }
 
-                            evt.keyCode = null;
+                            // evt.keyCode = null;
                                                 
                             break;			                
                         case 112: // ---- F1 Key
@@ -1343,6 +1372,35 @@ sap.ui.define([
                     }
                 }
 			}, this));
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
 		},
 
 
@@ -1459,6 +1517,9 @@ sap.ui.define([
                     this.PackageListTable.setBusy(!this.PackageListTable.getBusy());
                 }
             }
+
+            // ---- Set Focus to main Input field
+            this._setFocus();
         }
 
 
