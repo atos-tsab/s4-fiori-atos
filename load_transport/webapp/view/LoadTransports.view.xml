@@ -1,0 +1,34 @@
+<mvc:View
+    controllerName="z.loadtransport.controller.LoadTransports"
+    xmlns:mvc="sap.ui.core.mvc" 
+	xmlns:core="sap.ui.core"
+	displayBlock="true"
+    xmlns="sap.m">
+
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+ 		<customHeader>
+			<Toolbar>
+				<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+				<ToolbarSpacer />
+				<Button id="idButtonBook_REC_WE_FORN" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
+				<ToolbarSeparator />
+				<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
+				<ToolbarSeparator />
+				<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" />
+			</Toolbar>
+		</customHeader>
+
+        <content>
+            <core:Fragment fragmentName="z.loadtransport.view.parts.ScanDetails" type="XML" />
+            <core:Fragment fragmentName="z.loadtransport.view.parts.UiTable" type="XML" />
+        </content>
+
+		<footer>
+			<Toolbar>
+				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
+				<ToolbarSpacer />
+			</Toolbar>
+		</footer>
+    </Page>
+
+</mvc:View>

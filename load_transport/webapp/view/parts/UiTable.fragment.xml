@@ -1,0 +1,113 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerTableB" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableHU" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row" 
+			visibleRowCount="1">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "StatusLoad", "columnIndex":"0", "leadingProperty": "StatusLoad"}' />
+					</ui:customData>
+					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
+					<ui:template>
+						<CheckBox text="" selected="{StatusLoad}" enabled="false" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnit", "columnIndex":"1", "leadingProperty": "HandlingUnit"}' />
+					</ui:customData>
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{HandlingUnitId}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"2", "leadingProperty": "Material"}' />
+					</ui:customData>
+					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{MaterialNo}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"3", "leadingProperty": "Quantity"}' />
+					</ui:customData>
+					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Quantity}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"4", "leadingProperty": "UnitOfMeasurement"}' />
+					</ui:customData>
+					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{QuantityUnitOfMeasurement}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Delivery", "columnIndex":"5", "leadingProperty": "Delivery"}' />
+					</ui:customData>
+					<Label text="{i18n>Delivery}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{DeliveryNo}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "GoodsRecipient", "columnIndex":"6", "leadingProperty": "GoodsRecipient"}' />
+					</ui:customData>
+					<Label text="{i18n>GoodsRecipient}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{ShipToParty}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Customer", "columnIndex":"7", "leadingProperty": "Customer"}' />
+					</ui:customData>
+					<Label text="{i18n>Customer}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{ShipToName}" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+	<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+		<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="true">
+			<VBox justifyContent="Start" wrap="Wrap">
+<!--
+
+				<Label text="20000101" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+ 				<Label text="0321225310|03|000336| |1000011306|albert|" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+ 				<Label text="0321225310||000336| |1000011306|albert|" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 01.031.93.63.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.001.00.44.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.179.07.12.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+				<Label text="Produkt 03.340.00.01.0" width="auto" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+ -->			
+ 			</VBox>
+		</HBox>
+	</VBox>
+
+</core:FragmentDefinition>
