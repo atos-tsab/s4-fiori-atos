@@ -233,6 +233,34 @@ sap.ui.define(["sap/ui/core/format/NumberFormat"], function(NumberFormat) {
 			}
 		},
 
+		timeOnlyFormatter: function (envy) { //eslint-disable-line
+			jQuery.sap.require("sap.ui.core.format.DateFormat");
+
+			if (envy) {
+				var oTimeFormat = sap.ui.core.format.DateFormat.getTimeInstance({
+					pattern: "HH:mm"
+				});
+
+				var nDate = new Date(envy);
+
+				return oTimeFormat.format(nDate);
+			}
+		},
+
+		dateOnlyFormatter: function (envy) { //eslint-disable-line
+			jQuery.sap.require("sap.ui.core.format.DateFormat");
+
+			if (envy) {
+				var oDateFormat = sap.ui.core.format.DateFormat.getDateTimeInstance({
+					pattern: "dd.MM.yyyy"
+				});
+
+				var nDate = new Date(envy);
+
+				return oDateFormat.format(nDate);
+			}
+		},
+
 		formatSenderName: function (sFirstName, sLastName) {
 			return sLastName + ", " + sFirstName;
 		},

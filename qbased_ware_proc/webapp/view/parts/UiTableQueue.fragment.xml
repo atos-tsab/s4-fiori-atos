@@ -12,7 +12,7 @@
 			enableSelectAll="false"
 			selectionMode="Single" 
 			selectionBehavior="Row" 
-			visibleRowCount="12"
+			visibleRowCount="6"
 			rowSelectionChange="onRowSelectionQueueList"
 			width="560px">
 			<ui:rowSettingsTemplate>

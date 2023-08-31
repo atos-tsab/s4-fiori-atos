@@ -16,23 +16,26 @@
 
 
  sap.ui.define([
-    "z/qbasedwareproc/controller/BaseController",
 	"z/qbasedwareproc/model/formatter",
 	"z/qbasedwareproc/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, formatter, tools, JSONModel, History, Controller) {
+], function (formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.qbasedwareproc.";
     var _fragmentPath   = "z.qbasedwareproc.view.fragments.";
 	var _sAppModulePath = "z/qbasedwareproc/";
+
     var APP = "QBAS_PROC_WARE";
  
  
-    return BaseController.extend("z.qbasedwareproc.controller.QbasedProcWare", {
+    return Controller.extend("z.qbasedwareproc.controller.QbasedProcWare", {
  
         // ---- Implementation of formatter functions
         formatter: formatter,
@@ -46,9 +49,21 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -68,7 +83,8 @@
             this.BookButton = this.byId("idButtonBook_" + APP);
 
             // ---- Define the UI Tables
-            this.QueueListTable = this.byId("idTableQueueList");
+            this.QueueListTable    = this.byId("idTableQueueList");
+            this.ShipmentListTable = this.byId("idTableShipmentList");
         },
 
         _initLocalModels: function () {
@@ -79,7 +95,8 @@
             this.getView().setModel(this.oModel);
 
             // ---- Set Jason Models. CaptureQueue
-            var sViewTitle = this.getResourceBundle().getText("CaptureQueue");
+            var sCaptionShipment = this.oResourceBundle.getText("CaptureOwnShipments");
+            var sViewTitle       = this.oResourceBundle.getText("CaptureQueue");
 
             var oData = {
                 "viewMode":        "Queue",
@@ -89,13 +106,16 @@
                 "next":            true,
                 "back":            false,
                 "switchState":     true,
+                "switchStateShip": true,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewQueue":       true,
                 "viewLocation":    false,
+                "viewShipment":    false,
                 "viewCaption":     sViewTitle,
+                "captionShipment": sCaptionShipment,
                 "valueManuallyNo": ""
             };
 
@@ -127,12 +147,14 @@
             if (this.byId("idTableQueueList")) {
 				this.byId("idTableQueueList").destroy();
 			}
+            if (this.byId("idTableShipmentList")) {
+				this.byId("idTableShipmentList").destroy();
+			}
         },
 
         _onObjectMatched: function (oEvent) {
-            var sViewTitleH = this.getResourceBundle().getText("CaptureQueue");
-            var sViewTitleW = this.getResourceBundle().getText("CaptureShipping");
-            var that = this;
+            var sViewTitleH = this.oResourceBundle.getText("CaptureQueue");
+            var sViewTitleW = this.oResourceBundle.getText("CaptureShipping");
 
 			// this._setKeyboardShortcutsQueue();
 
@@ -141,18 +163,28 @@
 
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 if (oEvent.getParameter("arguments").qmode !== null && oEvent.getParameter("arguments").qmode !== undefined) {
-                    this.sActiveQMode = oEvent.getParameter("arguments").qmode;    
+                    this.sActiveQMode = oEvent.getParameter("arguments").qmode;
+                } else {
+                    this.sActiveQMode = "H";
                 }
+            } else {
+                this.sActiveQMode = "H";
             }
 
             if (this.sActiveQMode === "H") {
                 this.oScanModel.setProperty("/switchState", true);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleH);
+                this.oScanModel.setProperty("/viewShipment", false);
+
                 this.bExternalQueue = false;
             } else {
                 this.oScanModel.setProperty("/switchState", false);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleW);
+                this.oScanModel.setProperty("/viewShipment", true);
+
                 this.bExternalQueue = true;
+
+                this.loadShipmentData(false);
             }
 
             this.loadUserData();
@@ -163,9 +195,7 @@
         // ---- Button Event Handlers
         // --------------------------------------------------------------------------------------------------------------------
 
-        onPressMainOk: function (sViewMode, route) {
-            // this.sViewMode = sViewMode;
-
+        onPressMainOk: function (sViewMode) {
             this.onNavToHandlingUnits(this.sActiveQueue);
         },
 
@@ -255,9 +285,39 @@
             this.oScanModel.setData(oData);
         },
 
+        onRowSelectionShipmentList: function (oEvent) {
+            var oData  = this.oScanModel.getData();
+            var oTable = this.ShipmentListTable;
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var sSource = oEvent.getSource();
+
+                    if (oTable !== null && oTable !== undefined && oTable.getBinding("rows").getContexts().length > 0) {
+                        var path = "";
+
+                        if (oEvent.getParameter("rowContext") !== null && oEvent.getParameter("rowContext") !== undefined) {
+                            path = oEvent.getParameter("rowContext").getPath();
+                        } else {
+                            path = oTable.getBinding("rows").getContexts()[0].getPath();
+                        }
+                       
+                        var selectedRow = sSource.getModel().getProperty(path);
+                        var iIndex = sSource.getSelectedIndex();
+ 
+                        // this.iActiveQueue = iIndex;
+                        // this.sActiveQueue = selectedRow.QueueId;
+                    }
+                }
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
         onSwitchChange: function (oEvent) {
-            var sViewTitleH = this.getResourceBundle().getText("CaptureQueue");
-            var sViewTitleW = this.getResourceBundle().getText("CaptureShipping");
+            var sViewTitleH   = this.oResourceBundle.getText("CaptureQueue");
+            var sViewTitleW   = this.oResourceBundle.getText("CaptureShipping");
+            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
 
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
@@ -266,17 +326,121 @@
                     if (bState) {
                         this.sActiveQMode   = "H";
                         this.bExternalQueue = false;
+
                         this.oScanModel.setProperty("/switchState", true);
+                        this.oScanModel.setProperty("/viewShipment", false);
+                        this.oScanModel.setProperty("/switchStateShip", true);
                         this.oScanModel.setProperty("/viewCaption", sViewTitleH);
                     } else {
                         this.sActiveQMode   = "W";
                         this.bExternalQueue = true;
+
                         this.oScanModel.setProperty("/switchState", false);
+                        this.oScanModel.setProperty("/viewShipment", true);
+                        this.oScanModel.setProperty("/switchStateShip", true);
                         this.oScanModel.setProperty("/viewCaption", sViewTitleW);
-                     }
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
+
+                        this.loadShipmentData(true);
+                    }
 
                     this.loadQueueData();
                 }
+            }
+        },
+
+        onSwitchChangeShipment: function (oEvent) {
+            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
+            var sViewTitleAll = this.oResourceBundle.getText("CaptureAllShipments");
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
+                    var bState = oEvent.getParameter("state");
+ 
+                    if (bState) {
+                        this.oScanModel.setProperty("/switchStateShip", true);
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
+                    } else {
+                        this.oScanModel.setProperty("/switchStateShip", false);
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleAll);
+                    }
+
+                    this.loadShipmentData(bState);
+                }
+            }
+        },
+
+        onPressShipment: function (iShipmentNumber) {
+            this.saveShipmentData(iShipmentNumber);
+        },
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Booking Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+        saveShipmentData: function (iShipmentNumber) {
+            var sErrMesg = this.oResourceBundle.getText("ErrorShipment", iShipmentNumber);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", iShipmentNumber);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
+            var that = this;
+
+            if (iShipmentNumber !== null && iShipmentNumber !== undefined && iShipmentNumber !== "") {
+                BusyIndicator.show(1);
+
+                var sPath = "/GoodsIssueShipment(ShipmentNumber='" + iShipmentNumber + "')";
+                var urlParam = { "BookAllDeliveries": true};
+    
+                var oModel = this._getServiceUrl()[0];
+                    oModel.update(sPath, urlParam, {
+                        error: function(oError, resp) {
+                            BusyIndicator.hide();
+
+                            tools.handleODataRequestFailed(oError, resp, true);
+                        },
+                        success: function(rData, oResponse) {
+                            // ---- Check for complete final booking
+                            if (rData !== null && rData !== undefined) {
+                                if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.alertMe(rData.SapMessageText, "");
+                                    
+                                    that._resetAll();
+
+                                    BusyIndicator.hide();
+
+                                    return;
+                                } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.SapMessageText, "");
+                                }
+                            }
+
+                            if (parseInt(oResponse.statusCode, 10) === 201 || parseInt(oResponse.statusCode, 10) === 204) {
+                                BusyIndicator.hide();
+
+                                that.oScanModel.setProperty("/showOk", true);
+                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+
+                                that.loadShipmentData(false);
+
+                                setTimeout(function () {
+                                    that._resetAll();                                
+                                }, tSTime);            
+                            } else {
+                                BusyIndicator.hide();
+
+                                tools.showMessageError(oResponse.statusText, oResponse.statusCode);
+                            }
+                        }
+                    });
+            } else {
+                BusyIndicator.hide();
+
+                that.oScanModel.setProperty("/showOk", false);
+                that.oScanModel.setProperty("/showOkText", "");
+                that.oScanModel.setProperty("/showErr", true);
+                that.oScanModel.setProperty("/showErrText", sErrMesg);
             }
         },
 
@@ -294,33 +458,34 @@
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
-			this.oModel.read(sPath, {
-				error: function(oError, resp) {
-                    tools.handleODataRequestFailed(oError, resp, true);
-				},
-				success: function(rData, response) {
-					if (rData !== null && rData !== undefined) {
-                        // ---- Check for complete final booking
-                        if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                            // ---- Coding in case of showing Business application Errors
-                            tools.showMessageError(rData.SapMessageText, "");
-                        } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        if (rData !== null && rData !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                // ---- Coding in case of showing Business application Errors
+                                tools.showMessageError(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+                        }
+
+                        if (rData !== null && rData !== undefined && rData !== "") {
+                            that.iWN = rData.ParameterValue;
+
+                            that.loadQueueData();
                         }
                     }
-
-					if (rData !== null && rData !== undefined && rData !== "") {
-                        that.iWN = rData.ParameterValue;
-
-                        that.loadQueueData();
-                    }
-				}
-			});
+                });
         },
 
 	    loadQueueData: function () {
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
             var that = this;
 
             // ---- Check for Warehouse Number
@@ -338,8 +503,10 @@
                 aFilters.push(new sap.ui.model.Filter("NoOfOpenTasks", sap.ui.model.FilterOperator.GT, 0));
                 aFilters.push(new sap.ui.model.Filter("ExternalQueue", sap.ui.model.FilterOperator.EQ, this.bExternalQueue));
 
+            var sPath = "/Queue";
+
             var oModel = this._getServiceUrl()[0];
-                oModel.read("/Queue", {
+                oModel.read(sPath, {
                     filters: aFilters,
                     error: function(oError, resp) {
                         BusyIndicator.hide();
@@ -348,6 +515,20 @@
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
                             that._setQueueTableData(rData.results);
                         }
 
@@ -357,7 +538,7 @@
         },
 
         _setQueueTableData: function (oData) {
-            var sErrMsg = this.getResourceBundle().getText("QueueErr");
+            var sErrMsg = this.oResourceBundle.getText("QueueErr");
 
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
@@ -367,7 +548,7 @@
                         item.Booked =  false;
                 } 
             } else {
-                tools.alertMe(sErrMsg, "");
+                tools.alertMeOffset(sErrMsg, "0 -110");
             }
 
             var oModel = new JSONModel();
@@ -376,6 +557,76 @@
             this.QueueListTable.setModel(oModel);
             this.QueueListTable.bindRows("/");
             this.QueueListTable.setSelectedIndex(0);
+        },
+
+	    loadShipmentData: function (bState) {
+            var that = this;
+
+            // ---- Read the Shipment Data from the backend
+			var aFilters = [];
+
+            if (bState) {
+                aFilters.push(new sap.ui.model.Filter("ShowAll", sap.ui.model.FilterOperator.EQ, false));
+            } else {
+                aFilters.push(new sap.ui.model.Filter("ShowAll", sap.ui.model.FilterOperator.EQ, true));
+            }
+
+            BusyIndicator.show(1);
+
+            var sPath = "/GoodsIssueShipment";
+
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        BusyIndicator.hide();
+
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
+                                    // ---- Coding in case of showing Business application Errors
+                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
+                            that._setShipmentTableData(rData.results);
+                        }
+
+                        BusyIndicator.hide();
+                    }
+                });
+        },
+
+        _setShipmentTableData: function (oData) {
+            var sErrMsg = this.oResourceBundle.getText("ShipmentErr");
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var item = oData[i];
+                        item.No     = (i + 1);
+                        item.Status = "Success";
+                        item.Booked =  true;
+                } 
+            } else {
+                tools.alertMeOffset(sErrMsg, "0 200");
+            }
+
+            var oModel = new JSONModel();
+                oModel.setData(oData);
+
+            this.ShipmentListTable.setModel(oModel);
+            this.ShipmentListTable.bindRows("/");
+            this.ShipmentListTable.setSelectedIndex(0);
         },
 
 
@@ -403,8 +654,8 @@
         },
 
 		_getShellSource: function (oEvent) {
-			var spaceID = this.getResourceBundle().getText("SpaceId");
-			var pageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
@@ -424,9 +675,6 @@
 
 		_getServiceUrl: function () {
             var sService = "";
-
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
 
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
@@ -463,19 +711,19 @@
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 113: // ---- F2 Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (sRoute === "Main") {
-                                that.onPressMainOk(sViewMode);
-                            }
+                            // if (sRoute === "Main") {
+                            //     that.onPressMainOk(sViewMode);
+                            // }
 
                             break;			                
                         case 114: // ---- F3 Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (sRoute === "Main") {
-                                that.onNavBack();
-                            }
+                            // if (sRoute === "Main") {
+                            //     that.onNavBack();
+                            // }
                             
                             break;			                
                         default: 
@@ -488,30 +736,44 @@
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
         _resetAll: function () {
             var oModel = new JSONModel([]);
 
-            // ---- Reset the Main Model
-            var oDisplayData = {
-                "ExtLsPackage":     "",
-                "SupplierId":       "",
-                "Supplier":         "",
-                "ExtShipment":      "",
-                "Delivery":         "",
-                "Scanmodus":        "",
-                "PsDeliverNote":    ""
-            };
-
-            var oDisplayModel = new JSONModel();
-                oDisplayModel.setData(oDisplayData);
-
-            this.getView().setModel(oDisplayModel, "DisplayModel");
-
             // ---- Reset the Scan Model
-            var sViewTitle = this.getResourceBundle().getText("CaptureQueue");
+            var sCaptionShipment = this.oResourceBundle.getText("CaptureOwnShipments");
+            var sViewTitle       = this.oResourceBundle.getText("CaptureQueue");
 
             var oData = { 
                 "viewMode":        "Queue",
@@ -521,13 +783,16 @@
                 "next":            true,
                 "back":            false,
                 "switchState":     true,
+                "switchStateShip": true,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewQueue":       true,
                 "viewLocation":    false,
+                "viewShipment":    false,
                 "viewCaption":     sViewTitle,
+                "captionShipment": sCaptionShipment,
                 "valueManuallyNo": ""
             };
 
@@ -541,6 +806,15 @@
 
                 this.QueueListTable.setModel(oModel);
             }
+
+            // ---- Reset the UI Table for Shipments
+            if (this.ShipmentListTable !== null && this.ShipmentListTable !== undefined) {
+                if (this.ShipmentListTable.getBusy()) {
+                    this.ShipmentListTable.setBusy(!this.ShipmentListTable.getBusy());
+                }
+
+                this.ShipmentListTable.setModel(oModel);
+            }            
         }
 
 

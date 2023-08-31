@@ -46,7 +46,8 @@
 										<OverflowToolbar width="560px" class="sapUiSmallMarginBegin">
 											<Label text="{i18n>Toolbar}{i18n>Colon}" />
 											<ToolbarSpacer/>
-											<Switch state="{ScanModel>/switchState}" change="onSwitchChange" tooltip="{i18n>SwitchTooltip}" customTextOn="{i18n>SwitchInt}" customTextOff="{i18n>SwitchExt}">
+											<Switch state="{ScanModel>/switchState}" change="onSwitchChange" tooltip="{i18n>SwitchTooltip}" 
+													customTextOn="{i18n>SwitchInt}" customTextOff="{i18n>SwitchExt}">
 												<layoutData>
 													<FlexItemData growFactor="1" />
 												</layoutData>
@@ -62,6 +63,27 @@
 										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableQueue" type="XML" />
 									</HBox>
 								</VBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewShipment}" class="sapUiSmallMarginTop">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<OverflowToolbar width="560px" class="sapUiSmallMarginBegin">
+											<Label text="{ScanModel>/captionShipment}" />
+											<ToolbarSpacer/>
+											<Switch state="{ScanModel>/switchStateShip}" change="onSwitchChangeShipment" tooltip="{i18n>SwitchTooltipShipment}" 
+													customTextOn="{i18n>SwitchOwn}" customTextOff="{i18n>SwitchAll}">
+												<layoutData>
+													<FlexItemData growFactor="1" />
+												</layoutData>
+											</Switch>
+										</OverflowToolbar>
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<core:Fragment fragmentName="z.qbasedwareproc.view.parts.UiTableShipment" type="XML" />
+									</HBox>
+								</VBox>
+
 							</VBox>
 
 						</f:content>

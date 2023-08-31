@@ -16,25 +16,26 @@
 
 
  sap.ui.define([
-    "z/qbasedwareproc/controller/BaseController",
 	"z/qbasedwareproc/controls/ExtScanner",
 	"z/qbasedwareproc/model/formatter",
 	"z/qbasedwareproc/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
 	"sap/ui/model/json/JSONModel",
-	"sap/ui/model/Sorter",
-    "sap/ui/core/routing/History",
+    "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, Sorter, History, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.qbasedwareproc.";
     var _fragmentPath   = "z.qbasedwareproc.view.fragments.";
 	var _sAppModulePath = "z/qbasedwareproc/";
+
     var APP = "QBAS_PROC_WARE";
  
  
-    return BaseController.extend("z.qbasedwareproc.controller.HandlingUnits", {
+    return Controller.extend("z.qbasedwareproc.controller.HandlingUnits", {
  
         // ---- Implementation of formatter functions
         formatter: formatter,
@@ -48,10 +49,22 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -72,6 +85,10 @@
 
             // ---- Define the UI Tables
             this.LocationListTable = this.byId("idTableLocationList");
+
+            // ---- Define the Input Fields
+            this.InputHU  = this.byId("idInput_HU");
+            this.InputMat = this.byId("idInput_Material");
         },
 
         _initLocalModels: function () {
@@ -82,8 +99,8 @@
             this.getView().setModel(this.oModel);
 
             // ---- Set Jason Models.
-            var sViewTitleH = this.getResourceBundle().getText("CaptureHU");
-            var sTableTitleH = this.getResourceBundle().getText("HU");
+            var sViewTitleH = this.oResourceBundle.getText("CaptureHU");
+            var sTableTitleH = this.oResourceBundle.getText("HU");
 
             var oData = {
                 "viewMode":        "Handling",
@@ -113,14 +130,12 @@
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -135,33 +150,36 @@
         },
 
         onAfterRendering: function () {
+            this.InputHU.onsapenter  = ((oEvent) => { this._onOkClicked(); });
+            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
 
             // --------------------------------------------------------------
 
-            if (this.byId("idTableLocationList")) {
-				this.byId("idTableLocationList").destroy();
-			}
+            if (this.byId("idTableLocationList")) { this.byId("idTableLocationList").destroy(); }
+
+            // --------------------------------------------------------------
+
+            if (this.byId("idInput_HU"))       { this.byId("idInput_HU").destroy();       }
+            if (this.byId("idInput_Material")) { this.byId("idInput_Material").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
-            var sViewTitleH  = this.getResourceBundle().getText("CaptureHU");
-            var sViewTitleM  = this.getResourceBundle().getText("CaptureMat");
-            var sTableTitleH = this.getResourceBundle().getText("HU");
-            var sTableTitleM = this.getResourceBundle().getText("Material");
-            var sTableTitleC = this.getResourceBundle().getText("WarehouseTask");
+            var sViewTitleH  = this.oResourceBundle.getText("CaptureHU");
+            var sViewTitleM  = this.oResourceBundle.getText("CaptureMat");
+            var sTableTitleH = this.oResourceBundle.getText("HU");
+            var sTableTitleM = this.oResourceBundle.getText("Material");
+            
+            this.sViewMode = this.oScanModel.getProperty("/viewMode");
 
 			// ---- Enable the Function key solution
 			// this._setKeyboardShortcutsHU();
 
             // ---- Reset all components 
             this._resetAll();
-            this._setFocus();
 			
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 this.sActiveQueue = oEvent.getParameter("arguments").queue;
@@ -184,6 +202,9 @@
 
                 this.loadHuData(this.iWN, this.sActiveQueue);
             }
+
+            // ---- Set Focus to main Input field
+            this._handleFocus();
         },
 
         
@@ -292,7 +313,7 @@
         // --------------------------------------------------------------------------------------------------------------------
 
 	    loadHuData: function (iWHN, sQueue) {
-            var sErrMsg = this.getResourceBundle().getText("QueueErr");
+            var sErrMsg = this.oResourceBundle.getText("QueueErr");
             var sNavTo  = "to_HandlingUnits,to_WarehouseTasks";
             var that = this;
 
@@ -307,8 +328,10 @@
                     aFilters.push(new sap.ui.model.Filter("ReadMode", sap.ui.model.FilterOperator.EQ, this.sActiveQMode));
                 }
 
+            var sPath = "/Queue";
+
             var oModel = this._getServiceUrl()[0];
-                oModel.read("/Queue", {
+                oModel.read(sPath, {
                     filters: aFilters,
                     error: function(oError, resp) {
                         BusyIndicator.hide();
@@ -435,11 +458,13 @@
                     let item = oTableData[i];
                     
                     if (this.sActiveQMode === "W") {
+                        this.oScanModel.setProperty("/viewMat", true);
+
                         if (item.Material === iHU) {
                             oTable.setSelectedIndex(i);
-                        }
 
-                        this.oScanModel.setProperty("/viewMat", true);
+                            break;
+                        }
                     } else {
                         if (item.HandlingUnitId === iHU) {
                             oTable.setSelectedIndex(i);
@@ -594,9 +619,6 @@
 		_getServiceUrl: function () {
             var sService = "";
 
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
-
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
 
@@ -680,11 +702,52 @@
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-        _setFocus: function () {
+        _handleFocus: function () {
+            // ---- Set Focus to main Input field
             var id = "idInput_HU";
+
+            if (this.sActiveQMode === "H") { 
+                id = "idInput_HU";
+            } else if (this.sActiveQMode === "W") {
+                id = "idInput_Material";                       
+            }
+
+            this._setFocus(id);
+        },
+
+        _setFocus: function (id) {
             var that = this;
 
             if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
@@ -714,8 +777,8 @@
             this.getView().setModel(oDisplayModel, "DisplayModel");
 
             // ---- Reset the Scan Model
-            var sViewTitleH  = this.getResourceBundle().getText("CaptureHU");
-            var sTableTitleH = this.getResourceBundle().getText("HU");
+            var sViewTitleH  = this.oResourceBundle.getText("CaptureHU");
+            var sTableTitleH = this.oResourceBundle.getText("HU");
 
             var oData = { 
                 "viewMode":        "Handling",
@@ -746,6 +809,9 @@
 
                 this.LocationListTable.setModel(oModel);
             }
+
+            // ---- Set Focus to main Input field
+            this._setFocus("idInput_HU");
         }
 
 

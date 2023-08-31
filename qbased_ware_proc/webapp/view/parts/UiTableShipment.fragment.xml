@@ -1,0 +1,89 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerShipmentTable" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableShipmentList" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row"
+			visibleRowCount="6"
+			rowSelectionChange="onRowSelectionShipmentList"
+			width="auto">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="50px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "No", "columnIndex":"0", "leadingProperty": "No"}' />
+					</ui:customData>
+					<Label text="{i18n>Nom}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{No}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="140px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "ShipmentNumber", "columnIndex":"1", "leadingProperty": "ShipmentNumber"}' />
+					</ui:customData>
+					<Label text="{i18n>ShipmentNumber}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{ShipmentNumber}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="160px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Queue", "columnIndex":"2", "leadingProperty": "Queue"}' />
+					</ui:customData>
+					<Label text="{i18n>Queue}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Queue}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "QueueDescription", "columnIndex":"3", "leadingProperty": "QueueDescription"}' />
+					</ui:customData>
+					<Label text="{i18n>QueueDescription}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{QueueDescription}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="110px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "FinishedDate", "columnIndex":"4", "leadingProperty": "FinishedDate"}' />
+					</ui:customData>
+					<Label text="{i18n>FinishedDate}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{path:'FinishedDate',formatter:'.formatter.dateOnlyFormatter'}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="100px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "FinishedTime", "columnIndex":"5", "leadingProperty": "FinishedTime"}' />
+					</ui:customData>
+					<Label text="{i18n>FinishedTime}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{path:'FinishedDate',formatter:'.formatter.timeOnlyFormatter'}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="110px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "FinishedDate", "columnIndex":"6", "leadingProperty": "FinishedDate"}' />
+					</ui:customData>
+					<Label text="{i18n>Book}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Button press="onPressShipment(${ShipmentNumber})" text="{i18n>Book}" type="Success" width="auto" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

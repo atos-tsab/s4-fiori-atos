@@ -16,24 +16,26 @@
 
 
 sap.ui.define([
-    "z/qbasedwareproc/controller/BaseController",
 	"z/qbasedwareproc/controls/ExtScanner",
 	"z/qbasedwareproc/model/formatter",
 	"z/qbasedwareproc/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.qbasedwareproc.";
     var _fragmentPath   = "z.qbasedwareproc.view.fragments.";
 	var _sAppModulePath = "z/qbasedwareproc/";
+
     var APP = "QBAS_PROC_WARE";
  
  
-    return BaseController.extend("z.qbasedwareproc.controller.Resign", {
+    return Controller.extend("z.qbasedwareproc.controller.Resign", {
 
  		// ---- Implementation of formatter functions
         formatter: formatter,
@@ -47,10 +49,22 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -61,6 +75,7 @@ sap.ui.define([
             this.iHU = "";
             this.iBookCount      = 0;
             this.sScanType       = "";
+            this.sActiveQMode    = "";
             this.oDeliveryData   = {};
             this.iScanModusAktiv = 0;
 
@@ -69,6 +84,11 @@ sap.ui.define([
 
             // ---- Define the Buttons
             this.BookButton = this.byId("idButtonBookHU");
+
+            // ---- Define the Input Fields
+            this.InputHU       = this.byId("idInput_HU");
+            this.InputQuantity = this.byId("idInput_Quantity");
+            this.InputLocConf  = this.byId("idInput_LocConf");
         },
 
         _initLocalModels: function () {
@@ -89,9 +109,7 @@ sap.ui.define([
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewStorage":     false,
-                "viewHu":          false,
-                "viewMat":         true,
-                "viewWHT":         false,
+                "viewHu":          true,
                 "viewQuantity":    false,
                 "viewLocConf":     false,
                 "viewLoc":         false,
@@ -110,14 +128,12 @@ sap.ui.define([
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -132,21 +148,30 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
+            this.InputHU.onsapenter       = ((oEvent) => { this._onOkClicked(); });
+            this.InputQuantity.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this.InputLocConf.onsapenter  = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
+
+            if (this.byId("idInput_HU"))       { this.byId("idInput_HU").destroy();       }
+            if (this.byId("idInput_Quantity")) { this.byId("idInput_Quantity").destroy(); }
+            if (this.byId("idInput_LocConf"))  { this.byId("idInput_LocConf").destroy();  }
         },
 
         _onObjectMatched: function (oEvent) {
+            this.sViewMode = this.oScanModel.getProperty("/viewMode");
+
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcuts();
+			// this._setKeyboardShortcuts();
 
             // ---- Reset all components
             this._resetAll();
-            this.sSuffix = "";
+
+            this.UrlParam = oEvent;
+            this.sSuffix  = "";
 
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 this.sActiveQueue = oEvent.getParameter("arguments").queue;
@@ -205,7 +230,7 @@ sap.ui.define([
                         if (this.sActiveQMode === "W") {
                             this._loadHuData(sManNumber);
                         } else {
-                            var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
+                            var sErrMsg = this.oResourceBundle.getText("HuSelectionErr", [sManNumber, this.iHU]);
 
                             if (this.iHU === sManNumber) {
                                 this._loadQuantityData(sManNumber);
@@ -237,9 +262,9 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         saveBookingData: function (iDocumentNo) {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iHU);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var oData    = this.oDisplayModel.getData();
             var that = this;
 
@@ -275,11 +300,11 @@ sap.ui.define([
                                 }
                             }
 
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                            if (parseInt(oResponse.statusCode, 10) === 202 || parseInt(oResponse.statusCode, 10) === 204) {
+                                BusyIndicator.hide();
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
-
-                                BusyIndicator.hide();
 
                                 setTimeout(function () {
                                     that._resetAll();
@@ -308,7 +333,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
 	    _loadWareHouseData: function (iWHN, sQueue, iHU) {
-            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", iHU);
+            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", iHU);
             var that = this;
 
             BusyIndicator.show(1);
@@ -317,9 +342,11 @@ sap.ui.define([
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, iWHN));
                 aFilters.push(new sap.ui.model.Filter("QueueId", sap.ui.model.FilterOperator.EQ, sQueue));
+                
+            var sPath = "/Queue";
 
             var oModel = this._getServiceUrl()[0];
-                oModel.read("/Queue", {
+                oModel.read(sPath, {
                     filters: aFilters,
                     error: function(oError, resp) {
                         BusyIndicator.hide();
@@ -364,6 +391,11 @@ sap.ui.define([
                                         }
                                     } else if (that.sActiveQMode === "W") {
                                         if (item.WarehouseTaskId === iHU) {
+                                            if (item.HandlingUnitId === "") {
+                                                that._NoHu = true;
+                                            } else {
+                                                that._NoHu = false;
+                                            }
                                             that._setWareHouseTableData(item, iHU);
                                         }
                                     }
@@ -399,7 +431,7 @@ sap.ui.define([
         },
 
 	    _loadHuData: function (sManNumber) {
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
             var that = this;
 
             this.iHU = sManNumber;
@@ -434,8 +466,7 @@ sap.ui.define([
                                 tools.alertMe(rData.SapMessageText, "");
                                 
                                 that._resetAll();
-                                that._setFocus("idInput_HU");
-
+                                
                                 BusyIndicator.hide();
 
                                 return;
@@ -456,7 +487,7 @@ sap.ui.define([
 
                             BusyIndicator.hide();
                         } else {
-                            var sErrMsg = this.getResourceBundle().getText("HandlingUnitErr", that.iHU);
+                            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", that.iHU);
 
                             BusyIndicator.hide();
 
@@ -467,24 +498,46 @@ sap.ui.define([
         },
 
 	    _setHuData: function (oData, sManNumber) {
-            if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
-                var sMaterial = oData.to_WarehouseTask.MaterialNo;
-
-                if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
-                    this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+            if (this._NoHu) {
+                if (oData !== null && oData !== undefined) {
+                    var sMaterial = oData.Material;
+    
+                    if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
+                        this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+                    } else {
+                        var sErrNoIndentMaterial = this.oResourceBundle.getText("NoIndentMaterial", sMaterial);
+    
+                        tools.alertMe(sErrNoIndentMaterial);
+    
+                        return;
+                    }
                 } else {
-                    var sErrNoIndentMaterial = this.getResourceBundle().getText("NoIndentMaterial", sMaterial);
-
-                    tools.alertMe(sErrNoIndentMaterial);
-
+                    var sErrNoHuData = this.oResourceBundle.getText("NoHuData", sManNumber);
+    
+                    tools.alertMe(sErrNoHuData);
+    
                     return;
                 }
             } else {
-                var sErrNoHuData = this.getResourceBundle().getText("NoHuData", sManNumber);
-
-                tools.alertMe(sErrNoHuData);
-
-                return;
+                if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
+                    var sMaterial = oData.to_WarehouseTask.MaterialNo;
+    
+                    if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
+                        this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+                    } else {
+                        var sErrNoIndentMaterial = this.oResourceBundle.getText("NoIndentMaterial", sMaterial);
+    
+                        tools.alertMe(sErrNoIndentMaterial);
+    
+                        return;
+                    }
+                } else {
+                    var sErrNoHuData = this.oResourceBundle.getText("NoHuData", sManNumber);
+    
+                    tools.alertMe(sErrNoHuData);
+    
+                    return;
+                }
             }
 
             // ---- Change the Scan Model
@@ -493,22 +546,28 @@ sap.ui.define([
 
         _handleHandlingUnitData: function (sManNumber) {
             this.oScanModel.setProperty("/viewMode", "Handling");
-            this.oScanModel.setProperty("/viewQuantity", false);
             this.oScanModel.setProperty("/viewHu", true);
+            this.oScanModel.setProperty("/viewQuantity", false);
+            this.oScanModel.setProperty("/viewLocConf", false);
 
-            this._setFocus("idInput_HU");
+            var that = this;
+
+            setTimeout(function () {
+                that._setFocus("idInput_HU");
+            }, 1000);            
         },
 
         _loadQuantityData: function (sManNumber) {
             this.oScanModel.setProperty("/viewMode", "Quantity");
             this.oScanModel.setProperty("/viewQuantity", true);
             this.oScanModel.setProperty("/viewHu", false);
+            this.oScanModel.setProperty("/viewLocConf", false);
 
             this._setFocus("idInput_Quantity");
         },
 
 		_handleQuantityData: function () {
-            var sErrMesg = this.getResourceBundle().getText("OnlySmallQuantities");
+            var sErrMesg = this.oResourceBundle.getText("OnlySmallQuantities");
             var iQuantity = parseInt(this.oDisplayModel.getProperty("/TargetQuantity"), 10);
 
             this.oScanModel.setProperty("/showErr", false);
@@ -544,14 +603,12 @@ sap.ui.define([
             }
            
             // ---- Set Focus to default Input field
-            this.oScanModel.setProperty("/valueManuallyNo", "");
-            this._setFocus("idInput_Quantity");
             this._resetQuantity();
 		},
 
         _handleFinalData: function (sManNumber) {
-            var sErrMesg  = this.getResourceBundle().getText("StorageBinErr", sManNumber);
-            var tSTime    = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg  = this.oResourceBundle.getText("StorageBinErr", sManNumber);
+            var tSTime    = this.oResourceBundle.getText("ShowTime");
             var check = false;
             var id    = "idInput_LocConf";
             var that  = this
@@ -563,6 +620,8 @@ sap.ui.define([
             if (check) {
                 id = "idButtonBookHU";
 
+                this.oScanModel.setProperty("/viewHu", false);
+                this.oScanModel.setProperty("/viewQuantity", false);
                 this.oScanModel.setProperty("/viewLocConf", false);
                 this.oScanModel.setProperty("/booking", true);
                 this.oScanModel.setProperty("/refresh", true);
@@ -570,6 +629,8 @@ sap.ui.define([
             } else {
                 id = "idInput_LocConf";
 
+                this.oScanModel.setProperty("/viewHu", false);
+                this.oScanModel.setProperty("/viewQuantity", false);
                 this.oScanModel.setProperty("/viewLocConf", true);
                 this.oScanModel.setProperty("/booking", false);
                 this.oScanModel.setProperty("/refresh", true);
@@ -633,8 +694,6 @@ sap.ui.define([
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        key = this._removePrefix(key);
-
                         this.oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
                         this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -681,7 +740,6 @@ sap.ui.define([
         },
 
 		onQuantityScanAfterClose: function () {
-            this._setFocus("idInput_LocConf");
 		},
 
 		onQuantityScanSave: function () {
@@ -744,7 +802,7 @@ sap.ui.define([
                         if (this.sActiveQMode === "W") {
                             this._loadHuData(sManNumber);
                         } else {
-                            var sErrMsg = this.getResourceBundle().getText("HuSelectionErr", [sManNumber, this.iHU]);
+                            var sErrMsg = this.oResourceBundle.getText("HuSelectionErr", [sManNumber, this.iHU]);
 
                             if (this.iHU === sManNumber) {
                                 this._loadQuantityData(sManNumber);
@@ -872,9 +930,6 @@ sap.ui.define([
 		_getServiceUrl: function () {
             var sService = "";
 
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
-
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
 
@@ -910,17 +965,17 @@ sap.ui.define([
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 13: // ---- Enter Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (sRoute === "Resign") {
-                                if (that.iScanModusAktiv < 2) {
-                                    that.onPressResignOk();
-                                } else {
-                                    that.iScanModusAktiv = 0;
-                                }
-                            }
+                            // if (sRoute === "Resign") {
+                            //     if (that.iScanModusAktiv < 2) {
+                            //         that.onPressResignOk();
+                            //     } else {
+                            //         that.iScanModusAktiv = 0;
+                            //     }
+                            // }
 
-                            evt.keyCode = null;
+                            // evt.keyCode = null;
 
                             break;			                
                         case 112: // ---- F1 Key
@@ -974,12 +1029,41 @@ sap.ui.define([
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function (id) {
             var that = this;
-
+            
             if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
                 setTimeout(() => sap.ui.getCore().byId(id).focus({ preventScroll: true, focusVisible: true }));
             } else if (this.byId(id) !== null && this.byId(id) !== undefined) {
@@ -1038,6 +1122,8 @@ sap.ui.define([
             this.oScanModel.setProperty("/viewLocConf", true);
             this.oScanModel.setProperty("/ok", true);
             this.oScanModel.setProperty("/valueManuallyNo", "");
+
+            this._setFocus("idInput_LocConf");
         },
 
         _resetAll: function () {
@@ -1055,9 +1141,7 @@ sap.ui.define([
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewStorage":     false,
-                "viewHu":          false,
-                "viewMat":         true,
-                "viewWHT":         false,
+                "viewHu":          true,
                 "viewQuantity":    false,
                 "viewLocConf":     false,
                 "viewLoc":         false,

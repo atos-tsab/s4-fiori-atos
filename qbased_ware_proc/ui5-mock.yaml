@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5.yaml.json
 
-specVersion: "2.5"
+specVersion: "2.6"
 metadata:
   name: z.qbasedwareproc
 type: application
@@ -17,7 +17,7 @@ server:
           url: https://ui5.sap.com
         backend:
           - path: /sap
-            url: http://bpw-s4d.bpw.internal:8000
+            url: https://bpw-s4d.bpw.internal:44300
             client: '100'
     - name: fiori-tools-appreload
       afterMiddleware: compression
@@ -30,7 +30,7 @@ server:
       configuration:
         mountPath: /
         services:
-          - urlPath: /sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV
+          - urlPath: /sap/opu/odata/sap/Z_EEWM_HU_OPERATION_SRV
             metadataPath: ./webapp/localService/metadata.xml
             mockdataPath: ./webapp/localService/data
             generateMockData: true

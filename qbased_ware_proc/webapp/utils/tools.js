@@ -963,6 +963,16 @@ sap.ui.define([
             });
         },
 
+        alertMeOffset: function (msg, sOff) {
+            sap.m.MessageToast.show(msg, {
+                duration: 3000,
+                my: sap.ui.core.Popup.Dock.CenterCenter,
+                at: sap.ui.core.Popup.Dock.CenterCenter,
+                offset: sOff,
+                autoClose: true
+            });
+        },
+
 
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Basic Functions
