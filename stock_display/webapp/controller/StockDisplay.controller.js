@@ -15,26 +15,28 @@
  ************************************************************************/
 
 
- sap.ui.define([
-    "z/stockdisplay/controller/BaseController",
+sap.ui.define([
 	"z/stockdisplay/controls/ExtScanner",
 	"z/stockdisplay/model/formatter",
 	"z/stockdisplay/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
 	"sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
     "sap/ui/core/BusyIndicator",
 	"sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.stockdisplay.";
     var _fragmentPath   = "z.stockdisplay.view.fragments.";
 	var _sAppModulePath = "z/stockdisplay/";
+
     var APP = "STOC_DISP";
  
  
-    return BaseController.extend("z.stockdisplay.controller.StockDisplay", {
+    return Controller.extend("z.stockdisplay.controller.StockDisplay", {
 
  		// ---- Implementation of formatter functions
         formatter: formatter,
@@ -48,10 +50,22 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -72,6 +86,9 @@
 
             // ---- Define the UI Tables
             this.MaterialInfoTable = this.byId("idTableMaterialInfo");
+
+            // ---- Define the Input Fields
+            this.InputMat = this.byId("idInput_Mat");
         },
 
         _initLocalModels: function () {
@@ -106,14 +123,12 @@
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -128,17 +143,18 @@
         },
 
         onAfterRendering: function () {
+            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
+
+            if (this.byId("idInput_Mat")) { this.byId("idInput_Mat").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcuts();
+			// this._setKeyboardShortcuts();
 
             this._getShellSource();
             this._resetAll();
@@ -209,33 +225,34 @@
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
-			this.oModel.read(sPath, {
-				error: function(oError, resp) {
-                    tools.handleODataRequestFailed(oError, resp, true);
-				},
-				success: function(rData, response) {
-                    // ---- Check for complete final booking
-                    if (rData !== null && rData !== undefined) {
-                        if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                            tools.showMessageError(rData.SapMessageText, "");
-                        } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                            // ---- Coding in case of showing Business application Informations
-                            tools.alertMe(rData.SapMessageText, "");
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        // ---- Check for complete final booking
+                        if (rData !== null && rData !== undefined) {
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                tools.showMessageError(rData.SapMessageText, "");
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+                        }
+
+                        if (rData !== null && rData !== undefined && rData !== "") {
+                            that.iWN = rData.ParameterValue;
                         }
                     }
-
-					if (rData !== null && rData !== undefined && rData !== "") {
-                        that.iWN = rData.ParameterValue;
-                    }
-				}
-			});
+                });
         },
 
 	    loadStockOverviewData: function (sManNumber) {
             this.iMat = sManNumber;
 
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
-            var sErrMsg = this.getResourceBundle().getText("MaterialErr", this.iMat);
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var sErrMsg = this.oResourceBundle.getText("MaterialErr", this.iMat);
             var that = this;
 
             // ---- Check for Warehouse Number
@@ -252,8 +269,10 @@
                 aFilters.push(new sap.ui.model.Filter("WarehouseNo", sap.ui.model.FilterOperator.EQ, this.iWN));
                 aFilters.push(new sap.ui.model.Filter("MaterialNo", sap.ui.model.FilterOperator.EQ, this.iMat));
 
+            var sPath = "/OverviewStock";
+
             var oModel = this._getServiceUrl()[0];
-                oModel.read("/OverviewStock", {
+                oModel.read(sPath, {
                     filters: aFilters,
                     error: function(oError, resp) {
                         BusyIndicator.hide();
@@ -319,7 +338,7 @@
         },
 
 		_setTableModel: function (oData, oTable) {
-            var tableTitle = this.getResourceBundle().getText("ResultTable", oData.results.length);
+            var tableTitle = this.oResourceBundle.getText("ResultTable", oData.results.length);
 
             oTable.setTitle(tableTitle);
 
@@ -356,8 +375,6 @@
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        key = this._removePrefix(key);
-
                         this.oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
                         this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -528,8 +545,8 @@
         },
 
 		_getShellSource: function (oEvent) {
-			var spaceID = this.getResourceBundle().getText("SpaceId");
-			var pageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
@@ -549,9 +566,6 @@
 
 		_getServiceUrl: function () {
             var sService = "";
-
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
 
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
@@ -588,13 +602,13 @@
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 13: // ---- Enter Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (that.iScanModusAktiv < 2) {
-                                that.onPressOk(sViewMode);
-                            } else {
-                                that.iScanModusAktiv = 0;
-                            }
+                            // if (that.iScanModusAktiv < 2) {
+                            //     that.onPressOk(sViewMode);
+                            // } else {
+                            //     that.iScanModusAktiv = 0;
+                            // }
 
                             break;			                
                         case 112: // ---- F1 Key
@@ -630,6 +644,35 @@
                     }
                 }
 			}, this));
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
 		},
 
 
@@ -725,6 +768,9 @@
 
                 this.MaterialInfoTable.setModel(oModel);
             }
+
+            // ---- Set Focus to main Input field
+            this._setFocus();
         }
 
 
