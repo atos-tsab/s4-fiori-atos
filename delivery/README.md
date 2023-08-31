@@ -1,25 +1,25 @@
 ## Application Details
 |               |
 | ------------- |
-|**Generation Date and Time**<br>Thu Feb 09 2023 14:19:33 GMT+0100 (Central European Standard Time)|
+|**Generation Date and Time**<br>Wed Aug 23 2023 11:20:21 GMT+0200 (Central European Summer Time)|
 |**App Generator**<br>@sap/generator-fiori-freestyle|
-|**App Generator Version**<br>1.8.6|
+|**App Generator Version**<br>1.9.4|
 |**Generation Platform**<br>Visual Studio Code|
 |**Template Used**<br>simple|
 |**Service Type**<br>SAP System (ABAP On Premise)|
-|**Service URL**<br>http://bpw-s4d.bpw.internal:8000/sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV
+|**Service URL**<br>https://bpw-s4d.bpw.internal:44300/sap/opu/odata/sap/Z_EEWM_DELIVERY_SRV
 |**Module Name**<br>delivery|
-|**Application Title**<br>Delivery|
+|**Application Title**<br>Create Delivery without reference|
 |**Namespace**<br>z|
-|**UI5 Theme**<br>sap_fiori_3|
-|**UI5 Version**<br>1.96.6|
+|**UI5 Theme**<br>sap_horizon|
+|**UI5 Version**<br>1.107.1|
 |**Enable Code Assist Libraries**<br>False|
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>False|
 
 ## delivery
 
-Delivery application.
+Create Delivery without reference application.
 
 ### Starting the generated app
 

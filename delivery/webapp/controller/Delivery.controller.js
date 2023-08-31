@@ -15,26 +15,28 @@
  ************************************************************************/
 
 
- sap.ui.define([
-    "z/delivery/controller/BaseController",
+sap.ui.define([
     "z/delivery/controls/ExtScanner",
     "z/delivery/model/formatter",
     "z/delivery/utils/tools",
+    "sap/ui/model/resource/ResourceModel",
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
     "sap/ui/core/BusyIndicator",
     "sap/ui/core/mvc/Controller"
-], function (BaseController, ExtScanner, formatter, tools, JSONModel, History, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
 
     "use strict";
 
  	// ---- The app namespace is to be define here!
+    var _sAppPath       = "z.delivery.";
     var _fragmentPath   = "z.delivery.view.fragments.";
 	var _sAppModulePath = "z/delivery/";
+
     var APP = "DELIV";
  
  
-    return BaseController.extend("z.delivery.controller.Delivery", {
+    return Controller.extend("z.delivery.controller.Delivery", {
 
  		// ---- Implementation of formatter functions
         formatter: formatter,
@@ -48,10 +50,22 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         onInit: function () {
+            this._initResourceBundle();
             this._initLocalVars();
             this._initLocalModels();
             this._initBarCodeScanner();
             this._initLocalRouting();
+        },
+
+        _initResourceBundle: function () {
+            // ---- Set i18n Model on View
+            var i18nModel = new ResourceModel({
+                bundleName: _sAppPath + "i18n.i18n"
+            });
+
+            this.getView().setModel(i18nModel, "i18n");
+
+            this.oResourceBundle = this.getView().getModel("i18n").getResourceBundle();
         },
 
         _initLocalVars: function () {
@@ -70,10 +84,14 @@
 
             // ---- Define the Booking Button
             this.BookButton = this.byId("idButtonBook_" + APP);
+
+            // ---- Define the Input Fields
+            this.InputGate = this.byId("idInput_Gate");
+            this.InputHU   = this.byId("idInput_HandlingUnit");
         },
 
         _initLocalModels: function () {
-            var sTitle = this.getResourceBundle().getText("title");
+            var sTitle = this.oResourceBundle.getText("title");
 
             // ---- Get the Main Models.
             this.oModel = this.getOwnerComponent().getModel();
@@ -110,14 +128,12 @@
             var that = this;
 
             // ---- Handle the Bar / QR Code scanning
-            this.oMainModel = this.getOwnerComponent().getModel();
-
             this.oScanner = new ExtScanner({
                 settings:     true,
                 valueScanned: that.onScanned.bind(that),
                 decoderKey:   "text",
                 decoders:     that.getDecoders(),
-                models: 	  that.oMainModel
+                models: 	  that.oModel
             });
         },
 
@@ -132,17 +148,22 @@
         },
 
         onAfterRendering: function () {
+            this.InputGate.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this.InputHU.onsapenter   = ((oEvent) => { this._onOkClicked(); });
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
+			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
+
+            if (this.byId("idInput_Gate"))         { this.byId("idInput_Gate").destroy();         }
+            if (this.byId("idInput_HandlingUnit")) { this.byId("idInput_HandlingUnit").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
+            this.sViewMode = this.oScanModel.getProperty("/viewMode");
+
 			// ---- Enable the Function key solution
-			this._setKeyboardShortcuts();
+			// this._setKeyboardShortcuts();
 
             this._getShellSource();
             this._resetAll();
@@ -150,7 +171,7 @@
             this.loadTransportationPlanningPiontData();
 
             // ---- Set Focus to main Input field
-            this._setFocus("idInput_Material");
+            this._handleFocus();
         },
 
         
@@ -220,9 +241,9 @@
         // --------------------------------------------------------------------------------------------------------------------
 
         _createShipment: function () {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iMat);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iMat);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iMat);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iMat);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
@@ -297,9 +318,9 @@
         },
 
         _updateShipment: function () {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iHU);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iHU);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iHU);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iHU);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
@@ -378,9 +399,9 @@
         },
 
         _createDelivery: function () {
-            var sErrMesg = this.getResourceBundle().getText("ErrorBooking", this.iMat);
-            var sOkMesg  = this.getResourceBundle().getText("OkMesBooking", this.iMat);
-            var tSTime   = this.getResourceBundle().getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iMat);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iMat);
+            var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
@@ -468,25 +489,26 @@
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
 
-			this.oModel.read(sPath, {
-				error: function(oError, resp) {
-                    tools.handleODataRequestFailed(oError, resp, true);
-				},
-				success: function(rData, response) {
-                    // ---- Check for complete final booking
-                    if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                        // ---- Coding in case of showing Business application Errors
-                        tools.showMessageError(rData.SapMessageText, "");
-                    } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                        // ---- Coding in case of showing Business application Informations
-                        tools.alertMe(rData.SapMessageText, "");
-                    }
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    success: function(rData, response) {
+                        // ---- Check for complete final booking
+                        if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                            // ---- Coding in case of showing Business application Errors
+                            tools.showMessageError(rData.SapMessageText, "");
+                        } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                            // ---- Coding in case of showing Business application Informations
+                            tools.alertMe(rData.SapMessageText, "");
+                        }
 
-					if (rData !== null && rData !== undefined && rData !== "") {
-                        that.sWN = rData.ParameterValue;
+                        if (rData !== null && rData !== undefined && rData !== "") {
+                            that.sWN = rData.ParameterValue;
+                        }
                     }
-				}
-			});
+                });
         },
 
 	    loadTransportationPlanningPiontData: function () {
@@ -522,9 +544,9 @@
 
 					if (rData !== null && rData !== undefined && rData !== "") {
                         that.sTPP = rData.ParameterValue;
-
-                        BusyIndicator.hide();
                     }
+
+                    BusyIndicator.hide();
 				}
 			});
         },
@@ -532,9 +554,9 @@
 	    _loadGateData: function (sManNumber) {
             this.sGate = sManNumber;
 
-            var sTransportPlanPointErr = this.getResourceBundle().getText("TransportPlanPointErr");
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
-            var sErrMsg = this.getResourceBundle().getText("GateNumberErr", this.sGate);
+            var sTransportPlanPointErr = this.oResourceBundle.getText("TransportPlanPointErr");
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var sErrMsg = this.oResourceBundle.getText("GateNumberErr", this.sGate);
             var that = this;
 
             // ---- Check for Warehouse Number
@@ -617,7 +639,7 @@
         },
 
 	    _loadHuData: function (sManNumber) {
-            var sWarehouseNumberErr = this.getResourceBundle().getText("WarehouseNumberErr");
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
             var that = this;
 
             this.sActiveHU = sManNumber;
@@ -678,6 +700,7 @@
             this.oScanModel.setProperty("/saving", true);
             this.oScanModel.setProperty("/booking", true);
             this.oScanModel.setProperty("/refresh", true);
+            this.oScanModel.setProperty("/valueManuallyNo", "");
             
             // ---- Add data to the Display Model
             var data = this.oDisplayModel.getData();
@@ -715,8 +738,6 @@
                     var key = source.getValue();
     
                     if (key !== null && key !== undefined && key !== "") {
-                        key = this._removePrefix(key);
-
                         this.oScanModel.setProperty("/valueManuallyNo", key);
                     } else {
                         this.oScanModel.setProperty("/valueManuallyNo", "");
@@ -880,8 +901,8 @@
         },
 
 		_getShellSource: function (oEvent) {
-			var spaceID = this.getResourceBundle().getText("SpaceId");
-			var pageID  = this.getResourceBundle().getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
             if (History.getInstance() !== null && History.getInstance() !== undefined) {
                 if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
@@ -901,9 +922,6 @@
 
 		_getServiceUrl: function () {
             var sService = "";
-
-            // ---- Get the Main Models.
-            this.oModel = this.getOwnerComponent().getModel();
 
 			// ---- Get the OData Services from the manifest.json file. mediaService
 			var sManifestFile  = jQuery.sap.getModulePath(_sAppModulePath + "manifest", ".json");
@@ -939,15 +957,15 @@
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
                     switch (evt.keyCode) {
                         case 13: // ---- Enter Key
-                            evt.preventDefault();
+                            // evt.preventDefault();
 
-                            if (that.iScanModusAktiv < 2) {
-                                that.onPressOk(that.sViewMode);
-                            } else {
-                                that.iScanModusAktiv = 0;
-                            }
+                            // if (that.iScanModusAktiv < 2) {
+                            //     that.onPressOk(that.sViewMode);
+                            // } else {
+                            //     that.iScanModusAktiv = 0;
+                            // }
 
-                            evt.keyCode = null;
+                            // evt.keyCode = null;
 
                             break;			                
                         case 112: // ---- F1 Key
@@ -989,8 +1007,50 @@
 
 
         // --------------------------------------------------------------------------------------------------------------------
+        // ---- Base Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+		getRouter: function () {
+            if (this.getOwnerComponent() !== null && this.getOwnerComponent() !== undefined) {
+                if (this.getOwnerComponent().getRouter() !== null && this.getOwnerComponent().getRouter() !== undefined) {
+                    return this.getOwnerComponent().getRouter();
+                }
+            }
+		},
+
+		getModel: function (sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().getModel(sName) !== null && this.getView().getModel(sName) !== undefined) {
+                    return this.getView().getModel(sName);
+                }
+            }
+		},
+
+		setModel: function (oModel, sName) {
+            if (this.getView() !== null && this.getView() !== undefined) {
+                if (this.getView().setModel(oModel, sName) !== null && this.getView().setModel(oModel, sName) !== undefined) {
+                    return this.getView().setModel(oModel, sName);
+                }
+            }
+		},
+
+
+        // --------------------------------------------------------------------------------------------------------------------
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
+
+        _handleFocus: function () {
+            // ---- Set Focus to main Input field
+            var id = "idInput_Gate";
+
+            if (this.sViewMode === "Gate") { 
+                id = "idInput_Gate";
+            } else if (this.sViewMode === "Handling") {
+                id = "idInput_HandlingUnit";                       
+            }
+
+            this._setFocus(id);
+        },
 
         _setFocus: function (id) {
             var that = this;
@@ -1053,7 +1113,7 @@
         },
 
         _resetAll: function () {
-            var sTitle = this.getResourceBundle().getText("title");
+            var sTitle = this.oResourceBundle.getText("title");
 
             // ---- Reset the Main Model
             this.oDisplayModel.setData([]);
@@ -1080,6 +1140,9 @@
 
             // ---- Reset of the booking count
             this.iBookCount = 0;
+
+            // ---- Set Focus to main Input field
+            this._setFocus("idInput_Gate");
         }
 
 
