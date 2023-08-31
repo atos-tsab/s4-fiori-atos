@@ -135,7 +135,7 @@ sap.ui.define([
 			this._MainServiceUrl = mainDataSource.uri;
 
 			// ---- Enable the Function key solution
-            this._setKeyboardShortcutsScanner();
+            // this._setKeyboardShortcutsScanner();
 		},
 
 		// --------------------------------------------------------------------------------------------------------------------
@@ -355,9 +355,12 @@ sap.ui.define([
 		// --------------------------------------------------------------------------------------------------------------------
 
         openScanDialog: function (sScanView) {
+            // ---- Reset Scan Properties
+            this._oScanModel.setProperty("/valueManuallyNo", "");
+            this._oScanModel.setProperty("/valueScan", "");
+
             // ---- Show the Scan Dialog
             this.sScanView = sScanView;
-
             this.onShowDialog();
         },
 
@@ -433,9 +436,8 @@ sap.ui.define([
             this._resetInputs();
         },
 
-        onScannerOkPress: function (oEvent) {
-            var oDialog = oEvent.getSource().getParent();
-                oDialog.close();
+        onScannerOkPress: function () {
+            this._oID.close();
 
             var check = this._validateOkPressed();
 
@@ -466,9 +468,8 @@ sap.ui.define([
             this._resetInputs();
         },
 
-        onOkPress: function (oEvent) {
-            var oDialog = oEvent.getSource().getParent();
-                oDialog.close();
+        onOkPress: function () {
+            this._oID.close();
 
             var check = this._validateOkPressed();
             var that  = this;

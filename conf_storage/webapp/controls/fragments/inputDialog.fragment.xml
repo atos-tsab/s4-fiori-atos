@@ -10,7 +10,7 @@
                 <HBox>
                     <Label text="{scanModel>/labelDialog}{i18n>Colon}" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" />
 					<Input id="idScannedDialog" change="onInputChanged" liveChange="onInputLiveChange" width="240px" 
-                           value="{scanModel>/valueManuallyNo}" class="sapUiTinyMarginEnd" />
+                           submit="onOkPress" value="{scanModel>/valueManuallyNo}" class="sapUiTinyMarginEnd" />
                 </HBox>
                 <HBox>
                     <Label text="" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" />
