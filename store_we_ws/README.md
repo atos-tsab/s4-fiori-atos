@@ -1,18 +1,18 @@
 ## Application Details
 |               |
 | ------------- |
-|**Generation Date and Time**<br>Thu Feb 09 2023 10:44:58 GMT+0100 (Central European Standard Time)|
+|**Generation Date and Time**<br>Wed Aug 23 2023 14:46:33 GMT+0200 (Central European Summer Time)|
 |**App Generator**<br>@sap/generator-fiori-freestyle|
-|**App Generator Version**<br>1.8.5|
+|**App Generator Version**<br>1.9.4|
 |**Generation Platform**<br>Visual Studio Code|
 |**Template Used**<br>simple|
 |**Service Type**<br>SAP System (ABAP On Premise)|
-|**Service URL**<br>http://bpw-s4d.bpw.internal:8000/sap/opu/odata/scwm/SIMPLE_INB_DLV_SRV
+|**Service URL**<br>https://bpw-s4d.bpw.internal:44300/sap/opu/odata/sap/Z_EEWM_HU_OPERATION_SRV
 |**Module Name**<br>store_we_ws|
 |**Application Title**<br>Storage from WE/QS|
 |**Namespace**<br>z|
-|**UI5 Theme**<br>sap_fiori_3|
-|**UI5 Version**<br>1.96.6|
+|**UI5 Theme**<br>sap_horizon|
+|**UI5 Version**<br>1.107.1|
 |**Enable Code Assist Libraries**<br>False|
 |**Enable TypeScript**<br>False|
 |**Add Eslint configuration**<br>False|
