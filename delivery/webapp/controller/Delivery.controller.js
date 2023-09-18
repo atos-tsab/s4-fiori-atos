@@ -75,8 +75,10 @@ sap.ui.define([
             this.sWN  = "";
             this.sTPP = "";
             this.iMat = "";
+            this.sGateNom        = "";
             this.sViewMode       = "Material";
             this.sShellSource    = "#Shell-home";
+            this.iShipmentNum    = "";
             this.iScanModusAktiv = 0;
 
             // ---- Define the Owner Component for the Tools Util
@@ -87,7 +89,10 @@ sap.ui.define([
 
             // ---- Define the Input Fields
             this.InputGate = this.byId("idInput_Gate");
-            this.InputHU   = this.byId("idInput_HandlingUnit");
+            this.InputHU   = this.byId("idInput_HU");
+
+            // ---- Define the UI Tables
+            this.HuListTable = this.byId("idTableHU");
         },
 
         _initLocalModels: function () {
@@ -155,8 +160,10 @@ sap.ui.define([
         onExit: function () {
 			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
 
-            if (this.byId("idInput_Gate"))         { this.byId("idInput_Gate").destroy();         }
-            if (this.byId("idInput_HandlingUnit")) { this.byId("idInput_HandlingUnit").destroy(); }
+            if (this.byId("idTableHU")) { this.byId("idTableHU").destroy(); }
+
+            if (this.byId("idInput_Gate")) { this.byId("idInput_Gate").destroy();         }
+            if (this.byId("idInput_HU"))   { this.byId("idInput_HU").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
@@ -184,13 +191,7 @@ sap.ui.define([
         },
         
         onPressBooking: function () {
-            var data = this.oDisplayModel.getData();
-
-            if (data.ShipmentNumber === "") {
-                this._createShipment();
-            } else {
-                this._updateShipment();
-            }
+            this._updateShipment();
         },
 
         onPressOk: function (sViewMode) {
@@ -241,9 +242,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _createShipment: function () {
-            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iMat);
-            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iMat);
-            var tSTime   = this.oResourceBundle.getText("ShowTime");
+            var sErrMesg = this.oResourceBundle.getText("ErrorCreateShipment", this.iMat);
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
@@ -253,11 +252,8 @@ sap.ui.define([
  
                 var sPath   = "/Shipment";
                 var urlData = {
-                    "WarehouseNumber":       oData.WarehouseNumber,
-                    "ShipmentNumber":        oData.ShipmentNumber,
-                    "HandlingUnit":          oData.HandlingUnit,
-                    "PackagingQuantity":     oData.PackagingQuantity,
-                    "GateNo":                oData.GateNo
+                    "WarehouseNumber": this.sWN,
+                    "GateNo":          oData.GateNo
                 };
 
                 // ---- Create new Shipment
@@ -273,9 +269,15 @@ sap.ui.define([
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.SapMessageText, "");
-                                    
-                                    that._setFocus("idInput_Gate");
+                                    var component = that.byId("idInput_Gate");
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.SapMessageText, "");
+                                    }
+    
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     BusyIndicator.hide();
 
@@ -284,22 +286,12 @@ sap.ui.define([
                                     // ---- Coding in case of showing Business application Informations
                                     tools.alertMe(rData.SapMessageText, "");
                                 }
-                            }
 
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
-                                parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
-                                that.oScanModel.setProperty("/showOk", true);
-                                that.oScanModel.setProperty("/showOkText", sOkMesg);       
+                                that.oDisplayModel.setProperty("/ShipmentNumber", rData.ShipmentNumber);
 
-                                // ---- Do nothing -> Good case
-                                setTimeout(function () {
-                                    that._resetAll();
-                    
-                                    BusyIndicator.hide();
+                                that._setFocus("idInput_Gate");
 
-                                    // ---- Set Focus to main Input field
-                                    that._setFocus("idInput_Gate");
-                                }, tSTime);            
+                                BusyIndicator.hide();
                             } else {
                                 BusyIndicator.hide();
 
@@ -318,8 +310,8 @@ sap.ui.define([
         },
 
         _updateShipment: function () {
-            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iHU);
-            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iHU);
+            var sErrMesg = this.oResourceBundle.getText("ErrorShipment", this.iShipmentNum);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesShipment", this.iShipmentNum);
             var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
@@ -329,23 +321,15 @@ sap.ui.define([
                 var oData = this.oDisplayModel.getData();
 
                 var urlData = {
-                    "ShipmentNumber":    oData.ShipmentNumber,
-                    "PackagingQuantity": oData.PackagingQuantity,
-                    "GateNo":            oData.GateNo
+                    "BookComplete": true
                 };
 
-                var sWarehouseNumber = oData.WarehouseNumber;
-                var sHandlingUnit    = oData.HandlingUnit;
-
-                var sPath = "/Shipment(WarehouseNumber='" + sWarehouseNumber + "',HandlingUnit='" + sHandlingUnit + "')";
+                var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',GateNo='" + oData.GateNo + "',ShipmentNumber='" + oData.ShipmentNumber + "')";
 
                 // ---- Update an existing Warehouse Task
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, urlData, {
                         error: function(oError, resp) {                            
-                            that._resetQuantity();
-                            that.oScanModel.setProperty("/refresh", true);
-
                             BusyIndicator.hide();
 
                             tools.handleODataRequestFailed(oError, resp, true);
@@ -355,9 +339,15 @@ sap.ui.define([
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.SapMessageText, "");
-                                    
-                                    that._setFocus("idInput_Gate");
+                                    var component = that.byId("idInput_Gate");
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.SapMessageText, "");
+                                    }
+    
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     BusyIndicator.hide();
 
@@ -369,6 +359,13 @@ sap.ui.define([
                             }
 
                             if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content") {
+                                if (rData !== null && rData !== undefined) {
+                                    if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "S") {
+                                        // ---- Coding in case of showing Business application Informations
+                                        sOkMesg = rData.SapMessageText;
+                                    }
+                                }
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -399,8 +396,8 @@ sap.ui.define([
         },
 
         _createDelivery: function () {
-            var sErrMesg = this.oResourceBundle.getText("ErrorBooking", this.iMat);
-            var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", this.iMat);
+            var sErrMesg = this.oResourceBundle.getText("ErrorSaveDelivery", this.iShipmentNum);
+            var sOkMesg  = this.oResourceBundle.getText("OkMesSaveDelivery", this.iShipmentNum);
             var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
 
@@ -411,13 +408,11 @@ sap.ui.define([
  
                 var sPath   = "/Delivery";
                 var urlData = {
-                    "WarehouseNumber":       oData.WarehouseNumber,
-                    "HandlingUnit":          oData.HandlingUnit,
-                    "PackagingQuantity":     oData.PackagingQuantity,
-                    "GateNo":                oData.GateNo
+                    "GateNo":            oData.GateNo,
+                    "ShipmentNumber":    oData.ShipmentNumber
                 };
 
-                // ---- Create new Shipment
+                // ---- Create new Delivery
                 var oModel = this._getServiceUrl()[0];
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
@@ -430,10 +425,15 @@ sap.ui.define([
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.SapMessageText, "");
-                                    
-                                    // that._resetAll();
-                                    that._setFocus("idInput_Material");
+                                    var component = that.byId("idInput_HU");
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.SapMessageText, "");
+                                    }
+    
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     BusyIndicator.hide();
 
@@ -444,19 +444,29 @@ sap.ui.define([
                                 }
                             }
                             
-                            if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
-                                parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
+                            if (parseInt(oResponse.statusCode, 10) === 204 || parseInt(oResponse.statusCode, 10) === 201) {
+                                if (rData !== null && rData !== undefined) {
+                                    if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "S") {
+                                        // ---- Coding in case of showing Business application Informations
+                                        sOkMesg = rData.SapMessageText;
+                                    }
+                                }
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                 // ---- Do nothing -> Good case
                                 setTimeout(function () {
-                                    that._resetAll();
+                                    that._loadShipmentHuData(that.iShipmentNum);;
                     
                                     BusyIndicator.hide();
 
+                                    that.oScanModel.setProperty("/showOk", false);
+                                    that.oScanModel.setProperty("/showOkText", "");       
+
                                     // ---- Set Focus to main Input field
-                                    that._setFocus("idInput_Material");
+                                    that._setFocus("idInput_HU");
                                 }, tSTime);            
                             } else {
                                 BusyIndicator.hide();
@@ -576,7 +586,8 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the Gate Data from the backend
-            var sPath = "/Gate(GateNo='" + this.sGate + "',TransportationPlanningPoint='" + this.sTPP + "')";
+            // var sPath = "/Gate(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "')";
+            var sPath = "/Gate(TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "')";
 
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
@@ -591,8 +602,16 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 // ---- Coding in case of showing Business application Errors
-                                tools.showMessageError(rData.SapMessageText, "");
-                                
+                                var component = that.byId("idInput_Gate");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 BusyIndicator.hide();
 
                                 return;
@@ -614,7 +633,9 @@ sap.ui.define([
         },
 
         _setGateData: function (oData, sManNumber) {
-            var id = "idInput_HandlingUnit";
+            var id = "idInput_HU";
+
+            this.sGateNom = sManNumber;
 
             // ---- Set the Display data to the View            
             this.oDisplayModel.setData({});
@@ -622,13 +643,25 @@ sap.ui.define([
             this.oDisplayModel.setProperty("/GateDescription", oData.GateDescription);
             this.oDisplayModel.setProperty("/GateNo", oData.GateNo);
 
+            if (oData.ShipmentNumber !== "") {
+                this.iShipmentNum = oData.ShipmentNumber;
+
+                // ---- Load the Table of Handling Units of the actual Shipment number.
+                this._loadShipmentHuData(oData.ShipmentNumber);
+            } else {
+                this._createShipment(this.sWN, this.sGateNom);
+            }
+
             if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
                 if (this.sViewMode === "Gate") {
                     this.oScanModel.setProperty("/viewGate", false);
                     this.oScanModel.setProperty("/viewMode", "Handling");
                     this.oScanModel.setProperty("/viewHU", true);
-    
-                    id = "idInput_HandlingUnit";
+                    this.oScanModel.setProperty("/saving", true);
+                    this.oScanModel.setProperty("/booking", false);
+                    this.oScanModel.setProperty("/refresh", true);
+            
+                    id = "idInput_HU";
                 }
             }
 
@@ -636,6 +669,77 @@ sap.ui.define([
 
             // ---- Set Focus to main Input field
             this._setFocus(id);
+        },
+
+	    _loadShipmentHuData: function (iShipmentNumber) {
+            var that = this;
+
+            BusyIndicator.show(1);
+
+            // ---- Read the HU Data from the backend
+            var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',GateNo='" + this.sGate + "',ShipmentNumber='" + iShipmentNumber + "')";
+            
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    error: function(oError, resp) {
+                        BusyIndicator.hide();
+
+                        tools.handleODataRequestFailed(oError, resp, true);
+                    },
+                    urlParameters: {
+                        "$expand": "to_HandlingUnits"
+                    },
+                    success: function(rData, response) {
+                        if (rData !== null && rData !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                var component = that.byId("idInput_HU");
+                               
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
+
+                                BusyIndicator.hide();
+
+                                return;
+                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
+                                // ---- Coding in case of showing Business application Informations
+                                tools.alertMe(rData.SapMessageText, "");
+                            }
+
+                            if (rData.to_HandlingUnits.results) {
+                                // ---- Set Table Data
+                                that._setTableData(rData.to_HandlingUnits);
+
+                                BusyIndicator.hide();
+                            } else {
+                                var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", iShipmentNumber);
+
+                                BusyIndicator.hide();
+
+                                tools.alertMe(sErrMsg, "");
+                            }
+                        }
+                    }
+                });
+        },
+
+        _setTableData: function (oData) {
+            var oTable = this.HuListTable;
+
+            // ---- Set Model data to Table
+            this._setTableModel(oData, oTable);
+
+            // ---- Change Table settings
+            this._changeTableSettings(oTable, oData.results.length);
+
+            // ---- Check the status of the Handling Units
+            this._handleHuData(oTable);
+
+            // ---- Set focus to Input field
+            this._setFocus("idInput_HU");
         },
 
 	    _loadHuData: function (sManNumber) {
@@ -654,8 +758,8 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the HU Data from the backend
-            var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',HandlingUnit='" + this.sActiveHU + "',GateNo='" + this.sGate + "')";
-            
+            var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',GateNo='" + this.sGate + "',ShipmentNumber='" + this.iShipmentNum + "',HandlingUnitId='" + this.sActiveHU + "')";
+
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
@@ -667,10 +771,15 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-                                
-                                that._resetAll();
-                                that._setFocus("idInput_Gate");
+                                var component = that.byId("idInput_HU");
+                               
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
                                 BusyIndicator.hide();
 
@@ -697,19 +806,18 @@ sap.ui.define([
         },
 
 	    _setHuData: function (oData, sManNumber) {
-            this.oScanModel.setProperty("/saving", true);
-            this.oScanModel.setProperty("/booking", true);
-            this.oScanModel.setProperty("/refresh", true);
             this.oScanModel.setProperty("/valueManuallyNo", "");
             
             // ---- Add data to the Display Model
             var data = this.oDisplayModel.getData();
                 data.WarehouseNumber   = this.sWN;
-                data.HandlingUnit      = oData.HandlingUnit;
+                data.HandlingUnitId    = oData.HandlingUnitId;
                 data.PackagingQuantity = oData.PackagingQuantity;
-                data.ShipmentNumber    = oData.ShipmentNumber;
 
             this.oDisplayModel.setData(data);
+
+            // ---- Load the Table of Handling Units of the actual Shipment number.
+            this._loadShipmentHuData(this.iShipmentNum);
         },
 
         onInputChanged: function (oEvent) {
@@ -743,6 +851,82 @@ sap.ui.define([
                         this.oScanModel.setProperty("/valueManuallyNo", "");
                     }
                 }
+            }
+        },
+
+
+        // --------------------------------------------------------------------------------------------------------------------
+        // ---- Table Functions
+        // --------------------------------------------------------------------------------------------------------------------
+
+        _setTableModel: function (oData, oTable) {
+            if (oData.results.length > 0) {
+                for (let i = 0; i < oData.results.length; i++) {
+                    var item = oData.results[i];
+                        item.No = (i + 1);
+                } 
+            }
+            
+            var oModel = new JSONModel();
+            oModel.setData(oData.results);
+
+            oTable.setModel(oModel);
+            oTable.bindRows("/");
+        },
+
+        _changeTableSettings: function (oTable, iLength) {
+            var iMaxRowCount = parseInt(this.oResourceBundle.getText("MaxRowCount"), 10);
+            var iRowCount = parseInt((iLength + 1), 10);
+
+            if (iRowCount > iMaxRowCount) {
+                iRowCount = iMaxRowCount;
+            }
+
+            oTable.setVisibleRowCount(iRowCount);
+        },
+
+        _handleHuData: function (oTable) {
+            var oData = oTable.getModel().getData();
+            var iDelv = 0;
+            var iNote = 0;
+
+            if (oData.length > 0) {
+                for (let i = 0; i < oData.length; i++) {
+                    var data = oData[i];
+
+                    if (data.StatusLoad === true) {
+                        iNote = iNote + 1;
+
+                        data.Status = "Success";
+                    } else {
+                        data.Status = "None";
+                    }
+
+                    if (data.DeliveryNumber !== "") {
+                        iDelv = iDelv + 1;
+                    }                
+                }
+            }
+
+            if (iDelv === oData.length) {
+                this.oScanModel.setProperty("/booking", true);
+            } else {
+                this.oScanModel.setProperty("/booking", false);
+            }
+
+            this._setFocus("idInput_HU");
+        },
+
+        _handleScanModelData: function (oTable) {
+            if (oTable.getModel().getData().length > 0) {
+                this.oScanModel.setProperty("/viewHU", false);
+                this.oScanModel.setProperty("/booking", true);
+                this.oScanModel.setProperty("/valueManuallyNo", "");
+                this.oScanModel.setProperty("/ok", false);
+            } else {
+                this.oScanModel.setProperty("/viewHU", true);
+                this.oScanModel.setProperty("/booking", false);
+                this.oScanModel.setProperty("/ok", true);
             }
         },
 
@@ -904,19 +1088,22 @@ sap.ui.define([
 			var spaceID = this.oResourceBundle.getText("SpaceId");
 			var pageID  = this.oResourceBundle.getText("PageId");
 
-            if (History.getInstance() !== null && History.getInstance() !== undefined) {
-                if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var sSpaceHome  = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
-                    var sShellHome  = "#Shell-home";
+            if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
+                this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+            } else {
+                if (History.getInstance() !== null && History.getInstance() !== undefined) {
+                    if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
+                        var sPreviousHash = History.getInstance().getPreviousHash();
+    
+                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                            this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
-                    var sPreviousHash = History.getInstance().getPreviousHash();
+                            return;
+                        }
+                    }    
+                } 
 
-                    if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = sSpaceHome;
-                    } else {
-                        this.sShellSource = sSpaceHome;
-                    }
-                }    
+                this.sShellSource = "#Shell-home";
             }
 		},
 
@@ -1046,7 +1233,7 @@ sap.ui.define([
             if (this.sViewMode === "Gate") { 
                 id = "idInput_Gate";
             } else if (this.sViewMode === "Handling") {
-                id = "idInput_HandlingUnit";                       
+                id = "idInput_HU";                       
             }
 
             this._setFocus(id);
@@ -1114,6 +1301,7 @@ sap.ui.define([
 
         _resetAll: function () {
             var sTitle = this.oResourceBundle.getText("title");
+            var oModel = new JSONModel([]);
 
             // ---- Reset the Main Model
             this.oDisplayModel.setData([]);
@@ -1139,7 +1327,18 @@ sap.ui.define([
             this.oScanModel.setData(oData);
 
             // ---- Reset of the booking count
-            this.iBookCount = 0;
+            this.sGateNom     = "";
+            this.iBookCount   = 0;
+            this.iShipmentNum = "";
+
+			// ---- Reset the UI Table for Queues
+            if (this.HuListTable !== null && this.HuListTable !== undefined) {
+                if (this.HuListTable.getBusy()) {
+                    this.HuListTable.setBusy(!this.HuListTable.getBusy());
+                }
+
+                this.HuListTable.setModel(oModel);
+            }
 
             // ---- Set Focus to main Input field
             this._setFocus("idInput_Gate");

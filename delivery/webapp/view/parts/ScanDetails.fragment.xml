@@ -55,7 +55,7 @@
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewHU}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>HU}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_HandlingUnit" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+										<Input id="idInput_HU" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
 											   width="160px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScan('Handling')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
@@ -85,7 +85,7 @@
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>Last} {i18n>HU}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/HandlingUnit}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/HandlingUnitId}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>NumberOfPackages}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />

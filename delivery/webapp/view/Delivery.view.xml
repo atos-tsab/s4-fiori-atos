@@ -21,7 +21,8 @@
 		</customHeader>
 
         <content>
-            <core:Fragment fragmentName="z.delivery.view.ScanDetails" type="XML" />
+            <core:Fragment fragmentName="z.delivery.view.parts.ScanDetails" type="XML" />
+            <core:Fragment fragmentName="z.delivery.view.parts.UiTable" type="XML" />
         </content>
 
 		<footer>

@@ -1,0 +1,105 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerTableB" width="100%" horizontal="false" vertical="true">
+		<ui:Table 
+			id="idTableHU" 
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row" 
+			visibleRowCount="1">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="50px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "No", "columnIndex":"0", "leadingProperty": "No"}' />
+					</ui:customData>
+					<Label text="{i18n>Nom}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{No}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="50px" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "StatusLoad", "columnIndex":"1", "leadingProperty": "StatusLoad"}' />
+					</ui:customData>
+					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
+					<ui:template>
+						<CheckBox text="" selected="{StatusLoad}" enabled="false" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="12%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "DeliveryNumber", "columnIndex":"2", "leadingProperty": "DeliveryNumber"}' />
+					</ui:customData>
+					<Label text="{i18n>Delivery}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{DeliveryNumber}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="12%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnitId", "columnIndex":"3", "leadingProperty": "HandlingUnitId"}' />
+					</ui:customData>
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{HandlingUnitId}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="12%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"4", "leadingProperty": "Material"}' />
+					</ui:customData>
+					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Material}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialDescription", "columnIndex":"5", "leadingProperty": "MaterialDescription"}' />
+					</ui:customData>
+					<Label text="{i18n>Description}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{MaterialDescription}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"6", "leadingProperty": "Quantity"}' />
+					</ui:customData>
+					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Quantity}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"7", "leadingProperty": "UnitOfMeasurement"}' />
+					</ui:customData>
+					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{UnitOfMeasurement}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "WarehouseNumber", "columnIndex":"8", "leadingProperty": "WarehouseNumber"}' />
+					</ui:customData>
+					<Label text="{i18n>WarehouseNo}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{WarehouseNumber}" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

@@ -18,9 +18,10 @@
 sap.ui.define([
 	"sap/ui/base/Object",
 	"sap/m/MessageBox",
+    "sap/ui/core/BusyIndicator",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator"
-], function (UI5Object, MessageBox, Filter, FilterOperator) {
+], function (UI5Object, MessageBox, BusyIndicator, Filter, FilterOperator) {
 
 	"use strict";
 
@@ -65,6 +66,8 @@ sap.ui.define([
 
         _showServiceError : function (sErrorTitle, sDetails) {
             this._bMessageOpen = true;
+
+            BusyIndicator.hide();
 
             // this.handleODataRequestFailed(sErrorMessages, sErrorTitle, bErrorDetails); 
 
