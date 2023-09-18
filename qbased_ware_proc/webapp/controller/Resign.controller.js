@@ -179,7 +179,13 @@ sap.ui.define([
                 this.sActiveQMode = oEvent.getParameter("arguments").qmode;
                 this.iHU          = oEvent.getParameter("arguments").hu;
                 
-                this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+                if (this.sActiveQMode === "W") {
+                    this.iWT = this.iHU;
+
+                    this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iWT);
+                } else {
+                    this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+                }
             }
         },
 
@@ -200,7 +206,11 @@ sap.ui.define([
             // ---- Reset all components
             this._resetAll();
 
-            this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+            if (this.sActiveQMode === "W") {
+                this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iWT);
+            } else {
+                this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+            }
         },
 
 		_onOkClicked: function () {
@@ -360,18 +370,28 @@ sap.ui.define([
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results[0].to_WarehouseTasks.results.length > 0) {
                                 if (rData.results.length > 0) {
-                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
-                                        BusyIndicator.hide();
+                                    var component = that.byId("idInput_HU");
 
+                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
                                         // ---- Coding in case of showing Business application Errors
-                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                        if (component !== null && component !== undefined) {
+                                            tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                        } else {
+                                            tools.showMessageError(rData.results[0].SapMessageText, "");
+                                        }
+
+                                        BusyIndicator.hide();
 
                                         return;
                                     } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
-                                        BusyIndicator.hide();
-
                                         // ---- Coding in case of showing Business application Errors
-                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                        if (component !== null && component !== undefined) {
+                                            tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                        } else {
+                                            tools.showMessageError(rData.results[0].SapMessageText, "");
+                                        }
+
+                                        BusyIndicator.hide();
 
                                         return;
                                     } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -390,12 +410,13 @@ sap.ui.define([
                                             that._setWareHouseTableData(item, iHU);
                                         }
                                     } else if (that.sActiveQMode === "W") {
-                                        if (item.WarehouseTaskId === iHU) {
+                                        if (item.WarehouseTaskId === that.iWT) {
                                             if (item.HandlingUnitId === "") {
                                                 that._NoHu = true;
                                             } else {
                                                 that._NoHu = false;
                                             }
+
                                             that._setWareHouseTableData(item, iHU);
                                         }
                                     }
@@ -463,10 +484,16 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 // ---- Coding in case of showing Business application Errors
-                                tools.alertMe(rData.SapMessageText, "");
-                                
+                                var component = that.byId("idInput_HU");
+
                                 that._resetAll();
                                 
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
+
                                 BusyIndicator.hide();
 
                                 return;
@@ -499,8 +526,21 @@ sap.ui.define([
 
 	    _setHuData: function (oData, sManNumber) {
             if (this._NoHu) {
+                // ---- External Queue
                 if (oData !== null && oData !== undefined) {
                     var sMaterial = oData.Material;
+    
+                    if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
+                        this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+                    } else {
+                        var sErrNoIndentMaterial = this.oResourceBundle.getText("NoIndentMaterial", sMaterial);
+    
+                        tools.alertMe(sErrNoIndentMaterial);
+    
+                        return;
+                    }
+                } else if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
+                    var sMaterial = oData.to_WarehouseTask.MaterialNo;
     
                     if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
                         this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
@@ -519,8 +559,21 @@ sap.ui.define([
                     return;
                 }
             } else {
+                // ---- Internal Queue
                 if (oData.to_WarehouseTask !== null && oData.to_WarehouseTask !== undefined) {
                     var sMaterial = oData.to_WarehouseTask.MaterialNo;
+    
+                    if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
+                        this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);
+                    } else {
+                        var sErrNoIndentMaterial = this.oResourceBundle.getText("NoIndentMaterial", sMaterial);
+    
+                        tools.alertMe(sErrNoIndentMaterial);
+    
+                        return;
+                    }
+                } else if (oData !== null && oData !== undefined) {
+                    var sMaterial = oData.Material;
     
                     if (sMaterial !== null && sMaterial !== undefined && sMaterial === this.oDisplayModel.getProperty("/MaterialNo")) {
                         this.oDisplayModel.setProperty("/HandlingUnitId", sManNumber);

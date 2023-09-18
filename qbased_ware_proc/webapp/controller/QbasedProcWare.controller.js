@@ -388,8 +388,8 @@
             if (iShipmentNumber !== null && iShipmentNumber !== undefined && iShipmentNumber !== "") {
                 BusyIndicator.show(1);
 
-                var sPath = "/GoodsIssueShipment(ShipmentNumber='" + iShipmentNumber + "')";
-                var urlParam = { "BookAllDeliveries": true};
+                var sPath = "/Shipment(ShipmentNumber='" + iShipmentNumber + "')";
+                var urlParam = { "BookGIAllDeliveries": true};
     
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, urlParam, {
@@ -566,14 +566,14 @@
 			var aFilters = [];
 
             if (bState) {
-                aFilters.push(new sap.ui.model.Filter("ShowAll", sap.ui.model.FilterOperator.EQ, false));
+                aFilters.push(new sap.ui.model.Filter("ShowQueuedOwn", sap.ui.model.FilterOperator.EQ, true)); // ---- Own
             } else {
-                aFilters.push(new sap.ui.model.Filter("ShowAll", sap.ui.model.FilterOperator.EQ, true));
+                aFilters.push(new sap.ui.model.Filter("ShowQueuedAll", sap.ui.model.FilterOperator.EQ, true)); // ---- All
             }
 
             BusyIndicator.show(1);
 
-            var sPath = "/GoodsIssueShipment";
+            var sPath = "/Shipment";
 
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
@@ -657,19 +657,22 @@
 			var spaceID = this.oResourceBundle.getText("SpaceId");
 			var pageID  = this.oResourceBundle.getText("PageId");
 
-            if (History.getInstance() !== null && History.getInstance() !== undefined) {
-                if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var sSpaceHome  = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
-                    var sShellHome  = "#Shell-home";
+            if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
+                this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+            } else {
+                if (History.getInstance() !== null && History.getInstance() !== undefined) {
+                    if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
+                        var sPreviousHash = History.getInstance().getPreviousHash();
+    
+                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                            this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
-                    var sPreviousHash = History.getInstance().getPreviousHash();
+                            return;
+                        }
+                    }    
+                } 
 
-                    if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = sSpaceHome;
-                    } else {
-                        this.sShellSource = sSpaceHome;
-                    }
-                }    
+                this.sShellSource = "#Shell-home";
             }
 		},
 

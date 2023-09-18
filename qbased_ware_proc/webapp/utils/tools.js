@@ -943,6 +943,25 @@ sap.ui.define([
             );
         },
 
+        showMessageErrorFocus: function (oError, oDetails, component) {
+            var tSTime = 1000;
+            var that   = this;
+
+            sap.m.MessageBox.error(oError, {
+                details: oDetails,
+                actions: [sap.m.MessageBox.Action.CLOSE],
+                onClose: function () {
+                    this._bMessageOpen = false;
+
+                    setTimeout(function () {
+                        // ---- Set Focus to main Input field
+                        that._setFocus(component);
+                    }, tSTime);            
+
+                }.bind(this)
+            });
+        },
+
         alertMe: function (msg) {
             sap.m.MessageToast.show(msg, {
                 duration: 3000,
@@ -977,6 +996,10 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Basic Functions
         // --------------------------------------------------------------------------------------------------------------------
+
+        _setFocus: function (component) {
+            setTimeout(() => component.focus({ preventScroll: true, focusVisible: true }));
+        },
 
         parseSecoundsToSpecialFormat: function (seconds, seperatorTime) {
             var sec_num = parseInt(seconds, 10);
