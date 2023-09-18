@@ -77,6 +77,7 @@ sap.ui.define([
             this.sShellSource    = "#Shell-home";
             this.iScanModusAktiv = 0;
             this.QsRelevantHU            = false;
+            this.StatusVirtual           = false;
             this.StorageBinDoubleScan    = true;
             this.StatusOpenWarehouseTask = false;
 
@@ -258,6 +259,14 @@ sap.ui.define([
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
                 BusyIndicator.show(1);
 
+                // ---- Check for HU from VDA table
+                var sWhtTaskType = "H";
+
+                if (this.StatusVirtual) {
+                    // ---- Virtual HU: In this case, packaging (P instead of H) would have to be opened and the material would have to be given along.
+                    sWhtTaskType = "P";
+                }
+
                 var oData = this.oDisplayModel.getData();
 
                 var sPath   = "/WarehouseTask";
@@ -266,7 +275,7 @@ sap.ui.define([
                     "HandlingUnitId":        oData.HandlingUnitId,
                     "BookConfirm":           true,
                     "BookMoveHu":            true,
-                    "WarehouseTaskType":     "H",
+                    "WarehouseTaskType":     sWhtTaskType,
                     "TargetQuantity":        oData.Quantity,
                     "DestinationStorageBin": oData.Book2StorageBin
                 };
@@ -347,7 +356,14 @@ sap.ui.define([
                     oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
                     oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
                     oData.to_WarehouseTask.TargetQuantity         = oData.Quantity;
-                    oData.to_WarehouseTask.WarehouseTaskType      = "H";
+
+                // ---- Check for HU from VDA table
+                if (this.StatusVirtual) {
+                    // ---- Virtual HU: In this case, packaging (P instead of H) would have to be opened and the material would have to be given along.
+                    oData.to_WarehouseTask.WarehouseTaskType = "P";
+                } else {
+                    oData.to_WarehouseTask.WarehouseTaskType = "H";
+                }
 
                 var sWarehouseNumber = oData.to_WarehouseTask.WarehouseNumber;
                 var sWarehouseTask   = oData.to_WarehouseTask.WarehouseTaskId;
@@ -484,10 +500,15 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 // ---- Coding in case of showing Business application Errors
-                                tools.alertMe(rData.SapMessageText, "");
-                                
                                 that._resetAll();
-                                that._setFocus("idInput_HU");
+
+                                var component = that.byId("idInput_HU");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
                                 BusyIndicator.hide();
 
@@ -495,6 +516,13 @@ sap.ui.define([
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
                                 tools.alertMe(rData.SapMessageText, "");
+                            }
+
+                            // ---- Check for HU from VDA table
+                            if (rData.StatusVirtual) {
+                                that.StatusVirtual = true;
+                            } else {
+                                that.StatusVirtual = false;
                             }
 
                             // ---- Check for QS relevant HU
@@ -578,18 +606,15 @@ sap.ui.define([
                         if (rData.results !== null && rData.results !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
-                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    var component = that.byId("idInput_Location");
 
-                                    that.oScanModel.setProperty("/valueManuallyNo", "");
-
-                                    BusyIndicator.hide();
-
-                                    return;
-                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
-                                    // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
 
                                     BusyIndicator.hide();
 
@@ -1063,19 +1088,22 @@ sap.ui.define([
 			var spaceID = this.oResourceBundle.getText("SpaceId");
 			var pageID  = this.oResourceBundle.getText("PageId");
 
-            if (History.getInstance() !== null && History.getInstance() !== undefined) {
-                if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var sSpaceHome  = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
-                    var sShellHome  = "#Shell-home";
+            if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
+                this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+            } else {
+                if (History.getInstance() !== null && History.getInstance() !== undefined) {
+                    if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
+                        var sPreviousHash = History.getInstance().getPreviousHash();
+    
+                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                            this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
-                    var sPreviousHash = History.getInstance().getPreviousHash();
+                            return;
+                        }
+                    }    
+                } 
 
-                    if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = sSpaceHome;
-                    } else {
-                        this.sShellSource = sSpaceHome;
-                    }
-                }    
+                this.sShellSource = "#Shell-home";
             }
 		},
 
@@ -1311,6 +1339,7 @@ sap.ui.define([
             // ---- Reset of parts
             this.iBookCount = 0;
             this.QsRelevantHU            = false;
+            this.StatusVirtual           = false;
             this.StorageBinDoubleScan    = true;
             this.StatusOpenWarehouseTask = false;
 
