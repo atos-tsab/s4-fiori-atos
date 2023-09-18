@@ -552,13 +552,18 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
-                                    tools.alertMe(rData.results[0].SapMessageText, "");
-                                    
                                     that._resetAll();
-                                    that._setFocus();
 
+                                    var component = that.byId("idInput_HU");
+    
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
+    
                                     BusyIndicator.hide();
-
+    
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -608,16 +613,15 @@ sap.ui.define([
                     success: function(rData, response) {
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
-                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                                tools.showMessageError(rData.SapMessageText, "");
+                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                var component = that.byId("idInput_HU");
 
-                                BusyIndicator.hide();
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
-                                return;
-                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                                // ---- Coding in case of showing Business application Errors
-                                tools.showMessageError(rData.SapMessageText, "");
-                                
                                 BusyIndicator.hide();
 
                                 return;
@@ -675,10 +679,16 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
-                                    tools.alertMe(rData.results[0].SapMessageText, "");
-                                    
-                                    that._setFocus();
-
+                                    var component = that.byId("idInput_HU");
+    
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
+    
+                                    BusyIndicator.hide();
+    
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -754,9 +764,13 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-                                
-                                that._setFocus();
+                                var component = that.byId("idInput_HU");
+    
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
                                 BusyIndicator.hide();
 
@@ -805,10 +819,14 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-                                
-                                that._setFocus();
+                                var component = that.byId("idInput_HU");
     
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
+
                                 BusyIndicator.hide();
 
                                 return;
@@ -1269,19 +1287,22 @@ sap.ui.define([
 			var spaceID = this.oResourceBundle.getText("SpaceId");
 			var pageID  = this.oResourceBundle.getText("PageId");
 
-            if (History.getInstance() !== null && History.getInstance() !== undefined) {
-                if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var sSpaceHome  = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
-                    var sShellHome  = "#Shell-home";
+            if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
+                this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+            } else {
+                if (History.getInstance() !== null && History.getInstance() !== undefined) {
+                    if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
+                        var sPreviousHash = History.getInstance().getPreviousHash();
+    
+                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                            this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
-                    var sPreviousHash = History.getInstance().getPreviousHash();
+                            return;
+                        }
+                    }    
+                } 
 
-                    if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = sSpaceHome;
-                    } else {
-                        this.sShellSource = sSpaceHome;
-                    }
-                }    
+                this.sShellSource = "#Shell-home";
             }
 		},
 
