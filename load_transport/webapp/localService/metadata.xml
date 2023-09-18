@@ -3,7 +3,71 @@
     <edmx:DataServices m:DataServiceVersion="2.0">
         <Schema Namespace="Z_EEWM_GOODS_ISSUE_SRV" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
             <Annotation Term="Core.SchemaVersion" String="1.0.0" xmlns="http://docs.oasis-open.org/odata/ns/edm"/>
-            <EntityType Name="GoodsIssueScania" sap:content-version="1">
+            <EntityType Name="Shipment" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="ShipmentNumber"/>
+                </Key>
+                <Property Name="ShipmentNumber" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Shipment Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Gate" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Suppl. 4" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="GateDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Addit. Text 4" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Queue" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Suppl. 4" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="QueueDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Addit. Text 4" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="FinishedDate" Type="Edm.DateTime" Precision="7" sap:unicode="false" sap:label="Current Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="FinishedTime" Type="Edm.Time" Precision="0" sap:unicode="false" sap:label="Time" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusPlanned" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusLoadStart" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusLoadEnd" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusShipmentStart" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusShipmentEnd" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ShowQueuedOwn" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="ShowQueuedAll" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="BookGIAllDeliveries" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageType" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Message Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <NavigationProperty Name="to_HandlingUnits" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToHandlingUnits" FromRole="FromRole_ShipmentToHandlingUnits" ToRole="ToRole_ShipmentToHandlingUnits"/>
+                <NavigationProperty Name="to_Deliveries" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToDeliveries" FromRole="FromRole_ShipmentToDeliveries" ToRole="ToRole_ShipmentToDeliveries"/>
+            </EntityType>
+            <EntityType Name="Delivery" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="DocumentNo"/>
+                </Key>
+                <Property Name="DocumentNo" Type="Edm.String" Nullable="false" MaxLength="35" sap:unicode="false" sap:label="Document Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="DeliveryNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SupplierId" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Supplier" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ExternalShipment" Type="Edm.String" Nullable="false" MaxLength="35" sap:unicode="false" sap:label="Ext. Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="UnloadingPoint" Type="Edm.String" Nullable="false" MaxLength="25" sap:unicode="false" sap:label="Unloading Point" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ShipmentNumber" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Shipment Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusGoodsIssue" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="PSDeliveryNote" Type="Edm.String" Nullable="false" MaxLength="132" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="BookGoodsIssue" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageType" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Message Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <NavigationProperty Name="to_Shipment" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToDeliveries" FromRole="ToRole_ShipmentToDeliveries" ToRole="FromRole_ShipmentToDeliveries"/>
+            </EntityType>
+            <EntityType Name="DeliveryHU" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="WarehouseNumber"/>
+                    <PropertyRef Name="HandlingUnitId"/>
+                </Key>
+                <Property Name="WarehouseNumber" Type="Edm.String" Nullable="false" MaxLength="4" sap:unicode="false" sap:label="Warehouse No." sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="HandlingUnitId" Type="Edm.String" Nullable="false" MaxLength="20" sap:unicode="false" sap:label="Handling Unit" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="DocumentNo" Type="Edm.String" Nullable="false" MaxLength="35" sap:unicode="false" sap:label="Document Number" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="ShipmentNumber" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Shipment Number" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="DeliveryNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false"/>
+                <Property Name="MaterialNo" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Material" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="MaterialPackaging" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Material" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="MaterialPackagingDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Quantity" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3" sap:unicode="false" sap:unit="QuantityUnitOfMeasurement" sap:label="Quantity" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="QuantityUnitOfMeasurement" Type="Edm.String" Nullable="false" MaxLength="3" sap:unicode="false" sap:label="Base Unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="unit-of-measure"/>
+                <Property Name="ShipToParty" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Customer" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ShipToName" Type="Edm.String" Nullable="false" MaxLength="30" sap:unicode="false" sap:label="Name 1" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="StatusLoad" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="BookLoad" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageType" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Message Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+            </EntityType>
+            <EntityType Name="ScaniaGI" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="ShipmentNumber"/>
                 </Key>
@@ -14,16 +78,17 @@
                 <Property Name="BookGoodsIssue" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="SapMessageType" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Message Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-                <NavigationProperty Name="to_HandlingUnits" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToHandlingUnits" FromRole="FromRole_ShipmentToHandlingUnits" ToRole="ToRole_ShipmentToHandlingUnits"/>
+                <NavigationProperty Name="to_HandlingUnits" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGIToScaniaHUs" FromRole="FromRole_ScaniaGIToScaniaHUs" ToRole="ToRole_ScaniaGIToScaniaHUs"/>
             </EntityType>
-            <EntityType Name="GoodsIssueScaniaHU" sap:content-version="1">
+            <EntityType Name="ScaniaGIHU" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="HandlingUnitId"/>
                 </Key>
                 <Property Name="HandlingUnitId" Type="Edm.String" Nullable="false" MaxLength="20" sap:unicode="false" sap:label="Handling Unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-                <Property Name="DeliveryNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="ShipmentNumber" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Shipment Number" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="DeliveryNo" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Delivery" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="MaterialNo" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Material" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="MaterialDescription" Type="Edm.String" Nullable="false" MaxLength="40" sap:unicode="false" sap:label="Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="Quantity" Type="Edm.Decimal" Nullable="false" Precision="13" Scale="3" sap:unicode="false" sap:unit="QuantityUnitOfMeasurement" sap:label="Quantity" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="QuantityUnitOfMeasurement" Type="Edm.String" Nullable="false" MaxLength="3" sap:unicode="false" sap:label="Base Unit" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false" sap:semantics="unit-of-measure"/>
                 <Property Name="ShipToParty" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Customer" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
@@ -32,7 +97,6 @@
                 <Property Name="BookLoad" Type="Edm.Boolean" Nullable="false" sap:unicode="false" sap:label="TRUE" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="SapMessageType" Type="Edm.String" Nullable="false" MaxLength="1" sap:unicode="false" sap:label="Message Type" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
-                <NavigationProperty Name="to_Shipment" Relationship="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToHandlingUnits" FromRole="ToRole_ShipmentToHandlingUnits" ToRole="FromRole_ShipmentToHandlingUnits"/>
             </EntityType>
             <EntityType Name="StorageBin" sap:content-version="1">
                 <Key>
@@ -78,8 +142,8 @@
                 <Property Name="SapMessageText" Type="Edm.String" Nullable="false" MaxLength="255" sap:unicode="false" sap:label="Text" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
             </EntityType>
             <Association Name="ShipmentToHandlingUnits" sap:content-version="1">
-                <End Type="Z_EEWM_GOODS_ISSUE_SRV.GoodsIssueScania" Multiplicity="1" Role="FromRole_ShipmentToHandlingUnits"/>
-                <End Type="Z_EEWM_GOODS_ISSUE_SRV.GoodsIssueScaniaHU" Multiplicity="*" Role="ToRole_ShipmentToHandlingUnits"/>
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.Shipment" Multiplicity="1" Role="FromRole_ShipmentToHandlingUnits"/>
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.DeliveryHU" Multiplicity="*" Role="ToRole_ShipmentToHandlingUnits"/>
                 <ReferentialConstraint>
                     <Principal Role="FromRole_ShipmentToHandlingUnits">
                         <PropertyRef Name="ShipmentNumber"/>
@@ -89,16 +153,51 @@
                     </Dependent>
                 </ReferentialConstraint>
             </Association>
+            <Association Name="ShipmentToDeliveries" sap:content-version="1">
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.Shipment" Multiplicity="1" Role="FromRole_ShipmentToDeliveries"/>
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.Delivery" Multiplicity="*" Role="ToRole_ShipmentToDeliveries"/>
+                <ReferentialConstraint>
+                    <Principal Role="FromRole_ShipmentToDeliveries">
+                        <PropertyRef Name="ShipmentNumber"/>
+                    </Principal>
+                    <Dependent Role="ToRole_ShipmentToDeliveries">
+                        <PropertyRef Name="ShipmentNumber"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
+            <Association Name="ScaniaGIToScaniaHUs" sap:content-version="1">
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGI" Multiplicity="1" Role="FromRole_ScaniaGIToScaniaHUs"/>
+                <End Type="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGIHU" Multiplicity="*" Role="ToRole_ScaniaGIToScaniaHUs"/>
+                <ReferentialConstraint>
+                    <Principal Role="FromRole_ScaniaGIToScaniaHUs">
+                        <PropertyRef Name="ShipmentNumber"/>
+                    </Principal>
+                    <Dependent Role="ToRole_ScaniaGIToScaniaHUs">
+                        <PropertyRef Name="ShipmentNumber"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
             <EntityContainer Name="Z_EEWM_GOODS_ISSUE_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
-                <EntitySet Name="GoodsIssueScania" EntityType="Z_EEWM_GOODS_ISSUE_SRV.GoodsIssueScania" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
-                <EntitySet Name="GoodsIssueScaniaHU" EntityType="Z_EEWM_GOODS_ISSUE_SRV.GoodsIssueScaniaHU" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="Shipment" EntityType="Z_EEWM_GOODS_ISSUE_SRV.Shipment" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="Delivery" EntityType="Z_EEWM_GOODS_ISSUE_SRV.Delivery" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="DeliveryHU" EntityType="Z_EEWM_GOODS_ISSUE_SRV.DeliveryHU" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="ScaniaGI" EntityType="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGI" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="ScaniaGIHU" EntityType="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGIHU" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
                 <EntitySet Name="StorageBin" EntityType="Z_EEWM_GOODS_ISSUE_SRV.StorageBin" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:pageable="false" sap:content-version="1"/>
                 <EntitySet Name="UserParameter" EntityType="Z_EEWM_GOODS_ISSUE_SRV.UserParameter" sap:creatable="false" sap:deletable="false" sap:searchable="true" sap:pageable="false" sap:content-version="1"/>
                 <EntitySet Name="Plant" EntityType="Z_EEWM_GOODS_ISSUE_SRV.Plant" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
                 <EntitySet Name="Gate" EntityType="Z_EEWM_GOODS_ISSUE_SRV.Gate" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
-                <AssociationSet Name="ShipmentToHandlingUnitsSet" Association="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToHandlingUnits" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
-                    <End EntitySet="GoodsIssueScania" Role="FromRole_ShipmentToHandlingUnits"/>
-                    <End EntitySet="GoodsIssueScaniaHU" Role="ToRole_ShipmentToHandlingUnits"/>
+                <AssociationSet Name="ScaniaGIToScaniaHUsSet" Association="Z_EEWM_GOODS_ISSUE_SRV.ScaniaGIToScaniaHUs" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+                    <End EntitySet="ScaniaGI" Role="FromRole_ScaniaGIToScaniaHUs"/>
+                    <End EntitySet="ScaniaGIHU" Role="ToRole_ScaniaGIToScaniaHUs"/>
+                </AssociationSet>
+                <AssociationSet Name="ShipmentToHandlingUnits" Association="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToHandlingUnits" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+                    <End EntitySet="Shipment" Role="FromRole_ShipmentToHandlingUnits"/>
+                    <End EntitySet="DeliveryHU" Role="ToRole_ShipmentToHandlingUnits"/>
+                </AssociationSet>
+                <AssociationSet Name="ShipmentToDeliveriesSet" Association="Z_EEWM_GOODS_ISSUE_SRV.ShipmentToDeliveries" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+                    <End EntitySet="Shipment" Role="FromRole_ShipmentToDeliveries"/>
+                    <End EntitySet="Delivery" Role="ToRole_ShipmentToDeliveries"/>
                 </AssociationSet>
             </EntityContainer>
             <atom:link rel="self" href="https://bpw-s4d.bpw.internal:44300/sap/opu/odata/sap/Z_EEWM_GOODS_ISSUE_SRV/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
