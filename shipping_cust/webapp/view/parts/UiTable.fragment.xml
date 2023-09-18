@@ -28,7 +28,7 @@
 				</ui:Column>
 				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnit", "columnIndex":"1", "leadingProperty": "HandlingUnit"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnitId", "columnIndex":"1", "leadingProperty": "HandlingUnitId"}' />
 					</ui:customData>
 					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -37,7 +37,7 @@
 				</ui:Column>
 				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"2", "leadingProperty": "Material"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialNo", "columnIndex":"2", "leadingProperty": "MaterialNo"}' />
 					</ui:customData>
 					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -55,7 +55,7 @@
 				</ui:Column>
 				<ui:Column width="8%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"4", "leadingProperty": "UnitOfMeasurement"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "QuantityUnitOfMeasurement", "columnIndex":"4", "leadingProperty": "QuantityUnitOfMeasurement"}' />
 					</ui:customData>
 					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -64,7 +64,7 @@
 				</ui:Column>
 				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Delivery", "columnIndex":"5", "leadingProperty": "Delivery"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "DeliveryNo", "columnIndex":"5", "leadingProperty": "DeliveryNo"}' />
 					</ui:customData>
 					<Label text="{i18n>Delivery}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -73,7 +73,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "GoodsRecipient", "columnIndex":"6", "leadingProperty": "GoodsRecipient"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "ShipToParty", "columnIndex":"6", "leadingProperty": "ShipToParty"}' />
 					</ui:customData>
 					<Label text="{i18n>GoodsRecipient}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -82,7 +82,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "Customer", "columnIndex":"7", "leadingProperty": "Customer"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "ShipToName", "columnIndex":"7", "leadingProperty": "ShipToName"}' />
 					</ui:customData>
 					<Label text="{i18n>Customer}" textAlign="Center" width="100%" />
 					<ui:template>

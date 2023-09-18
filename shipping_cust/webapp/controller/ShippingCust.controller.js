@@ -246,8 +246,8 @@ sap.ui.define([
             if (iShipmentNumber !== null && iShipmentNumber !== undefined && iShipmentNumber !== "") {
                 BusyIndicator.show(1);
 
-                var sPath = "/GoodsIssueScania(ShipmentNumber='" + iShipmentNumber + "')";
-                var urlParam = { "BookGoodsIssue": true };
+                var sPath = "/Shipment(ShipmentNumber='" + iShipmentNumber + "')";
+                var urlParam = { "BookGIAllDeliveries": true };
 
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, urlParam, {
@@ -341,7 +341,7 @@ sap.ui.define([
             }
 
             // ---- Read the Transport Data from the backend
-            var sPath = "/GoodsIssueScania(ShipmentNumber='" + this.iTR + "')";
+            var sPath = "/Shipment(ShipmentNumber='" + this.iTR + "')";
 
             BusyIndicator.show(1);
 
@@ -359,10 +359,15 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-
                                 that._resetAll();
-                                that._setFocus("idInput_Transport");
+
+                                var component = that.byId("idInput_Transport");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
                                 BusyIndicator.hide();
 
@@ -426,70 +431,11 @@ sap.ui.define([
             this._setFocus("idInput_HU");
         },
 
-        _loadDeliveryData: function (sDocumentNo, iHU, oData) {
-            var that = this;
-
-            // ---- Read the HU Data from the backend
-            var sPath = "/Delivery('" + sDocumentNo + "')?$expand=to_HUs";
-
-            BusyIndicator.show(1);
-
-            var oModel = this._getServiceUrl()[0];
-                oModel.read(sPath, {
-                    error: function (oError, resp) {
-                        BusyIndicator.hide();
-
-                        tools.handleODataRequestFailed(oError, resp, true);
-                    },
-                    success: function (rData, response) {
-                        if (rData !== null && rData !== undefined) {
-                            // ---- Check for complete final booking
-                            if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === true) {
-                                tools.showMessageError(rData.SapMessageText, "");
-
-                                BusyIndicator.hide();
-
-                                that._setFocus("idInput_HU");
-
-                                return;
-                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E" && rData.StatusGoodsReceipt === false) {
-                                // ---- Coding in case of showing Business application Errors
-                                tools.showMessageError(rData.SapMessageText, "");
-
-                                that._setFocus("idInput_HU");
-
-                                BusyIndicator.hide();
-
-                                return;
-                            } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
-                                // ---- Coding in case of showing Business application Informations
-                                tools.alertMe(rData.SapMessageText, "");
-                            }
-
-                            // ---- Start with showing data
-                            that.oDeliveryData = rData;
-
-                            // ---- Set the Data for the Model and set the Model to the View
-                            rData.HandlingUnit = iHU;
-
-                            that.oDisplayModel.setData(rData);
-
-                            // ---- Handle the Scan Modus for the different tables
-                            that.ScanModus = rData.ScanModus;
-                            that.iScanModusAktiv = 0;
-                            that._setTableData(oData, iHU);
-
-                            BusyIndicator.hide();
-                        }
-                    }
-                });
-        },
-
         _updateStatusSingleHU: function (iHU) {
             var oTable = this.HuListTable;
             var that = this;
 
-            var sPath = "/GoodsIssueScaniaHU(HandlingUnitId='" + iHU  + "')";
+            var sPath = "/DeliveryHU(WarehouseNumber='" + this.iWN + "',HandlingUnitId='" + iHU + "')";
             var urlParam = { "BookLoad": true };
 
             BusyIndicator.show(1);
@@ -505,10 +451,14 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-                                
-                                that._setFocus("idInput_HU");
-    
+                                var component = that.byId("idInput_HU");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
+
                                 BusyIndicator.hide();
 
                                 return;
@@ -536,7 +486,7 @@ sap.ui.define([
             var that = this;
 
             // ---- Read the HU Data from the backend
-            var sPath = "/GoodsIssueScania(ShipmentNumber='" + this.iTR + "')";
+            var sPath = "/Shipment(ShipmentNumber='" + this.iTR + "')";
 
             BusyIndicator.show(1);
 
@@ -554,10 +504,15 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                tools.alertMe(rData.SapMessageText, "");
-
                                 that._resetAll();
-                                that._setFocus("idInput_Transport");
+
+                                var component = that.byId("idInput_Transport");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(rData.SapMessageText, "", component);
+                                } else {
+                                    tools.showMessageError(rData.SapMessageText, "");
+                                }
 
                                 BusyIndicator.hide();
 
@@ -851,22 +806,25 @@ sap.ui.define([
         },
 
         _getShellSource: function (oEvent) {
-            var spaceID = this.oResourceBundle.getText("SpaceId");
-            var pageID = this.oResourceBundle.getText("PageId");
+			var spaceID = this.oResourceBundle.getText("SpaceId");
+			var pageID  = this.oResourceBundle.getText("PageId");
 
-            if (History.getInstance() !== null && History.getInstance() !== undefined) {
-                if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
-                    var sSpaceHome = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
-                    var sShellHome = "#Shell-home";
+            if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
+                this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
+            } else {
+                if (History.getInstance() !== null && History.getInstance() !== undefined) {
+                    if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
+                        var sPreviousHash = History.getInstance().getPreviousHash();
+    
+                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                            this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
-                    var sPreviousHash = History.getInstance().getPreviousHash();
+                            return;
+                        }
+                    }    
+                } 
 
-                    if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
-                        this.sShellSource = sSpaceHome;
-                    } else {
-                        this.sShellSource = sSpaceHome;
-                    }
-                }
+                this.sShellSource = "#Shell-home";
             }
         },
 
