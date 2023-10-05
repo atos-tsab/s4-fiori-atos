@@ -233,7 +233,9 @@ sap.ui.define([
                      this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     }
                 }    
             }
@@ -545,7 +547,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -584,9 +588,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_HU");
 
-                                tools.alertMe(sErrMsg, "");
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -608,7 +619,7 @@ sap.ui.define([
 
                         that.oScanModel.setProperty("/valueManuallyNo", "");
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        tools.handleODataRequestFailedTitle(oError, sDocumentNo, true);
                     },
                     success: function(rData, response) {
                         if (rData !== null && rData !== undefined) {
@@ -672,7 +683,11 @@ sap.ui.define([
                 oModel.read("/DeliveryHU", {
                     filters: aFilters,
                     error: function(oError, resp) {
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        BusyIndicator.hide();
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, this.iHU, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -813,7 +828,7 @@ sap.ui.define([
 
                         that.oScanModel.setProperty("/valueManuallyNo", "");
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        tools.handleODataRequestFailedTitle(oError, this.iHU, true);
                     },
                     success: function(rData, oResponse) {
                         // ---- Check for complete final booking
@@ -1165,7 +1180,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     }
                 }    
             }
