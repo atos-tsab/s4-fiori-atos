@@ -3,7 +3,7 @@
  ************************************************************************
  * Created by     : Thomas Sablotny, Atos Germany
  ************************************************************************
- * Description    : BPW - eEWM - Mobile App Bestandsanzeige
+ * Description    : BPW - eEWM - Mobile App Erfassung WE-Fremd
  ************************************************************************
  * Authorization  : Checked by backend
  ************************************************************************/
@@ -670,6 +670,329 @@ sap.ui.define([
 
             return oModel;
         },
+
+
+		// --------------------------------------------------------------------------------------------------------------------
+		// ---- Error Functions
+		// --------------------------------------------------------------------------------------------------------------------
+		
+		handleODataRequestFailed: function (oError, oTitle, showDetails) {								// eslint-disable-line
+			var errTitle   = this.getResourceBundle().getText("Error");
+			var errCheck   = false;
+			var detailText = "";
+
+			if (this._bMessageOpen) {
+				return;
+			}
+            
+			this._bMessageOpen = true;
+			
+			// ---- Check for Error informations  
+			if (oError !== null && oError !== undefined) {
+				// ---- Try to parse as a JSON response body string
+				if (oError.response !== null && oError.response !== undefined) {
+					if (oError.response.body !== null && oError.response.body !== undefined) {
+						errCheck = this._handleResponseBodyErrors(oError, showDetails);
+					}
+				}
+				
+				// ---- Try to parse as a JSON response text string  
+				if (oError.responseText !== null && oError.responseText !== undefined) {
+					errCheck = this._handleResponseTextErrors(oError, showDetails);
+				}
+			}
+
+			if (!errCheck) {
+				if (showDetails) {
+					detailText = oError;
+				}
+
+				sap.m.MessageBox.error(
+					errTitle, {
+						id: "serviceErrorMessageBox",
+						details: detailText,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function () {
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+			}
+		},
+		
+		handleODataRequestFailedTitle: function (oError, oTitle, showDetails) {						    // eslint-disable-line
+			var errTitle   = this.getResourceBundle().getText("Error") + " - " + oTitle;
+			var errCheck   = false;
+			var detailText = "";
+
+			if (this._bMessageOpen) {
+				return;
+			}
+            
+			this._bMessageOpen = true;
+			
+			// ---- Check for Error informations  
+			if (oError !== null && oError !== undefined) {
+				// ---- Try to parse as a JSON response body string
+				if (oError.response !== null && oError.response !== undefined) {
+					if (oError.response.body !== null && oError.response.body !== undefined) {
+						errCheck = this._handleResponseBodyErrors(oError, showDetails);
+					}
+				}
+				
+				// ---- Try to parse as a JSON response text string  
+				if (oError.responseText !== null && oError.responseText !== undefined) {
+					errCheck = this._handleResponseTextErrorsTitle(oError, showDetails, oTitle);
+				}
+			}
+
+			if (!errCheck) {
+				if (showDetails) {
+					detailText = oError;
+				}
+
+				sap.m.MessageBox.error(
+					errTitle, {
+						id: "serviceErrorMessageBox",
+						details: detailText,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function () {
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+			}
+		},
+		
+		// --------------------------------------------------------------------------------------------------------------------
+
+		_handleResponseBodyErrors: function (oError, showDetails) {
+			// ---- Handling of the response body errors 
+			var errResponse = JSON.parse(oError.response.body);
+			var errTitle = this.getResourceBundle().getText("Error");
+			var errDetail = "";														// eslint-disable-line
+			var errMsg = "";
+			
+			if (errResponse !== null && errResponse !== undefined) {
+				errMsg = errResponse.error.message.value;
+				if (!errMsg) {
+					errMsg = errResponse;
+				}
+				
+				if (showDetails) {
+					errDetail = this._getErrorDetails(errResponse.error);
+				}
+				
+				sap.m.MessageBox.show(
+						errMsg, {
+						icon: sap.m.MessageBox.Icon.ERROR,
+						title: errTitle,
+						details: errDetail,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function (oAction) { 								// eslint-disable-line
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+				
+				return true;
+			} else {
+				return false;
+			}
+		},
+
+		_handleResponseTextErrors: function (oError, showDetails) {
+			// ---- Handling of the response text errors 
+			var errTitle = this.getResourceBundle().getText("Error");
+			var htm = this._checkForHtml(oError.responseText);
+			var xml = this._checkForXml(oError.responseText);
+			var errResponse = "";
+			var errDetail = "";														// eslint-disable-line
+			var errMsg = "";
+			
+			// ---- Check for XML error messages
+			if (htm) {
+				errResponse = jQuery.parseHTML(oError.responseText);
+			} else if (xml) {
+				errResponse = jQuery.parseXML(oError.responseText);
+			} else {
+				errResponse = JSON.parse(oError.responseText);
+			}
+			
+			if (errResponse !== null && errResponse !== undefined) {
+				// ---- Check for XML error messages
+				if (htm) {
+					errMsg = errResponse[1].textContent;
+				} else if (xml) {
+					errMsg = errResponse.all[2].textContent;
+				
+					if (showDetails) {
+						errDetail = this._getXmlErrorDetails(errResponse);
+					}
+				} else {
+					errMsg = errResponse.error.message.value;
+				
+					if (showDetails) {
+						errDetail = this._getErrorDetails(errResponse.error);
+					}
+				}
+
+				sap.m.MessageBox.show(
+						errMsg, {
+						icon: sap.m.MessageBox.Icon.ERROR,
+						title: errTitle,
+						details: errDetail,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function (oAction) {								// eslint-disable-line
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+				
+				return true;
+			} else {
+				return false;
+			}
+		},
+
+		_handleResponseTextErrorsTitle: function (oError, showDetails, oTitle) {
+			// ---- Handling of the response text errors 
+			var errTitle = this.getResourceBundle().getText("Error") + " - " + oTitle;
+			var htm = this._checkForHtml(oError.responseText);
+			var xml = this._checkForXml(oError.responseText);
+			var errResponse = "";
+			var errDetail = "";														// eslint-disable-line
+			var errMsg = "";
+			
+			// ---- Check for XML error messages
+			if (htm) {
+				errResponse = jQuery.parseHTML(oError.responseText);
+			} else if (xml) {
+				errResponse = jQuery.parseXML(oError.responseText);
+			} else {
+				errResponse = JSON.parse(oError.responseText);
+			}
+			
+			if (errResponse !== null && errResponse !== undefined) {
+				// ---- Check for XML error messages
+				if (htm) {
+					errMsg = errResponse[1].textContent;
+				} else if (xml) {
+					errMsg = errResponse.all[2].textContent;
+				
+					if (showDetails) {
+						errDetail = this._getXmlErrorDetails(errResponse);
+					}
+				} else {
+					errMsg = errResponse.error.message.value;
+				
+					if (showDetails) {
+						errDetail = this._getErrorDetails(errResponse.error);
+					}
+				}
+
+				sap.m.MessageBox.show(
+						errMsg, {
+						icon: sap.m.MessageBox.Icon.ERROR,
+						title: errTitle,
+						details: errDetail,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function (oAction) {								// eslint-disable-line
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+				
+				return true;
+			} else {
+				return false;
+			}
+		},
+
+ 		// --------------------------------------------------------------------------------------------------------------------
+
+		_checkForHtml: function (htm) {
+			if (htm !== null && htm !== undefined && htm !== "") {
+				var htmDoc = htm.startsWith("<html>");
+				
+				if (htmDoc) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		},
+
+		_checkForXml: function (xml) {
+			if (xml !== null && xml !== undefined && xml !== "") {
+				var xmlDoc = xml.startsWith("<?xml");
+				
+				if (xmlDoc) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		},
+
+ 		// --------------------------------------------------------------------------------------------------------------------
+
+		_getErrorDetails: function (errDetail) {
+ 			var application    = errDetail.innererror.application;
+ 			var codeError      = "Error code: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + errDetail.code;
+ 			var transactionid  = "Transaction ID: " + errDetail.innererror.transactionid;
+  			var stampDate      = this._getErrorTimestamp(errDetail.innererror.timestamp);
+			var timestamp      = "Timestamp: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + stampDate;
+ 			var service        = "OData Service: &nbsp;";
+ 			var serviceVersion = "Service Version: ";
+			var dummy          = "<br>---------------------------------------------------------------------------<br>";
+			
+ 			if (application !== null && application !== undefined) {
+	 			service        = service + application.service_namespace + application.service_id;
+	 			serviceVersion = serviceVersion + application.service_version;
+ 			}
+ 			
+ 			var details = codeError + "<br>" + service + "<br>" + serviceVersion + dummy + transactionid + "<br>" + timestamp;
+
+			return details;
+		},
+		
+		_getXmlErrorDetails: function (errDetail) {
+ 			var codeError = "Error code: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + errDetail.all[1].textContent;
+ 			var errText   = "Error message: " + errDetail.all[2].textContent;
+			var timestamp = "Timestamp: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + errDetail.lastModified;
+			var dummy     = "<br>---------------------------------------------------------------------------<br>";
+			
+ 			var details = timestamp  + "<br>" + codeError + dummy + "<br>" + errText;
+
+			return details;
+		},
+		
+ 		_getErrorTimestamp: function (timestamp) {
+ 			var stamp = "";
+ 			
+ 			var year = timestamp.substring(0, 4);
+  			var mon  = timestamp.substring(4, 6);
+  			var day  = timestamp.substring(6, 8);
+  			var hour = timestamp.substring(8, 10);
+  			var min  = timestamp.substring(10, 12);
+  			var sec  = timestamp.substring(12, 14);
+ 			
+ 			if (year !== "" && mon !== "" && day !== "") {
+				stamp = day + "." + mon + "." + year + " / " + hour + ":" + min + ":" + sec;
+ 			}
+ 
+			return stamp;
+		},
 
 
         // --------------------------------------------------------------------------------------------------------------------

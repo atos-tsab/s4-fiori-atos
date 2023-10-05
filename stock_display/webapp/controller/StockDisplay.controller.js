@@ -206,7 +206,10 @@ sap.ui.define([
                     }
 
                     this.iScanModusAktiv = 1;
-                    this.loadStockOverviewData(sManNumber);
+
+                    if (sManNumber !== "") {
+                        this.loadStockOverviewData(sManNumber);
+                    }
                 }    
             }
 		},
@@ -277,7 +280,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         // ---- Check for complete final booking
@@ -311,7 +316,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Mat");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -433,7 +447,9 @@ sap.ui.define([
                         this.iScanModusAktiv = 2;
                     }
 
-                    this.loadStockOverviewData(sManNumber);
+                    if (sManNumber !== "") {
+                        this.loadStockOverviewData(sManNumber);
+                    }
                 }    
             }
  		},
@@ -774,8 +790,12 @@ sap.ui.define([
                 if (this.MaterialInfoTable.getBusy()) {
                     this.MaterialInfoTable.setBusy(!this.MaterialInfoTable.getBusy());
                 }
-
+               
                 this.MaterialInfoTable.setModel(oModel);
+
+                var tableTitle = this.oResourceBundle.getText("ResultTable", "0");
+
+                this.MaterialInfoTable.setTitle(tableTitle);
             }
 
             // ---- Set Focus to main Input field
