@@ -239,7 +239,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Quantity") {
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
@@ -247,7 +249,9 @@ sap.ui.define([
                             this._loadStorageBinData(sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
-                        this._handleLocConfData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._handleLocConfData(sManNumber);
+                        }
                     }
                 }    
             }
@@ -402,7 +406,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_WarehouseTask"
@@ -549,7 +555,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Location");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -569,7 +584,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/viewLoc", false);
                 this.oScanModel.setProperty("/viewMode", "LocConf");
                 this.oScanModel.setProperty("/viewLocConf", true);
-                this.oScanModel.setProperty("/valueManuallyNo", "");              
+                this.oScanModel.setProperty("/valueManuallyNo", "");
             }
 
             this.oDisplayModel.setData(oDisplayData);
@@ -862,7 +877,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Quantity") {
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
@@ -870,7 +887,9 @@ sap.ui.define([
                             this._loadStorageBinData(sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
-                        this._handleLocConfData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._handleLocConfData(sManNumber);
+                        }
                     }
                 }    
             }
