@@ -223,9 +223,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Transport") {
-                        this._loadTransportData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadTransportData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._updateStatusSingleHU(sManNumber);
+                        if (sManNumber !== "") {
+                            this._updateStatusSingleHU(sManNumber);
+                        }
                     }
                 }
             }
@@ -254,6 +258,8 @@ sap.ui.define([
                         error: function (oError, resp) {
                             BusyIndicator.hide();
 
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                             tools.handleODataRequestFailed(oError, resp, true);
                         },
                         success: function (rData, oResponse) {
@@ -273,6 +279,8 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                                 tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                             }
                         }
@@ -350,7 +358,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
@@ -386,10 +396,23 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                                 tools.alertMe(sErrMsg, "");
                             }
                         } else {
                             BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_Transport");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -445,7 +468,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, iHU, true);
                     },
                     success: function(rData, oResponse) {
                         // ---- Check for complete final booking
@@ -476,6 +501,8 @@ sap.ui.define([
                         } else {
                             BusyIndicator.hide();
 
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                             tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                         }
                     }
@@ -495,7 +522,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, this.iTR, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
@@ -526,14 +555,36 @@ sap.ui.define([
                             if (rData.to_HandlingUnits.results.length > 0) {
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                                 that._setTableData(rData.to_HandlingUnits);
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
-                            }
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Transport");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                           }
                         } else {
                             BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_Transport");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -685,9 +736,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Transport") {
-                        this._loadTransportData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadTransportData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._updateStatusSingleHU(sManNumber);
+                        if (sManNumber !== "") {
+                            this._updateStatusSingleHU(sManNumber);
+                        }
                     }
                 }
             }
