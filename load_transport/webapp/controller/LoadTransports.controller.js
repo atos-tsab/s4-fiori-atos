@@ -223,9 +223,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Transport") {
-                        this._loadTransportData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadTransportData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._updateStatusSingleHU(sManNumber);
+                        if (sManNumber !== "") {
+                            this._updateStatusSingleHU(sManNumber);
+                        }
                     }
                 }
             }
@@ -739,9 +743,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Transport") {
-                        this._loadTransportData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadTransportData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._updateStatusSingleHU(sManNumber);
+                        if (sManNumber !== "") {
+                            this._updateStatusSingleHU(sManNumber);
+                        }
                     }
                 }
             }
