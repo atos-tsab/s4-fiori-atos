@@ -350,7 +350,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
@@ -359,10 +361,10 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                that._resetAll();
+
                                 // ---- Coding in case of showing Business application Errors
                                 var component = that.byId("idInput_Transport");
-
-                                that._resetAll();
 
                                 if (component !== null && component !== undefined) {
                                     tools.showMessageErrorFocus(rData.SapMessageText, "", component);
@@ -371,6 +373,8 @@ sap.ui.define([
                                 }
 
                                 BusyIndicator.hide();
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -387,10 +391,30 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Transport");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         } else {
                             BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_Transport");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -446,7 +470,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, iHU, true);
                     },
                     success: function(rData, oResponse) {
                         // ---- Check for complete final booking
@@ -463,6 +489,8 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -478,6 +506,8 @@ sap.ui.define([
                         } else {
                             BusyIndicator.hide();
 
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
+                        
                             tools.showMessageError(oResponse.statusText, oResponse.statusCode);
                         }
                     }
@@ -497,7 +527,9 @@ sap.ui.define([
                     error: function (oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.iTR, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
@@ -506,9 +538,9 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
-                                var component = that.byId("idInput_Transport");
-
                                 that._resetAll();
+
+                                var component = that.byId("idInput_Transport");
 
                                 if (component !== null && component !== undefined) {
                                     tools.showMessageErrorFocus(rData.SapMessageText, "", component);
@@ -532,10 +564,30 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Transport");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         } else {
                             BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_Transport");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });

@@ -721,6 +721,51 @@ sap.ui.define([
 			}
 		},
 		
+		handleODataRequestFailedTitle: function (oError, oTitle, showDetails) {						    // eslint-disable-line
+			var errTitle   = this.getResourceBundle().getText("Error") + " - " + oTitle;
+			var errCheck   = false;
+			var detailText = "";
+
+			if (this._bMessageOpen) {
+				return;
+			}
+            
+			this._bMessageOpen = true;
+			
+			// ---- Check for Error informations  
+			if (oError !== null && oError !== undefined) {
+				// ---- Try to parse as a JSON response body string
+				if (oError.response !== null && oError.response !== undefined) {
+					if (oError.response.body !== null && oError.response.body !== undefined) {
+						errCheck = this._handleResponseBodyErrors(oError, showDetails);
+					}
+				}
+				
+				// ---- Try to parse as a JSON response text string  
+				if (oError.responseText !== null && oError.responseText !== undefined) {
+					errCheck = this._handleResponseTextErrorsTitle(oError, showDetails, oTitle);
+				}
+			}
+
+			if (!errCheck) {
+				if (showDetails) {
+					detailText = oError;
+				}
+
+				sap.m.MessageBox.error(
+					errTitle, {
+						id: "serviceErrorMessageBox",
+						details: detailText,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function () {
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+			}
+		},
+		
 		// --------------------------------------------------------------------------------------------------------------------
 
 		_handleResponseBodyErrors: function (oError, showDetails) {
@@ -762,6 +807,61 @@ sap.ui.define([
 		_handleResponseTextErrors: function (oError, showDetails) {
 			// ---- Handling of the response text errors 
 			var errTitle = this.getResourceBundle().getText("Error");
+			var htm = this._checkForHtml(oError.responseText);
+			var xml = this._checkForXml(oError.responseText);
+			var errResponse = "";
+			var errDetail = "";														// eslint-disable-line
+			var errMsg = "";
+			
+			// ---- Check for XML error messages
+			if (htm) {
+				errResponse = jQuery.parseHTML(oError.responseText);
+			} else if (xml) {
+				errResponse = jQuery.parseXML(oError.responseText);
+			} else {
+				errResponse = JSON.parse(oError.responseText);
+			}
+			
+			if (errResponse !== null && errResponse !== undefined) {
+				// ---- Check for XML error messages
+				if (htm) {
+					errMsg = errResponse[1].textContent;
+				} else if (xml) {
+					errMsg = errResponse.all[2].textContent;
+				
+					if (showDetails) {
+						errDetail = this._getXmlErrorDetails(errResponse);
+					}
+				} else {
+					errMsg = errResponse.error.message.value;
+				
+					if (showDetails) {
+						errDetail = this._getErrorDetails(errResponse.error);
+					}
+				}
+
+				sap.m.MessageBox.show(
+						errMsg, {
+						icon: sap.m.MessageBox.Icon.ERROR,
+						title: errTitle,
+						details: errDetail,
+						styleClass: this.OwnerComponent.getContentDensityClass(),
+						actions: [sap.m.MessageBox.Action.CLOSE],
+						onClose: function (oAction) {								// eslint-disable-line
+							this._bMessageOpen = false;
+						}.bind(this)
+					}
+				);
+				
+				return true;
+			} else {
+				return false;
+			}
+		},
+
+		_handleResponseTextErrorsTitle: function (oError, showDetails, oTitle) {
+			// ---- Handling of the response text errors 
+			var errTitle = this.getResourceBundle().getText("Error") + " - " + oTitle;
 			var htm = this._checkForHtml(oError.responseText);
 			var xml = this._checkForXml(oError.responseText);
 			var errResponse = "";
