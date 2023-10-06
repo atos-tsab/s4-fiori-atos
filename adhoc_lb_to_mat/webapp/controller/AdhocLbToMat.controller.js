@@ -170,7 +170,7 @@ sap.ui.define([
 
             this._getShellSource();
             this._resetAll();
-            this.loadUserDataWN();
+            this.loadUserData();
 
             // ---- Set Focus to main Input field
             this._handleFocus();
@@ -219,7 +219,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Material") {
-                        this._loadMaterialData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadMaterialData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
                             this._loadStorageBinData(sManNumber);
@@ -332,7 +334,7 @@ sap.ui.define([
         // ---- Loading Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-	    loadUserDataWN: function () {
+	    loadUserData: function () {
             var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
             var sLType1 = this.oResourceBundle.getText("LType1");
             var sLType2 = this.oResourceBundle.getText("LType2");
@@ -419,7 +421,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -463,7 +467,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Material");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -513,7 +526,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.sStorageBin, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -531,6 +546,8 @@ sap.ui.define([
     
                                     BusyIndicator.hide();
     
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -550,8 +567,17 @@ sap.ui.define([
                                 BusyIndicator.hide();
                             } else {
                                 BusyIndicator.hide();
+                                
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Location");
 
-                                tools.alertMe(sErrMsg, "");
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -697,7 +723,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Material") {
-                        this._loadMaterialData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadMaterialData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
                             this._loadStorageBinData(sManNumber);
