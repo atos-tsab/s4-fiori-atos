@@ -74,7 +74,6 @@ sap.ui.define([
 
             this.sWN  = "";
             this.sTPP = "";
-            this.iMat = "";
             this.sGateNom        = "";
             this.sViewMode       = "Material";
             this.sShellSource    = "#Shell-home";
@@ -228,9 +227,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Gate") {
-                        this._loadGateData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadGateData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     }
                 }    
             }
@@ -241,19 +244,18 @@ sap.ui.define([
         // ---- Booking Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-        _createShipment: function () {
-            var sErrMesg = this.oResourceBundle.getText("ErrorCreateShipment", this.iMat);
+        _createShipment: function (sWN, sGateNo, sTPP) {
+            var sErrMesg = this.oResourceBundle.getText("ErrorCreateShipment");
             var that = this;
 
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
                 BusyIndicator.show(1);
 
-                var oData = this.oDisplayModel.getData();
- 
                 var sPath   = "/Shipment";
                 var urlData = {
-                    "WarehouseNumber": this.sWN,
-                    "GateNo":          oData.GateNo
+                    "WarehouseNumber":             sWN,
+                    "GateNo":                      sGateNo,
+                    "TransportationPlanningPoint": sTPP
                 };
 
                 // ---- Create new Shipment
@@ -324,7 +326,7 @@ sap.ui.define([
                     "BookComplete": true
                 };
 
-                var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',GateNo='" + oData.GateNo + "',ShipmentNumber='" + oData.ShipmentNumber + "')";
+                var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + oData.GateNo + "',ShipmentNumber='" + oData.ShipmentNumber + "')";
 
                 // ---- Update an existing Warehouse Task
                 var oModel = this._getServiceUrl()[0];
@@ -408,8 +410,10 @@ sap.ui.define([
  
                 var sPath   = "/Delivery";
                 var urlData = {
-                    "GateNo":            oData.GateNo,
-                    "ShipmentNumber":    oData.ShipmentNumber
+                    "WarehouseNumber":             this.sWN,
+                    "GateNo":                      this.sGateNom,
+                    "TransportationPlanningPoint": this.sTPP,
+                    "ShipmentNumber":              oData.ShipmentNumber
                 };
 
                 // ---- Create new Delivery
@@ -570,7 +574,7 @@ sap.ui.define([
             var that = this;
 
             // ---- Check for Warehouse Number
-            if (this.iWN === "") {
+            if (this.sWN === "") {
                 tools.showMessageError(sWarehouseNumberErr, "");
                 
                 return;
@@ -586,15 +590,16 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the Gate Data from the backend
-            // var sPath = "/Gate(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "')";
-            var sPath = "/Gate(TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "')";
+            var sPath = "/Gate(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "')";
 
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         // ---- Start with showing data
@@ -626,7 +631,16 @@ sap.ui.define([
                         } else {
                             BusyIndicator.hide();
 
-                            tools.alertMe(sErrMsg, "");
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_Gate");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -649,7 +663,7 @@ sap.ui.define([
                 // ---- Load the Table of Handling Units of the actual Shipment number.
                 this._loadShipmentHuData(oData.ShipmentNumber);
             } else {
-                this._createShipment(this.sWN, this.sGateNom);
+                this._createShipment(this.sWN, this.sGateNom, this.sTPP);
             }
 
             if (sManNumber !== null && sManNumber !== undefined && sManNumber !== "") {
@@ -677,14 +691,16 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the HU Data from the backend
-            var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',GateNo='" + this.sGate + "',ShipmentNumber='" + iShipmentNumber + "')";
+            var sPath = "/Shipment(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "',ShipmentNumber='" + iShipmentNumber + "')";
             
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, iShipmentNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
@@ -703,6 +719,8 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -715,12 +733,20 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
                             } else {
-                                var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", iShipmentNumber);
-
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
-                            }
+                                // ---- Coding in case of showing Business application Errors
+                                var sErrMsg   = that.getResourceBundle().getText("HandlingUnitErr", iShipmentNumber);
+                                var component = that.byId("idInput_HU");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                             }
                         }
                     }
                 });
@@ -758,22 +784,22 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the HU Data from the backend
-            var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',GateNo='" + this.sGate + "',ShipmentNumber='" + this.iShipmentNum + "',HandlingUnitId='" + this.sActiveHU + "')";
+            var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',TransportationPlanningPoint='" + this.sTPP + "',GateNo='" + this.sGate + "',ShipmentNumber='" + this.iShipmentNum + "',HandlingUnitId='" + this.sActiveHU + "')";
 
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 var component = that.byId("idInput_HU");
-                               
-                                that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                 if (component !== null && component !== undefined) {
                                     tools.showMessageErrorFocus(rData.SapMessageText, "", component);
@@ -782,6 +808,8 @@ sap.ui.define([
                                 }
 
                                 BusyIndicator.hide();
+                               
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -794,11 +822,19 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
                             } else {
-                                var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
-
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var sErrMsg   = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
+                                var component = that.byId("idInput_Location");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -968,9 +1004,13 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Gate") {
-                        this._loadGateData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadGateData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     }
                 }    
             }
