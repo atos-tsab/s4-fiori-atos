@@ -92,6 +92,8 @@ sap.ui.define([
         },
 
         _initLocalModels: function () {
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+
             // ---- Get the Main Models.
             this.oModel = this.getOwnerComponent().getModel();
 
@@ -104,6 +106,7 @@ sap.ui.define([
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
+                "captionResign":   sViewTitleInt,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -162,7 +165,9 @@ sap.ui.define([
         },
 
         _onObjectMatched: function (oEvent) {
-            this.sViewMode = this.oScanModel.getProperty("/viewMode");
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+            var sViewTitleExt = this.oResourceBundle.getText("CaptureExternal");
+            this.sViewMode    = this.oScanModel.getProperty("/viewMode");
 
 			// ---- Enable the Function key solution
 			// this._setKeyboardShortcuts();
@@ -182,8 +187,12 @@ sap.ui.define([
                 if (this.sActiveQMode === "W") {
                     this.iWT = this.iHU;
 
+                    this.oScanModel.setProperty("/captionResign", sViewTitleExt);
+
                     this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iWT);
                 } else {
+                    this.oScanModel.setProperty("/captionResign", sViewTitleInt);
+
                     this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
                 }
             }
@@ -238,7 +247,9 @@ sap.ui.define([
 
                     if (this.sViewMode === "Handling" && sManNumber !== "") {
                         if (this.sActiveQMode === "W") {
-                            this._loadHuData(sManNumber);
+                            if (sManNumber !== "") {
+                                this._loadHuData(sManNumber);
+                            }
                         } else {
                             var sErrMsg = this.oResourceBundle.getText("HuSelectionErr", [sManNumber, this.iHU]);
 
@@ -361,7 +372,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, iHU, true);
                     },
                     urlParameters: {
                         "$expand": "to_WarehouseTasks"
@@ -372,7 +385,7 @@ sap.ui.define([
                                 if (rData.results.length > 0) {
                                     var component = that.byId("idInput_HU");
 
-                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                    if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                         // ---- Coding in case of showing Business application Errors
                                         if (component !== null && component !== undefined) {
                                             tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
@@ -382,16 +395,7 @@ sap.ui.define([
 
                                         BusyIndicator.hide();
 
-                                        return;
-                                    } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
-                                        // ---- Coding in case of showing Business application Errors
-                                        if (component !== null && component !== undefined) {
-                                            tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
-                                        } else {
-                                            tools.showMessageError(rData.results[0].SapMessageText, "");
-                                        }
-
-                                        BusyIndicator.hide();
+                                        that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                         return;
                                     } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -426,7 +430,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_HU");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -474,7 +487,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_WarehouseTask"
@@ -496,6 +511,8 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -514,11 +531,19 @@ sap.ui.define([
 
                             BusyIndicator.hide();
                         } else {
-                            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", that.iHU);
-
                             BusyIndicator.hide();
 
-                            tools.alertMe(sErrMsg, "");
+                            // ---- Coding in case of showing Business application Errors
+                            var sErrMsg   = that.oResourceBundle.getText("HandlingUnitErr", sManNumber);
+                            var component = that.byId("idInput_Location");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -853,7 +878,9 @@ sap.ui.define([
 
                     if (this.sViewMode === "Handling" && this.oScanModel.getProperty("/valueManuallyNo") !== "") {
                         if (this.sActiveQMode === "W") {
-                            this._loadHuData(sManNumber);
+                            if (sManNumber !== "") {
+                                this._loadHuData(sManNumber);
+                            }
                         } else {
                             var sErrMsg = this.oResourceBundle.getText("HuSelectionErr", [sManNumber, this.iHU]);
 
@@ -1180,6 +1207,8 @@ sap.ui.define([
         },
 
         _resetAll: function () {
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+
             // ---- Reset the Main Model
             this.oDisplayModel.setData([]);
 
@@ -1189,6 +1218,7 @@ sap.ui.define([
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
+                "captionResign":   sViewTitleInt,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",

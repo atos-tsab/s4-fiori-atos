@@ -99,8 +99,10 @@
             this.getView().setModel(this.oModel);
 
             // ---- Set Jason Models.
-            var sViewTitleH = this.oResourceBundle.getText("CaptureHU");
-            var sTableTitleH = this.oResourceBundle.getText("HU");
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+            var sViewTitleH   = this.oResourceBundle.getText("CaptureHU");
+            var sTableTitleH  = this.oResourceBundle.getText("HU");
+            var sColon        = this.oResourceBundle.getText("Colon");
 
             var oData = {
                 "viewMode":        "Handling",
@@ -109,7 +111,7 @@
                 "ok":              true,
                 "next":            true,
                 "back":            false,
-                "captionList":     sViewTitleH,
+                "captionList":     sViewTitleInt + sColon + " - " + sViewTitleH,
                 "captionTable":    sTableTitleH,
                 "lblWidth":        "110px",
                 "showOk":          false,
@@ -168,10 +170,13 @@
         },
 
         _onObjectMatched: function (oEvent) {
-            var sViewTitleH  = this.oResourceBundle.getText("CaptureHU");
-            var sViewTitleM  = this.oResourceBundle.getText("CaptureMat");
-            var sTableTitleH = this.oResourceBundle.getText("HU");
-            var sTableTitleM = this.oResourceBundle.getText("Material");
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+            var sViewTitleExt = this.oResourceBundle.getText("CaptureExternal");
+            var sViewTitleH   = this.oResourceBundle.getText("CaptureHU");
+            var sViewTitleM   = this.oResourceBundle.getText("CaptureMat");
+            var sTableTitleH  = this.oResourceBundle.getText("HU");
+            var sTableTitleM  = this.oResourceBundle.getText("Material");
+            var sColon        = this.oResourceBundle.getText("Colon");
             
             this.sViewMode = this.oScanModel.getProperty("/viewMode");
 
@@ -187,13 +192,13 @@
                 this.sActiveQMode = oEvent.getParameter("arguments").qmode;
 
                 if (this.sActiveQMode === "H") {
-                    this.oScanModel.setProperty("/captionList", sViewTitleH);
+                    this.oScanModel.setProperty("/captionList", sViewTitleInt + sColon + " - " + sViewTitleH);
                     this.oScanModel.setProperty("/captionTable", sTableTitleH);
                     this.oScanModel.setProperty("/captionVisble", true);
                     this.oScanModel.setProperty("/lblWidth", "110px");
                     this.oScanModel.setProperty("/viewMat", false);
                 } else {
-                    this.oScanModel.setProperty("/captionList", sViewTitleM);
+                    this.oScanModel.setProperty("/captionList", sViewTitleExt + sColon + " - " + sViewTitleM);
                     this.oScanModel.setProperty("/captionTable", sTableTitleM);
                     this.oScanModel.setProperty("/captionVisble", false);
                     this.oScanModel.setProperty("/lblWidth", "80px");
@@ -320,6 +325,14 @@
             // ---- Read the HU Data from the backend 
             BusyIndicator.show(1);
 
+            var id = "idInput_HU";
+
+            if (this.sActiveQMode === "H") { 
+                id = "idInput_HU";
+            } else if (this.sActiveQMode === "W") {
+                id = "idInput_Material";                       
+            }
+
 			var aFilters = [];
                 aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, iWHN));
                 aFilters.push(new sap.ui.model.Filter("QueueId", sap.ui.model.FilterOperator.EQ, sQueue));
@@ -336,36 +349,60 @@
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sQueue, true);
                     },
                     urlParameters: {
                         "$expand": sNavTo
                     },
                     success: function(rData, response) {
-                        BusyIndicator.hide();
-
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {
-                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
-                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
-                                    // ---- Coding in case of showing Business application Errors
-                                    tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    var component = that.byId(id);
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
+    
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
+    
+                                    BusyIndicator.hide();
+    
+                                    return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Informations
                                     tools.alertMe(rData.results[0].SapMessageText, "");
                                 }
                             }
 
                             if (rData.results.length > 0) { 
+                                BusyIndicator.hide();
+
                                 if (that.sActiveQMode === "H") {
                                     that._setHuTableData(rData.results[0].to_WarehouseTasks);
                                 } else {
                                     that._setWhtTableData(rData.results[0].to_WarehouseTasks);
                                 }
                             } else {
-                                tools.alertMe(sErrMsg, "");
+                                BusyIndicator.hide();
+
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId(id);
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -777,8 +814,10 @@
             this.getView().setModel(oDisplayModel, "DisplayModel");
 
             // ---- Reset the Scan Model
-            var sViewTitleH  = this.oResourceBundle.getText("CaptureHU");
-            var sTableTitleH = this.oResourceBundle.getText("HU");
+            var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+            var sViewTitleH   = this.oResourceBundle.getText("CaptureHU");
+            var sTableTitleH  = this.oResourceBundle.getText("HU");
+            var sColon        = this.oResourceBundle.getText("Colon");
 
             var oData = { 
                 "viewMode":        "Handling",
@@ -787,7 +826,7 @@
                 "ok":              true,
                 "next":            true,
                 "back":            false,
-                "captionList":     sViewTitleH,
+                "captionList":     sViewTitleInt + sColon + " - " + sViewTitleH,
                 "captionTable":    sTableTitleH,
                 "lblWidth":        "110px",
                 "showOk":          false,

@@ -23,7 +23,7 @@
 							<f:GridContainerItemLayoutData columns="4" />
 						</f:layoutData>
 						<f:header>
-							<card:Header title="{i18n>CaptureResign}" />
+							<card:Header title="{ScanModel>/captionResign}" />
 						</f:header>
 						<f:content>
 
