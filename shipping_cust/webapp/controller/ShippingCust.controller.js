@@ -381,6 +381,8 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
 
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
@@ -524,7 +526,7 @@ sap.ui.define([
 
                         that.oScanModel.setProperty("/valueManuallyNo", "");
 
-                        tools.handleODataRequestFailedTitle(oError, this.iTR, true);
+                        tools.handleODataRequestFailedTitle(oError, that.iTR, true);
                     },
                     urlParameters: {
                         "$expand": "to_HandlingUnits"
