@@ -543,11 +543,20 @@ sap.ui.define([
 
                             BusyIndicator.hide();
                         } else {
-                            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", that.iHU);
+                            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", sManNumber);
 
                             BusyIndicator.hide();
 
-                            tools.alertMe(sErrMsg, "");
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_HU");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -606,7 +615,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.sStorageBin, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -623,6 +634,8 @@ sap.ui.define([
                                     }
 
                                     BusyIndicator.hide();
+
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
