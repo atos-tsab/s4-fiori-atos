@@ -405,7 +405,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     urlParameters: {
                         "$expand": "to_WarehouseTask"
@@ -448,7 +450,16 @@ sap.ui.define([
 
                             BusyIndicator.hide();
                         
-                            tools.alertMe(sErrMsg, "");
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.byId("idInput_HU");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -512,7 +523,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
                         
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.sStorageBin, true);
                     },
                     success: function(rData, response) {
                         if (rData !== null && rData !== undefined) {
@@ -529,6 +542,8 @@ sap.ui.define([
                                     }
 
                                     BusyIndicator.hide();
+
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -550,8 +565,17 @@ sap.ui.define([
                                 BusyIndicator.hide();
                             } else {
                                 BusyIndicator.hide();
-                        
-                                tools.alertMe(sErrMsg, "");
+
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_HU");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -686,7 +710,9 @@ sap.ui.define([
                                         }
     
                                         BusyIndicator.hide();
-    
+ 
+                                        that.oScanModel.setProperty("/valueManuallyNo", "");
+   
                                         return;
                                     } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                         // ---- Coding in case of showing Business application Informations
