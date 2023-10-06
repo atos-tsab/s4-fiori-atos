@@ -179,7 +179,7 @@ sap.ui.define([
 
             this._getShellSource();
             this._resetAll();
-            this.loadUserDataWN();
+            this.loadUserData();
 
             // ---- Set Focus to main Input field
             this._handleFocus();
@@ -234,7 +234,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 1;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Quantity") {
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
@@ -242,7 +244,9 @@ sap.ui.define([
                             this._loadStorageBinData(sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
-                        this._handleLocConfData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._handleLocConfData(sManNumber);
+                        }
                     }
                 }    
             }
@@ -639,7 +643,7 @@ sap.ui.define([
         // ---- Loading / Set Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-	    loadUserDataWN: function () {
+	    loadUserData: function () {
             var sParam = encodeURIComponent("/SCWM/LGN");
             var that   = this;
 
@@ -695,7 +699,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
                     },
                     success: function(rData, response) {
                         // ---- Check for complete final booking
@@ -726,12 +732,20 @@ sap.ui.define([
 
                                 BusyIndicator.hide();
                             } else {
-                                var sErrMsg = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
-
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
-                            }
+                                // ---- Coding in case of showing Business application Errors
+                                var sErrMsg   = that.getResourceBundle().getText("HandlingUnitErr", sManNumber);
+                                var component = that.byId("idInput_Location");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                           }
                         }
                     }
                 });
@@ -780,7 +794,9 @@ sap.ui.define([
                     error: function(oError, resp) {
                         BusyIndicator.hide();
 
-                        tools.handleODataRequestFailed(oError, resp, true);
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.sStorageBin, true);
                     },
                     success: function(rData, response) {
                         if (rData.results !== null && rData.results !== undefined) {
@@ -797,6 +813,8 @@ sap.ui.define([
                                     }
 
                                     BusyIndicator.hide();
+
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
 
                                     return;
                                 } else if (rData.results[0] !== null && rData.results[0] !== undefined && rData.results[0].SapMessageType === "I") {
@@ -818,7 +836,16 @@ sap.ui.define([
                             } else {
                                 BusyIndicator.hide();
 
-                                tools.alertMe(sErrMsg, "");
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId("idInput_Location");
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
                         }
                     }
@@ -1097,7 +1124,9 @@ sap.ui.define([
                     this.iScanModusAktiv = 2;
 
                     if (this.sViewMode === "Handling") {
-                        this._loadHuData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._loadHuData(sManNumber);
+                        }
                     } else if (this.sViewMode === "Quantity") {
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
@@ -1105,7 +1134,9 @@ sap.ui.define([
                             this._loadStorageBinData(sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
-                        this._handleLocConfData(sManNumber);
+                        if (sManNumber !== "") {
+                            this._handleLocConfData(sManNumber);
+                        }
                     }
                 }    
             }
