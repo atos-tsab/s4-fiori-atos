@@ -1065,9 +1065,11 @@ sap.ui.define([
         _removePrefix: function (key) {
             let str = key;
 
-            // ---- Check for P=Material Suffix | Q=Quantity Suffix || S=HandlingUnit Suffix
+            // ---- Check for P=Material Suffix | Q=Quantity Suffix || M=HandlingUnit || S=HandlingUnit Suffix
+            // ---- M Suffix is special for Scania App
             if ((this.sViewMode === "Material" && key.startsWith("P")) ||
                 (this.sViewMode === "Quantity" && key.startsWith("Q")) ||
+                (this.sViewMode === "Handling" && key.startsWith("M")) ||
                 (this.sViewMode === "Handling" && key.startsWith("S"))) {
 
                 this.oScanModel.setProperty("/valueSuffix", key.slice(0, 1));
