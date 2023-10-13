@@ -13,12 +13,12 @@
 			selectionMode="None" 
 			selectionBehavior="Row" 
 			visibleRowCount="10"
-			width="600px">
+			width="880px">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
 			<ui:columns>
-				<ui:Column width="30%" visible="true" autoResizable="true">
+				<ui:Column width="22%" visible="true" autoResizable="true">
 					<ui:customData>
 						<core:CustomData key="p13nData" value='\{"columnKey": "StorageBin", "columnIndex":"0", "leadingProperty": "StorageBin"}' />
 					</ui:customData>
@@ -27,7 +27,7 @@
 						<Text text="{StorageType} | {StorageBin}" />
 					</ui:template>
 				</ui:Column>				
-				<ui:Column width="20%" visible="true" autoResizable="true">
+				<ui:Column width="15%" visible="true" autoResizable="true">
 					<ui:customData>
 						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"1", "leadingProperty": "Quantity"}' />
 					</ui:customData>
@@ -52,6 +52,24 @@
 					<Label text="{i18n>StockType}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{StockType} = {StockTypeDescription}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "DocumentCategory", "columnIndex":"4", "leadingProperty": "DocumentCategory"}' />
+					</ui:customData>
+					<Label text="{i18n>DocumentCategory}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{DocumentCategory}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "DocumentCategoryDescription", "columnIndex":"5", "leadingProperty": "DocumentCategoryDescription"}' />
+					</ui:customData>
+					<Label text="{i18n>DocumentCategoryDescription}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{DocumentCategoryDescription}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>
