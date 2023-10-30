@@ -14,7 +14,7 @@
 			selectionBehavior="Row" 
 			visibleRowCount="6"
 			rowSelectionChange="onRowSelectionLocationList"
-			width="800px">
+			width="880px">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
@@ -71,6 +71,15 @@
 					<Label text="{i18n>SourceStorageType}" textAlign="Center" width="100%" />
 					<ui:template>
 						<Text text="{SourceStorageType}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "DestinationStorageBin", "columnIndex":"6" "leadingProperty": "DestinationStorageBin"}' />
+					</ui:customData>
+					<Label text="{i18n>DestStorageLocation}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{DestinationStorageBin}" />
 					</ui:template>
 				</ui:Column>
 			</ui:columns>

@@ -410,6 +410,7 @@
         },
 
         _setHuTableData: function (oData) {
+            var sSortText = this.oResourceBundle.getText("QueueSortProperty");
             var oListData = [];
            
             for (let i = 0; i < oData.results.length; i++) {
@@ -424,6 +425,7 @@
                     data.Material              = item.MaterialNo;
                     data.SourceStorageLocation = item.SourceStorageBin;
                     data.SourceStorageType     = item.SourceStorageType;
+                    data.DestinationStorageBin = item.DestinationStorageBin;
 
                 oListData.push(data);
             } 
@@ -433,6 +435,14 @@
 
             this.LocationListTable.setModel(oModel);
             this.LocationListTable.bindRows("/");
+
+            // ---- Special sorting in case of Queue REPL
+            if (this.sActiveQueue === sSortText) {
+                var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
+
+                this.LocationListTable.getBinding("rows").sort(oSorter);
+            }
+ 
             this.LocationListTable.setSelectedIndex(0);
         },
 
@@ -450,6 +460,7 @@
                     data.Material              = item.MaterialNo;
                     data.SourceStorageLocation = item.SourceStorageBin;
                     data.SourceStorageType     = item.SourceStorageType;
+                    data.DestinationStorageBin = item.DestinationStorageBin;
 
                 oListData.push(data);
             } 

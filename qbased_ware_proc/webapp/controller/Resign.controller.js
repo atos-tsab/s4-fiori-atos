@@ -248,7 +248,11 @@ sap.ui.define([
                     if (this.sViewMode === "Handling" && sManNumber !== "") {
                         if (this.sActiveQMode === "W") {
                             if (sManNumber !== "") {
-                                this._loadHuData(sManNumber);
+                                if (this.iWT !== "") {
+                                    this._loadWhtHuData(sManNumber);
+                                } else {
+                                    this._loadHuData(sManNumber);
+                                }
                             }
                         } else {
                             var sErrMsg = this.oResourceBundle.getText("HuSelectionErr", [sManNumber, this.iHU]);
@@ -529,6 +533,117 @@ sap.ui.define([
                             that.StatusOpenWarehouseTask = rData.StatusOpenWarehouseTask;
                             that._setHuData(rData, sManNumber);
 
+                            BusyIndicator.hide();
+                        } else {
+                            BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var sErrMsg   = that.oResourceBundle.getText("HandlingUnitErr", sManNumber);
+                            var component = that.byId("idInput_Location");
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrMsg, "", component);
+                            } else {
+                                tools.showMessageError(sErrMsg, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
+                        }
+                    }
+                });
+        },
+
+	    _loadWhtHuData: function (sManNumber) {
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var that = this;
+
+            this.iHU = sManNumber;
+
+            // ---- Check for Warehouse Number
+            if (this.iWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            BusyIndicator.show(1);
+
+            // ---- Read the HU Data from the backend
+            var sPath = "/HandlingUnit";
+
+            var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("HandlingUnitId", sap.ui.model.FilterOperator.EQ, this.iHU));
+                aFilters.push(new sap.ui.model.Filter("CheckWhtCompatibility", sap.ui.model.FilterOperator.EQ, this.iWT));
+
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        BusyIndicator.hide();
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, sManNumber, true);
+                    },
+                    urlParameters: {
+                        "$expand": "to_WarehouseTask"
+                    },
+                    success: function(rData, response) {
+                        if (rData.results !== null && rData.results !== undefined) {
+                            if (rData.results.length > 0) {
+                                // ---- Check for complete final booking
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    // ---- Coding in case of showing Business application Errors
+                                    var component = that.byId("idInput_HU");
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
+
+                                    BusyIndicator.hide();
+
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+
+                                for (let i = 0; i < rData.results.length; i++) {
+                                    var item = rData.results[i];
+
+                                    if (item.HandlingUnitId === sManNumber) {
+                                        // ---- Check for QS relevant HU
+                                        if (item.InspectionLot !== "" && item.InspectionType !== "") {
+                                            that.QsRelevantHU = true;
+                                        } else {
+                                            that.QsRelevantHU = false;
+                                        }
+
+                                        that.StatusOpenWarehouseTask = item.StatusOpenWarehouseTask;
+                                        that._setHuData(item, sManNumber);
+                                    }
+                                }
+                            } else {
+                                BusyIndicator.hide();
+
+                                // ---- Coding in case of showing Business application Errors
+                                var sErrMsg   = that.oResourceBundle.getText("HandlingUnitErr", sManNumber);
+                                var component = that.byId("idInput_Location");
+    
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+    
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                            }
+                            
                             BusyIndicator.hide();
                         } else {
                             BusyIndicator.hide();
