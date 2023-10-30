@@ -263,25 +263,29 @@ sap.ui.define([
             if (this.oDisplayModel !== null && this.oDisplayModel !== undefined) {
                 BusyIndicator.show(1);
 
+                // ---- Get Display Model
+                var oData = this.oDisplayModel.getData();
+
                 // ---- Check for HU from VDA table
                 var sWhtTaskType = "H";
+                var iHU          = "";
 
                 if (this.StatusVirtual) {
                     // ---- Virtual HU: In this case, packaging (P instead of H) would have to be opened and the material would have to be given along.
                     sWhtTaskType = "P";
+                    iHU          = oData.HandlingUnitId;
                 }
-
-                var oData = this.oDisplayModel.getData();
 
                 var sPath   = "/WarehouseTask";
                 var urlData = {
-                    "WarehouseNumber":       oData.WarehouseNumber,
-                    "HandlingUnitId":        oData.HandlingUnitId,
-                    "BookConfirm":           true,
-                    "BookMoveHu":            true,
-                    "WarehouseTaskType":     sWhtTaskType,
-                    "TargetQuantity":        oData.Quantity,
-                    "DestinationStorageBin": oData.Book2StorageBin
+                    "WarehouseNumber":           oData.WarehouseNumber,
+                    "HandlingUnitId":            oData.HandlingUnitId,
+                    "BookConfirm":               true,
+                    "BookMoveHu":                true,
+                    "WarehouseTaskType":         sWhtTaskType,
+                    "TargetQuantity":            oData.Quantity,
+                    "DestinationHandlingUnitId": iHU,
+                    "DestinationStorageBin":     oData.Book2StorageBin
                 };
 
                 // ---- Create new Warehouse Task
@@ -356,15 +360,15 @@ sap.ui.define([
                 var oData = this.oDisplayModel.getData();
                     oData.to_WarehouseTask.BookConfirm = true;
                     oData.to_WarehouseTask.BookMoveHu  = true;
-                    oData.to_WarehouseTask.HandlingUnitId         = oData.HandlingUnitId;
-                    oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
-                    oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
-                    oData.to_WarehouseTask.TargetQuantity         = oData.Quantity;
+                    oData.to_WarehouseTask.HandlingUnitId            = oData.HandlingUnitId;
+                    oData.to_WarehouseTask.DestinationStorageBin     = oData.Book2StorageBin;
+                    oData.to_WarehouseTask.DestinationStorageType    = oData.Book2StorageType;
+                    oData.to_WarehouseTask.TargetQuantity            = oData.Quantity;
 
                 // ---- Check for HU from VDA table
                 if (this.StatusVirtual) {
                     // ---- Virtual HU: In this case, packaging (P instead of H) would have to be opened and the material would have to be given along.
-                    oData.to_WarehouseTask.WarehouseTaskType = "P";
+                    oData.to_WarehouseTask.WarehouseTaskType         = "P";
                 } else {
                     oData.to_WarehouseTask.WarehouseTaskType = "H";
                 }
