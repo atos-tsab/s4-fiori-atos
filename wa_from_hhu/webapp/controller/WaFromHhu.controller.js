@@ -273,6 +273,10 @@ sap.ui.define([
 
                 var oData = this.oDisplayModel.getData();
 
+                if (sWhtType === "H" && oData.TargetQuantity < oData.Quantity) {
+                    sWhtType = "S";
+                }
+
                 var sPath   = "/WarehouseTask";
                 var urlData = {
                     "WarehouseNumber":       oData.WarehouseNumber,
@@ -280,7 +284,7 @@ sap.ui.define([
                     "BookConfirm":           true,
                     "BookMoveHu":            true,
                     "WarehouseTaskType":     sWhtType,
-                    "TargetQuantity":        oData.Quantity,
+                    "TargetQuantity":        oData.TargetQuantity,
                     "DestinationStorageBin": oData.Book2StorageBin
                 };
 
@@ -661,30 +665,37 @@ sap.ui.define([
             this.oScanModel.setProperty("/showErrText", "");
 
             if (this.oScanModel.getProperty("/valueManuallyNo") !== "") {
-                var iActualQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
+                var iTargetQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
                 
-                if (iActualQuantity > iQuantity) {
+                if (iTargetQuantity > iQuantity) {
                     tools.alertMe(sErrMesg);
 
                     this.oScanModel.setProperty("/valueManuallyNo", "");
+                    this.oDisplayModel.setProperty("/TargetQuantity", "");
                
                     // ---- Set Focus to default Input field
                     this._setFocus("idInput_Quantity");
 
                     return;
-                } else if (iActualQuantity < iQuantity) {
-                    this.ActualQuantity = this.oScanModel.getProperty("/valueManuallyNo");
+                } else if (iTargetQuantity < iQuantity) {
+                    this.oDisplayModel.setProperty("/TargetQuantity", this.oScanModel.getProperty("/valueManuallyNo"));
+
+                    this.TargetQuantity = this.oScanModel.getProperty("/valueManuallyNo");
 
                     this.onQuantityScanOpen();
-                } else if (iActualQuantity === iQuantity) {
-                    this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+                } else if (iTargetQuantity === iQuantity) {
+                    this.oDisplayModel.setProperty("/TargetQuantity", this.oDisplayModel.getProperty("/Quantity"));
+                    
+                    this.TargetQuantity = this.oDisplayModel.getProperty("/Quantity");
                
                     // ---- Set Focus to default Input field
                     this.oScanModel.setProperty("/valueManuallyNo", "");
                     this._setFocus("idInput_Quantity");
                 }
             } else {
-                this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+                this.oDisplayModel.setProperty("/TargetQuantity", this.oDisplayModel.getProperty("/Quantity"));
+                    
+                this.TargetQuantity = this.oDisplayModel.getProperty("/Quantity");
             }
            
             // ---- Set Focus to default Input field
@@ -835,7 +846,9 @@ sap.ui.define([
 				this.getView().dialogQuantityScan.close();
 			}
 
-            this.ActualQuantity = this.oDisplayModel.getProperty("/Quantity");
+            this.oDisplayModel.setProperty("/TargetQuantity", this.oDisplayModel.getProperty("/Quantity"));
+                    
+            this.TargetQuantity = this.oDisplayModel.getProperty("/Quantity");
             this._resetQuantity();
         },
 
@@ -848,7 +861,7 @@ sap.ui.define([
 				this.getView().dialogQuantityScan.close();
 			}
 
-            this.oDisplayModel.setProperty("/Quantity", this.ActualQuantity);
+            this.oDisplayModel.setProperty("/TargetQuantity", this.TargetQuantity);
             this._resetQuantity();
 		},
 
