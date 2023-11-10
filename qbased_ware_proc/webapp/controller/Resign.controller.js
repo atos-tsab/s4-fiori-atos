@@ -71,10 +71,11 @@ sap.ui.define([
             // ---- Define variables for the License View
             this.oView = this.getView();
 
-            this.iWN = "";
+            this.sWN = "";
             this.iHU = "";
-            this.iBookCount      = 0;
             this.sScanType       = "";
+            this.iBookCount      = 0;
+            this.iHuQuantity     = 0;
             this.sActiveQMode    = "";
             this.oDeliveryData   = {};
             this.iScanModusAktiv = 0;
@@ -180,7 +181,7 @@ sap.ui.define([
 
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 this.sActiveQueue = oEvent.getParameter("arguments").queue;
-                this.iWN          = oEvent.getParameter("arguments").whn;
+                this.sWN          = oEvent.getParameter("arguments").whn;
                 this.sActiveQMode = oEvent.getParameter("arguments").qmode;
                 this.iHU          = oEvent.getParameter("arguments").hu;
                 
@@ -189,11 +190,11 @@ sap.ui.define([
 
                     this.oScanModel.setProperty("/captionResign", sViewTitleExt);
 
-                    this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iWT);
+                    this._loadWareHouseData(this.sWN, this.sActiveQueue, this.iWT);
                 } else {
                     this.oScanModel.setProperty("/captionResign", sViewTitleInt);
 
-                    this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+                    this._loadWareHouseData(this.sWN, this.sActiveQueue, this.iHU);
                 }
             }
         },
@@ -216,9 +217,9 @@ sap.ui.define([
             this._resetAll();
 
             if (this.sActiveQMode === "W") {
-                this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iWT);
+                this._loadWareHouseData(this.sWN, this.sActiveQueue, this.iWT);
             } else {
-                this._loadWareHouseData(this.iWN, this.sActiveQueue, this.iHU);
+                this._loadWareHouseData(this.sWN, this.sActiveQueue, this.iHU);
             }
         },
 
@@ -475,7 +476,7 @@ sap.ui.define([
             this.iHU = sManNumber;
 
             // ---- Check for Warehouse Number
-            if (this.iWN === "") {
+            if (this.sWN === "") {
                 tools.showMessageError(sWarehouseNumberErr, "");
                 
                 return;
@@ -484,7 +485,7 @@ sap.ui.define([
             BusyIndicator.show(1);
 
             // ---- Read the HU Data from the backend
-            var sPath = "/HandlingUnit(WarehouseNumber='" + this.iWN + "',HandlingUnitId='" + this.iHU + "')";
+            var sPath = "/HandlingUnit(WarehouseNumber='" + this.sWN + "',HandlingUnitId='" + this.iHU + "')";
             
             var oModel = this._getServiceUrl()[0];
                 oModel.read(sPath, {
@@ -560,7 +561,7 @@ sap.ui.define([
             this.iHU = sManNumber;
 
             // ---- Check for Warehouse Number
-            if (this.iWN === "") {
+            if (this.sWN === "") {
                 tools.showMessageError(sWarehouseNumberErr, "");
                 
                 return;
@@ -572,7 +573,7 @@ sap.ui.define([
             var sPath = "/HandlingUnit";
 
             var aFilters = [];
-                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("HandlingUnitId", sap.ui.model.FilterOperator.EQ, this.iHU));
                 aFilters.push(new sap.ui.model.Filter("CheckWhtCompatibility", sap.ui.model.FilterOperator.EQ, this.iWT));
 
@@ -624,6 +625,7 @@ sap.ui.define([
                                             that.QsRelevantHU = false;
                                         }
 
+                                        that.iHuQuantity = item.Quantity;
                                         that.StatusOpenWarehouseTask = item.StatusOpenWarehouseTask;
                                         that._setHuData(item, sManNumber);
                                     }
@@ -734,7 +736,53 @@ sap.ui.define([
             }
 
             // ---- Change the Scan Model
-            this._loadQuantityData(sManNumber);
+            var sSpecialWarehouse = this.oResourceBundle.getText("SpecialWarehouse");
+            var sErrHuQuantity = this.oResourceBundle.getText("ErrHuQuantity");
+            
+            if (this.sActiveQMode === "W") {
+                // ---- Special Check for Warehouse L001
+                if (this.sWN === sSpecialWarehouse) {
+                    var iQuantity   = parseInt(this.oDisplayModel.getProperty("/TargetQuantity"), 10);
+                    var iHuQuantity = parseInt(this.iHuQuantity, 10);
+
+                    if (iHuQuantity > iQuantity) {
+                        BusyIndicator.hide();
+
+                        // ---- Coding in case of showing Business application Errors
+                        var component = this.byId("idInput_HU");
+
+                        if (component !== null && component !== undefined) {
+                            tools.showMessageErrorFocus(sErrHuQuantity, "", component);
+                        } else {
+                            tools.showMessageError(sErrHuQuantity, "");
+                        }
+
+                        this.onPressRefresh();
+
+                        return;
+                    } else {
+                        // ---- For External Oueues no Quantity change is allowed and ActualQuantity is like TargetQuantity
+                        this.ActualQuantity = this.iHuQuantity;
+                        this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
+
+                        // ---- Change viewMode to LocConf
+                        this.oScanModel.setProperty("/viewHu", false);
+
+                        this._resetQuantity();
+                    }
+                } else {
+                    // ---- For External Oueues no Quantity change is allowed and ActualQuantity is like TargetQuantity
+                    this.ActualQuantity = this.oDisplayModel.getProperty("/TargetQuantity");
+                    this.oDisplayModel.setProperty("/ActualQuantity", this.ActualQuantity);
+
+                    // ---- Change viewMode to LocConf
+                    this.oScanModel.setProperty("/viewHu", false);
+
+                    this._resetQuantity();
+                }
+            } else {
+                this._loadQuantityData(sManNumber);
+            }
         },
 
         _handleHandlingUnitData: function (sManNumber) {
@@ -1119,7 +1167,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         onNavBack: function () {
-            this.getRouter().navTo("hu", { "whn": this.iWN, "queue": this.sActiveQueue, "qmode": this.sActiveQMode }, true);
+            this.getRouter().navTo("hu", { "whn": this.sWN, "queue": this.sActiveQueue, "qmode": this.sActiveQMode }, true);
         },
 
 		_getServiceUrl: function () {
@@ -1323,6 +1371,14 @@ sap.ui.define([
 
         _resetAll: function () {
             var sViewTitleInt = this.oResourceBundle.getText("CaptureInternal");
+            var sViewTitleExt = this.oResourceBundle.getText("CaptureExternal");
+            var sTitle = "";
+
+            if (this.sActiveQMode === "W") {
+                sTitle = sViewTitleExt;
+            } else {
+                sTitle = sViewTitleInt;
+            }
 
             // ---- Reset the Main Model
             this.oDisplayModel.setData([]);
@@ -1333,7 +1389,7 @@ sap.ui.define([
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
-                "captionResign":   sViewTitleInt,
+                "captionResign":   sTitle,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
