@@ -389,6 +389,7 @@ sap.ui.define([
             this.iMat = sManNumber;
 
             var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var aStockType = tools.splitStringIntoArray(this.oResourceBundle.getText("StockTypeRange"), ",");
             var sStockType = this.oResourceBundle.getText("StockTypeParam");
             var sErrMsg = this.oResourceBundle.getText("MaterialErr", this.iMat);
             var that = this;
@@ -409,6 +410,13 @@ sap.ui.define([
                 aFilters.push(new sap.ui.model.Filter("StatusOpenWarehouseTask", sap.ui.model.FilterOperator.EQ, false));
                 aFilters.push(new sap.ui.model.Filter("StockTypeLocn", sap.ui.model.FilterOperator.EQ, sStockType));
                 aFilters.push(new sap.ui.model.Filter("StorageType", sap.ui.model.FilterOperator.EQ, this.sLType));
+
+            // ---- Special implementation for free Storage Types
+            for (let i = 0; i < aStockType.length; i++) {
+                var sVal = aStockType[i];
+
+                aFilters.push(new sap.ui.model.Filter("StockType", sap.ui.model.FilterOperator.EQ, sVal));                   
+            }
 
             var sPath = "/HandlingUnit";
 
