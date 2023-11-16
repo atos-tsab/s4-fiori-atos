@@ -92,7 +92,7 @@
 
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{i18n>STypeWhn}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/StorageType}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+										<TextArea value="{DisplayModel>/StockType}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
 										<TextArea value="{DisplayModel>/WarehouseNumber}" width="100px"  growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
 								</HBox>
