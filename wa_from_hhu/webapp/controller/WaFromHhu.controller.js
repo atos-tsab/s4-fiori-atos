@@ -23,8 +23,9 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/routing/History",
     "sap/ui/core/BusyIndicator",
+	"sap/ui/core/library",
     "sap/ui/core/mvc/Controller"
-], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, Controller) {
+], function (ExtScanner, formatter, tools, ResourceModel, JSONModel, History, BusyIndicator, CoreLibrary, Controller) {
 
     "use strict";
 
@@ -34,6 +35,7 @@ sap.ui.define([
 	var _sAppModulePath = "z/wafromhhu/";
 
     var APP = "WA_FROM_HHU";
+	var ValueState = CoreLibrary.ValueState;
 
 
     return Controller.extend("z.wafromhhu.controller.WaFromHhu", {
@@ -190,10 +192,6 @@ sap.ui.define([
             var sOpenWarehouseTaskErr = this.oResourceBundle.getText("OpenWarehouseTaskErr");
             var sWhtType = "H";
 
-            if (this.HU_Requirement === "Y") {
-                sWhtType = "U";
-            }
-
             if (this.StatusOpenWarehouseTask) {
                 tools.showMessageError(sOpenWarehouseTaskErr, "");
 
@@ -272,10 +270,10 @@ sap.ui.define([
                 BusyIndicator.show(1);
 
                 var oData = this.oDisplayModel.getData();
+                var iTargetQuantity = parseInt(oData.TargetQuantity, 10);
+                var iQuantity       = parseInt(oData.Quantity, 10);
 
-                if (sWhtType === "H" && oData.TargetQuantity < oData.Quantity) {
-                    sWhtType = "S";
-                }
+                if (iTargetQuantity < iQuantity) { sWhtType = "S"; }
 
                 var sPath   = "/WarehouseTask";
                 var urlData = {
@@ -593,8 +591,6 @@ sap.ui.define([
 		_setStorageBinData: function (oData) {
             var oDisplayData = this.oDisplayModel.getData();
 
-            this.HU_Requirement = oData.HU_Requirement;
-
             // ---- Set the Data for the Model and set the Model to the View
             if (this.sViewMode === "Location") {
                 oDisplayData.Book2StorageBin  = oData.StorageBinID;
@@ -659,12 +655,37 @@ sap.ui.define([
 
 		_handleQuantityData: function () {
             var sErrMesg = this.oResourceBundle.getText("OnlySmallQuantities");
+            var sValMesg = this.oResourceBundle.getText("OnlyNumericQuantities");
             var iQuantity = parseInt(this.oDisplayModel.getProperty("/Quantity"), 10);
+            
+            var that = this;
 
             this.oScanModel.setProperty("/showErr", false);
             this.oScanModel.setProperty("/showErrText", "");
 
             if (this.oScanModel.getProperty("/valueManuallyNo") !== "") {
+                var check = tools._isNumeric(this.oScanModel.getProperty("/valueManuallyNo"));
+
+                if (!check) {
+                    this.byId("idInput_Quantity").setValueState("Error");
+                    this.byId("idInput_Quantity").setValueStateText(sValMesg);
+
+                    setTimeout(function () {
+                        that.byId("idInput_Quantity").setValueState("None");
+                        that.byId("idInput_Quantity").setValueStateText("");
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+    
+                        // ---- Set Focus to main Input field
+                        that._setFocus("idInput_Quantity");
+                    }, 3000);            
+
+                    return;
+                } else {
+                    this.byId("idInput_Quantity").setValueState("None");
+                    this.byId("idInput_Quantity").setValueStateText("");
+                }
+                
                 var iTargetQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
                 
                 if (iTargetQuantity > iQuantity) {
@@ -1257,6 +1278,9 @@ sap.ui.define([
             this.oScanModel.setProperty("/ok", false);
             this.oScanModel.setProperty("/valueManuallyNo", "");
 
+            this.byId("idInput_Quantity").setValueState("None");
+            this.byId("idInput_Quantity").setValueStateText("");
+
             this._handleFeedbackData();
         },
 
@@ -1292,6 +1316,9 @@ sap.ui.define([
             this.QsRelevantHU            = false;
             this.StorageBinDoubleScan    = true;
             this.StatusOpenWarehouseTask = false;
+
+            this.byId("idInput_Quantity").setValueState("None");
+            this.byId("idInput_Quantity").setValueStateText("");
 
             // ---- Set Focus to main Input field
             this._setFocus("idInput_HU");
