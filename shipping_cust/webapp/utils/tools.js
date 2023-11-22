@@ -1286,6 +1286,8 @@ sap.ui.define([
         _isNumeric: function (num) {
             if (typeof (num) === "number" && !isNaN(num)) {
                 return true;
+            } else if (typeof (num) === "string" && !isNaN(num)) {
+                return true;
             } else if (typeof (num) === "string" && isNaN(num)) {
                 return false;
             } else if (num.trim() === undefined && num.trim() === "") {
