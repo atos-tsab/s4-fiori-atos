@@ -18,8 +18,8 @@
 			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
 				<HBox justifyContent="Start" wrap="Wrap">
 					<HBox justifyContent="Start" wrap="Wrap">
-						<Label id="idLabelPlantContent" text="{i18n>PlantContent}" width="auto" class="sapUiTinyMarginTop" />
-						<TextArea id="idTextAreaPlant" value="{DisplayModel>/Plant}" width="20px"  growing="false" rows="1" 
+						<Label id="idLabelPlantContent" text="{i18n>PlantContent}" width="auto" class="sapUiTinyMarginTop" wrapping="true" />
+						<TextArea id="idTextAreaPlant" value="{DisplayModel>/Plant}" width="20px"  growing="false" rows="1" wrapping="Soft"
 								  change="onInputPlantChanged" liveChange="onInputPlantLiveChange" class="atosMInputBaseDisabled sapUiSmallMarginBegin" />
 					</HBox>
 				</HBox>
