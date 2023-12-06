@@ -5,16 +5,20 @@
 	displayBlock="true"
     xmlns="sap.m">
 
-	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}">
  		<customHeader>
 			<Toolbar>
-				<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
-				<ToolbarSpacer />
-				<Button id="idButtonBook_SHIP_CUST" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
-				<ToolbarSeparator />
-				<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
-				<ToolbarSeparator />
-				<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" />
+				<content>
+					<Button type="Back" tooltip="{i18n>BackMain}" press="onNavBack" class="sapUiTinyMarginBegin" />
+					<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+					<ToolbarSpacer />
+
+					<Button id="idButtonBook_SHIP_CUST" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
+					<ToolbarSeparator />
+					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
+					<ToolbarSeparator />
+					<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" />
+				</content>
 			</Toolbar>
 		</customHeader>
 
@@ -25,8 +29,10 @@
 
 		<footer>
 			<Toolbar>
-				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
-				<ToolbarSpacer />
+				<content>
+					<Button text="{i18n>Back}" type="Back" tooltip="{i18n>BackMain}" visible="true" press="onNavBack" />
+					<ToolbarSpacer />
+				</content>
 			</Toolbar>
 		</footer>
     </Page>
