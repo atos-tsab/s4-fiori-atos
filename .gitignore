@@ -12,3 +12,5 @@
 .vscode/
 **/ui5-deploy.yaml
 bpw-ca.cer
+templates/deploy.sh
+templates/snippets package.json
