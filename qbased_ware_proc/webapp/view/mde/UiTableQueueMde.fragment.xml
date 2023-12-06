@@ -1,0 +1,48 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:l="sap.ui.layout"
+    displayBlock="true"
+    xmlns="sap.m">
+
+	<ScrollContainer id="idScrollContainerTableMDE" width="100%" horizontal="false" vertical="true">
+		<Table 
+			id="idTableQueueListMDE" 
+			growing="true"
+			growingThreshold="100"
+			growingScrollToLoad="true"
+			alternateRowColors="true"
+			contextualWidth="auto"
+			fixedLayout="false"
+			mode="SingleSelectMaster"
+			selectionChange="onRowSelectionQueueListMDE"
+			sticky="ColumnHeaders"
+			width="340px">
+			<columns>
+				<Column width="2em">
+					<Text text="{i18n>Nom}" />
+				</Column>
+				<Column width="1em">
+					<Text text="{i18n>QueueId}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Queue}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Number}" />
+				</Column>
+			</columns>
+			<items>
+				<ColumnListItem type="Active" vAlign="Middle">
+					<cells>
+						<Text text="{No}" wrapping="false" />
+						<Text text="{QueueId}" wrapping="false" />
+						<Text text="{Description}" />
+						<Text text="{NoOfOpenTasks}" />
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

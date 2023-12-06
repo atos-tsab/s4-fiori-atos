@@ -1,0 +1,88 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:card="sap.f.cards"
+ 	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+	xmlns:f="sap.f"
+    xmlns="sap.m">
+
+	<Panel accessibleRole="Form" height="auto" class="sapUiTinyMarginTop">
+		<content>
+			<f:GridContainer>
+				<f:layout>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="3px" />
+				</f:layout>
+				<f:layoutXS>
+					<f:GridContainerSettings rowSize="4px" columnSize="auto" gap="3px" />
+				</f:layoutXS>
+				<f:items>
+					<f:Card width="100%">
+						<f:layoutData>
+							<f:GridContainerItemLayoutData columns="4" />
+						</f:layoutData>
+						<f:header>
+							<card:Header title="{ScanModel>/captionList}" />
+						</f:header>
+						<f:content>
+
+
+							<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showOk}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showOkText}" width="auto" wrapping="true" class="atosOkText sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+			 					<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showErr}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/showErrText}" width="auto" wrapping="true" class="atosErrorText sapUiTinyMarginTop" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewHu}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/captionTable}{i18n>Colon}" width="{ScanModel>/lblWidth}" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
+										<Input id="idInputMDE_HU" value="{ScanModel>/valueManuallyNo}" width="144px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScanHu('Handling')" width="auto" class="sapUiTinyMarginBegin" />
+									</HBox>
+								</HBox>
+
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{ScanModel>/captionTable}{i18n>Colon}" width="{ScanModel>/lblWidth}" class="sapUiTinyMarginTop" />
+										<Input id="idInputMDE_Material" value="{ScanModel>/valueManuallyNo}" width="144px" class="atosMInputBaseDisabled" />
+										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
+												press="onScanHu('Material')" width="auto" class="sapUiTinyMarginBegin" />
+									</HBox>
+								</HBox>
+
+								<!-- ============================================================================================================================== -->
+
+								<VBox justifyContent="Start" wrap="Wrap" visible="true">
+									<HBox justifyContent="Start" wrap="Wrap">
+										<OverflowToolbar width="340px">
+											<Label text="{i18n>Toolbar}{i18n>Colon}" />
+											<ToolbarSeparator />
+											<Button press="onHandleLocationMDE($event,'next')" text="{i18n>Next}"     type="Emphasized" width="60px" enabled="{ScanModel>/next}" />
+											<ToolbarSeparator />
+											<Button press="onHandleLocationMDE($event,'back')" text="{i18n>Previous}" type="Emphasized" width="60px" enabled="{ScanModel>/back}" />
+										</OverflowToolbar>
+									</HBox>
+									<HBox justifyContent="Start" wrap="Wrap">
+										<core:Fragment fragmentName="z.qbasedwareproc.view.mde.UiTableLocationMDE" type="XML" />
+									</HBox>
+								</VBox>
+							</VBox>
+
+						</f:content>
+					</f:Card>
+				</f:items>
+			</f:GridContainer>
+		</content>
+	</Panel>
+
+</core:FragmentDefinition>

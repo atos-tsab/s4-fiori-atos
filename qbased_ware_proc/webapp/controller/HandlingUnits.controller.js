@@ -76,6 +76,7 @@
             this.sActiveQueue = "";
             this.sShellSource = "";
             this.sQueue = "";
+            this.bMDE = false;
 
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
@@ -87,6 +88,9 @@
             this.LocationListTable = this.byId("idTableLocationList");
 
             // ---- Define the Input Fields
+            this.idInputHU       = "";
+            this.idInputMaterial = "";
+
             this.InputHU  = this.byId("idInput_HU");
             this.InputMat = this.byId("idInput_Material");
         },
@@ -114,6 +118,8 @@
                 "captionList":     sViewTitleInt + sColon + " - " + sViewTitleH,
                 "captionTable":    sTableTitleH,
                 "lblWidth":        "110px",
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -152,21 +158,21 @@
         },
 
         onAfterRendering: function () {
-            this.InputHU.onsapenter  = ((oEvent) => { this._onOkClicked(); });
-            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this._handleInputFields();
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
-
-            // --------------------------------------------------------------
-
             if (this.byId("idTableLocationList")) { this.byId("idTableLocationList").destroy(); }
 
             // --------------------------------------------------------------
 
             if (this.byId("idInput_HU"))       { this.byId("idInput_HU").destroy();       }
             if (this.byId("idInput_Material")) { this.byId("idInput_Material").destroy(); }
+
+            // --------------------------------------------------------------
+
+            if (this.byId("idInputMDE_HU"))       { this.byId("idInputMDE_HU").destroy();       }
+            if (this.byId("idInputMDE_Material")) { this.byId("idInputMDE_Material").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
@@ -186,6 +192,9 @@
             // ---- Reset all components 
             this._resetAll();
 			
+            // ---- Check for MDE device
+            this._handleMDE();
+
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 this.sActiveQueue = oEvent.getParameter("arguments").queue;
                 this.iWN          = oEvent.getParameter("arguments").whn;
@@ -212,6 +221,42 @@
             this._handleFocus();
         },
 
+        _handleInputFields: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.idInputHU       = "idInputMDE_HU";
+                this.idInputMaterial = "idInputMDE_Material";
+     
+                this.InputHU  = this.byId("idInputMDE_HU");
+                this.InputMat = this.byId("idInputMDE_Material");
+
+                this.LocationListTable = this.byId("idTableLocationListMDE");
+            } else {
+                this.idInputHU       = "idInput_HU";
+                this.idInputMaterial = "idInput_Material";
+
+                this.LocationListTable = this.byId("idTableLocationList");
+            }
+
+            this.InputHU.onsapenter  = ((oEvent) => { this._onOkClicked(); });
+            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
+        },
+
+        _handleMDE: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+            }
+        },
+
         
         // --------------------------------------------------------------------------------------------------------------------
         // ---- Button Event Handlers
@@ -224,6 +269,92 @@
         onPressRefresh: function () {
             this._resetAll();
         },
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        onHandleLocation: function (oEvent, navTo) {
+            var oData = this.oScanModel.getData();
+            var oTable = this.LocationListTable;
+            var oModel = oTable.getModel();
+
+            this.HandleEvent   = oEvent;
+            this.HandleQueueId = oEvent.getSource().sId;
+
+            if (oTable !== null && oTable !== undefined) {
+                var iIndex = oTable.getSelectedIndex();
+                var iEnd   = oModel.getData().length;
+
+                if (navTo === "next") {
+                    iIndex = iIndex + 1;
+                } else {
+                    iIndex = iIndex - 1;
+                }
+
+                if (iIndex === 0) {
+                    oData.next = true;
+                    oData.back = false;
+                } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                    oData.next = true;
+                    oData.back = true;
+                } else if (iIndex < iEnd) {
+                    oData.next = false;
+                    oData.back = true;
+                }
+
+                oTable.setSelectedIndex(iIndex);
+
+                var path = path = oTable.getBinding("rows").getContexts()[iIndex].getPath();
+                var selectedRow = oModel.getProperty(path);
+
+                this.iActiveQueue = iIndex;
+                this.sActiveQueue = selectedRow.QueueId;
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
+        onHandleLocationMDE: function (oEvent, navTo) {
+            var oData = this.oScanModel.getData();
+            var oTable = this.LocationListTable;
+            var oModel = oTable.getModel();
+
+            this.HandleEvent   = oEvent;
+            this.HandleQueueId = oEvent.getSource().sId;
+
+            if (oTable !== null && oTable !== undefined) {
+                var iIndex = oTable.indexOfItem(oTable.getSelectedItem());
+                var iEnd   = oModel.getData().length;
+
+                if (navTo === "next") {
+                    iIndex = iIndex + 1;
+                } else {
+                    iIndex = iIndex - 1;
+                }
+
+                if (iIndex === 0) {
+                    oData.next = true;
+                    oData.back = false;
+                } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                    oData.next = true;
+                    oData.back = true;
+                } else if (iIndex < iEnd) {
+                    oData.next = false;
+                    oData.back = true;
+                }
+
+                oTable.setSelectedItem(oTable.getItems()[iIndex]);
+
+                var path = oTable.getBinding("items").getContexts()[iIndex].getPath();
+                var selectedRow = oModel.getProperty(path);
+
+                this.iActiveQueue = iIndex;
+                this.sActiveQueue = selectedRow.QueueId;
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         onRowSelectionLocationList: function (oEvent) {
             var oData = this.oScanModel.getData();
@@ -277,36 +408,53 @@
             this.oScanModel.setData(oData);
         },
 
-        onHandleLocation: function (oEvent, navTo) {
+        onRowSelectionLocationListMDE: function (oEvent) {
             var oData = this.oScanModel.getData();
             var oTable = this.LocationListTable;
             var oModel = oTable.getModel();
 
-            this.HandleEvent   = oEvent;
-            this.HandleQueueId = oEvent.getSource().sId;
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var sSource = oEvent.getSource();
 
-            if (oTable !== null && oTable !== undefined) {
-                var iIndex = oTable.getSelectedIndex();
-                var iEnd   = oModel.getData().length;
+                    if (oTable !== null && oTable !== undefined && oTable.getBinding("items").getContexts().length > 0) {
+                        var path = "";
 
-                if (navTo === "next") {
-                    iIndex = iIndex + 1;
-                } else {
-                    iIndex = iIndex - 1;
+                        if (oEvent.getParameter("listItem") !== null && oEvent.getParameter("listItem") !== undefined) {
+                            path = oEvent.getParameter("listItem").getBindingContext().getPath();
+                        } else {
+                            path = oTable.getBinding("items").getContexts()[0].getPath();
+                        }
+                       
+                        var selectedRow = sSource.getModel().getProperty(path);
+                        var iIndex = sSource.indexOfItem(sSource.getSelectedItem());
+                        var iEnd   = oModel.getData().length;
+
+                        this.iActiveHU = iIndex;
+
+                        if (this.sActiveQMode === "H") {
+                            this.sActiveHU = selectedRow.HandlingUnitId;
+                        } else {
+                            this.sActiveHU = selectedRow.WarehouseTaskId;
+                        }
+
+                        if (iIndex === 0) {
+                            if (iEnd > 1) {
+                                oData.next = true;
+                            } else {
+                                oData.next = false;
+                            }
+
+                            oData.back = false;
+                        } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                            oData.next = true;
+                            oData.back = true;
+                        } else if (iIndex < iEnd) {
+                            oData.next = false;
+                            oData.back = true;
+                        }                                       
+                    }
                 }
-
-                if (iIndex === 0) {
-                    oData.next = true;
-                    oData.back = false;
-                } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
-                    oData.next = true;
-                    oData.back = true;
-                } else if (iIndex < iEnd) {
-                    oData.next = false;
-                    oData.back = true;
-                }
-
-                oTable.setSelectedIndex(iIndex);
             }
 
             this.oScanModel.setData(oData);
@@ -410,8 +558,9 @@
         },
 
         _setHuTableData: function (oData) {
-            var sSortText = this.oResourceBundle.getText("QueueSortProperty");
+            var oSortTextArray = tools.splitStringIntoArray(this.oResourceBundle.getText("QueueSortProperty"), ",");
             var oListData = [];
+            var that = this;
            
             for (let i = 0; i < oData.results.length; i++) {
                 var item = oData.results[i];
@@ -428,26 +577,57 @@
                     data.DestinationStorageBin = item.DestinationStorageBin;
 
                 oListData.push(data);
-            } 
+            }
 
             var oModel = new JSONModel();
                 oModel.setData(oListData);
 
             this.LocationListTable.setModel(oModel);
-            this.LocationListTable.bindRows("/");
 
-            // ---- Special sorting in case of Queue REPL
-            if (this.sActiveQueue === sSortText) {
-                var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
+            // ---- Special sorting in case of Queue REPL / REPL2
+            var sSortText = "";
 
-                this.LocationListTable.getBinding("rows").sort(oSorter);
+            for (let j = 0; j < oSortTextArray.length; j++) {
+                var item = oSortTextArray[j];
+                
+                if (item === this.sActiveQueue) {
+                    sSortText = item;
+
+                    break;
+                }
             }
+
+            if (this.bMDE) {
+                this.LocationListTable.bindItems({
+                    path: "/",
+                    template: that.LocationListTable.removeItem(0),
+                    templateShareable: true
+                });
+
+                if (this.sActiveQueue === sSortText) {
+                    var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
+
+                    this.LocationListTable.getBinding("items").sort(oSorter);
+                }
  
-            this.LocationListTable.setSelectedIndex(0);
+                this.LocationListTable.setSelectedItem(this.LocationListTable.getItems()[0], true /*selected*/, true /*fire event*/);
+            } else {
+                this.LocationListTable.bindRows("/");
+
+                // ---- Special sorting in case of Queue REPL
+                if (this.sActiveQueue === sSortText) {
+                    var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
+
+                    this.LocationListTable.getBinding("rows").sort(oSorter);
+                }
+ 
+                this.LocationListTable.setSelectedIndex(0);
+            }
         },
 
         _setWhtTableData: function (oData) {
             var oListData = [];
+            var that = this;
 
             for (let i = 0; i < oData.results.length; i++) {
                 var item = oData.results[i];
@@ -469,8 +649,19 @@
                 oModel.setData(oListData);
 
             this.LocationListTable.setModel(oModel);
-            this.LocationListTable.bindRows("/");
-            this.LocationListTable.setSelectedIndex(0);
+
+            if (this.bMDE) {
+                this.LocationListTable.bindItems({
+                    path: "/",
+                    template: that.LocationListTable.removeItem(0),
+                    templateShareable: true
+                });
+
+                this.LocationListTable.setSelectedItem(this.LocationListTable.getItems()[0], true /*selected*/, true /*fire event*/);
+            } else {
+                this.LocationListTable.bindRows("/");
+                this.LocationListTable.setSelectedIndex(0);
+            }
         },
 
 		_onOkClicked: function () {
@@ -509,13 +700,21 @@
                         this.oScanModel.setProperty("/viewMat", true);
 
                         if (item.Material === iHU) {
-                            oTable.setSelectedIndex(i);
+                            if (this.bMDE) {
+                                oTable.setSelectedItem(oTable.getItems()[0], true /*selected*/, true /*fire event*/);
+                            } else {
+                                oTable.setSelectedIndex(0);
+                            }
 
                             break;
                         }
                     } else {
                         if (item.HandlingUnitId === iHU) {
-                            oTable.setSelectedIndex(i);
+                            if (this.bMDE) {
+                                oTable.setSelectedItem(oTable.getItems()[0], true /*selected*/, true /*fire event*/);
+                            } else {
+                                oTable.setSelectedIndex(0);
+                            }
                         }
                     }
                 }
@@ -840,6 +1039,8 @@
                 "captionList":     sViewTitleInt + sColon + " - " + sViewTitleH,
                 "captionTable":    sTableTitleH,
                 "lblWidth":        "110px",
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",

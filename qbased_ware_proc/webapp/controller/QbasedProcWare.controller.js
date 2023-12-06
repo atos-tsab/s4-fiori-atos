@@ -70,6 +70,7 @@
             // ---- Define variables for the License View
             this.oView = this.getView();
 
+            this.bMDE           = false;
             this.sActiveQMode   = "H";
             this.iActiveQueue   = 0;
             this.sActiveQueue   = "";
@@ -78,9 +79,6 @@
 
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
-
-            // ---- Define the Buttons
-            this.BookButton = this.byId("idButtonBook_" + APP);
 
             // ---- Define the UI Tables
             this.QueueListTable    = this.byId("idTableQueueList");
@@ -107,6 +105,8 @@
                 "back":            false,
                 "switchState":     true,
                 "switchStateShip": true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -135,20 +135,24 @@
         },
 
         onAfterRendering: function () {
+            this._handleInputFields();
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) {
-				this.byId("idButtonBook_" + APP).destroy();
-			}
-
-            // --------------------------------------------------------------
-
             if (this.byId("idTableQueueList")) {
 				this.byId("idTableQueueList").destroy();
 			}
             if (this.byId("idTableShipmentList")) {
 				this.byId("idTableShipmentList").destroy();
+			}
+
+            // --------------------------------------------------------------
+
+            if (this.byId("idTableQueueListMDE")) {
+				this.byId("idTableQueueListMDE").destroy();
+			}
+            if (this.byId("idTableShipmentListMDE")) {
+				this.byId("idTableShipmentListMDE").destroy();
 			}
         },
 
@@ -160,6 +164,9 @@
 
             this._getShellSource();
             this._resetAll();
+
+            // ---- Check for MDE device
+            this._handleMDE();
 
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 if (oEvent.getParameter("arguments").qmode !== null && oEvent.getParameter("arguments").qmode !== undefined) {
@@ -180,14 +187,43 @@
             } else {
                 this.oScanModel.setProperty("/switchState", false);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleW);
-                this.oScanModel.setProperty("/viewShipment", true);
 
                 this.bExternalQueue = true;
 
-                this.loadShipmentData(false);
+                if (this.bMDE) {
+                    this.oScanModel.setProperty("/viewShipment", false);
+                } else {
+                    this.loadShipmentData(false);
+                }
             }
 
             this.loadUserData();
+        },
+
+        _handleInputFields: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.QueueListTable    = this.byId("idTableQueueListMDE");
+                this.ShipmentListTable = this.byId("idTableShipmentListMDE");
+            } else {
+                this.QueueListTable    = this.byId("idTableQueueList");
+                this.ShipmentListTable = this.byId("idTableShipmentList");
+            }
+        },
+
+        _handleMDE: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+            }
         },
 
         
@@ -202,6 +238,75 @@
         onPressRefresh: function () {
             this._resetAll();
         },
+
+        onPressShipment: function (iShipmentNumber) {
+            this.saveShipmentData(iShipmentNumber);
+        },
+
+        // --------------------------------------------------------------------------------------------------------------------
+        
+        onSwitchChange: function (oEvent) {
+            var sViewTitleH   = this.oResourceBundle.getText("CaptureQueue");
+            var sViewTitleW   = this.oResourceBundle.getText("CaptureShipping");
+            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
+                    var bState = oEvent.getParameter("state");
+ 
+                    if (bState) {
+                        this.sActiveQMode   = "H";
+                        this.bExternalQueue = false;
+
+                        this.oScanModel.setProperty("/switchState", true);
+                        this.oScanModel.setProperty("/viewShipment", false);
+                        this.oScanModel.setProperty("/switchStateShip", true);
+                        this.oScanModel.setProperty("/viewCaption", sViewTitleH);
+                    } else {
+                        this.sActiveQMode   = "W";
+                        this.bExternalQueue = true;
+
+                        this.oScanModel.setProperty("/switchState", false);
+                        this.oScanModel.setProperty("/viewShipment", true);
+                        this.oScanModel.setProperty("/switchStateShip", true);
+                        this.oScanModel.setProperty("/viewCaption", sViewTitleW);
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
+
+                        if (this.bMDE) {
+                            this.oScanModel.setProperty("/viewShipment", false);
+                            this.oScanModel.setProperty("/switchStateShip", false);
+                        } else {
+                            this.loadShipmentData(true);
+                        }
+                    }
+
+                    this.loadQueueData();
+                }
+            }
+        },
+
+        onSwitchChangeShipment: function (oEvent) {
+            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
+            var sViewTitleAll = this.oResourceBundle.getText("CaptureAllShipments");
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
+                    var bState = oEvent.getParameter("state");
+ 
+                    if (bState) {
+                        this.oScanModel.setProperty("/switchStateShip", true);
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
+                    } else {
+                        this.oScanModel.setProperty("/switchStateShip", false);
+                        this.oScanModel.setProperty("/captionShipment", sViewTitleAll);
+                    }
+
+                    this.loadShipmentData(bState);
+                }
+            }
+        },
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         onHandleQueue: function (oEvent, navTo) {
             var oData = this.oScanModel.getData();
@@ -233,10 +338,59 @@
                 }
 
                 oTable.setSelectedIndex(iIndex);
+
+                var path = path = oTable.getBinding("rows").getContexts()[iIndex].getPath();
+                var selectedRow = oModel.getProperty(path);
+
+                this.iActiveQueue = iIndex;
+                this.sActiveQueue = selectedRow.QueueId;
             }
 
             this.oScanModel.setData(oData);
         },
+
+        onHandleQueueMDE: function (oEvent, navTo) {
+            var oData = this.oScanModel.getData();
+            var oTable = this.QueueListTable;
+            var oModel = oTable.getModel();
+
+            this.HandleEvent   = oEvent;
+            this.HandleQueueId = oEvent.getSource().sId;
+
+            if (oTable !== null && oTable !== undefined) {
+                var iIndex = oTable.indexOfItem(oTable.getSelectedItem());
+                var iEnd   = oModel.getData().length;
+
+                if (navTo === "next") {
+                    iIndex = iIndex + 1;
+                } else {
+                    iIndex = iIndex - 1;
+                }
+
+                if (iIndex === 0) {
+                    oData.next = true;
+                    oData.back = false;
+                } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                    oData.next = true;
+                    oData.back = true;
+                } else if (iIndex < iEnd) {
+                    oData.next = false;
+                    oData.back = true;
+                }
+
+                oTable.setSelectedItem(oTable.getItems()[iIndex]);
+
+                var path = oTable.getBinding("items").getContexts()[iIndex].getPath();
+                var selectedRow = oModel.getProperty(path);
+
+                this.iActiveQueue = iIndex;
+                this.sActiveQueue = selectedRow.QueueId;
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
+        // --------------------------------------------------------------------------------------------------------------------
 
         onRowSelectionQueueList: function (oEvent) {
             var oData  = this.oScanModel.getData();
@@ -285,6 +439,53 @@
             this.oScanModel.setData(oData);
         },
 
+        onRowSelectionQueueListMDE: function (oEvent) {
+            var oData  = this.oScanModel.getData();
+            var oTable = this.QueueListTable;
+            var oModel = oTable.getModel();
+
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var sSource = oEvent.getSource();
+
+                    if (oTable !== null && oTable !== undefined && oTable.getBinding("items").getContexts().length > 0) {
+                        var path = "";
+
+                        if (oEvent.getParameter("listItem") !== null && oEvent.getParameter("listItem") !== undefined) {
+                            path = oEvent.getParameter("listItem").getBindingContext().getPath();
+                        } else {
+                            path = oTable.getBinding("items").getContexts()[0].getPath();
+                        }
+                       
+                        var selectedRow = sSource.getModel().getProperty(path);
+                        var iIndex = sSource.indexOfItem(sSource.getSelectedItem());
+                        var iEnd   = oModel.getData().length;
+
+                        this.iActiveQueue = iIndex;
+                        this.sActiveQueue = selectedRow.QueueId;
+
+                        if (iIndex === 0) {
+                            if (iEnd > 1) {
+                                oData.next = true;
+                            } else {
+                                oData.next = false;
+                            }
+
+                            oData.back = false;
+                        } else if (iIndex > 0 && iIndex < (iEnd - 1)) {
+                            oData.next = true;
+                            oData.back = true;
+                        } else if (iIndex < iEnd) {
+                            oData.next = false;
+                            oData.back = true;
+                        }                                       
+                    }
+                }
+            }
+
+            this.oScanModel.setData(oData);
+        },
+
         onRowSelectionShipmentList: function (oEvent) {
             var oData  = this.oScanModel.getData();
             var oTable = this.ShipmentListTable;
@@ -304,9 +505,6 @@
                        
                         var selectedRow = sSource.getModel().getProperty(path);
                         var iIndex = sSource.getSelectedIndex();
- 
-                        // this.iActiveQueue = iIndex;
-                        // this.sActiveQueue = selectedRow.QueueId;
                     }
                 }
             }
@@ -314,64 +512,30 @@
             this.oScanModel.setData(oData);
         },
 
-        onSwitchChange: function (oEvent) {
-            var sViewTitleH   = this.oResourceBundle.getText("CaptureQueue");
-            var sViewTitleW   = this.oResourceBundle.getText("CaptureShipping");
-            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
+        onRowSelectionShipmentListMDE: function (oEvent) {
+            var oData  = this.oScanModel.getData();
+            var oTable = this.ShipmentListTable;
 
             if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
-                    var bState = oEvent.getParameter("state");
- 
-                    if (bState) {
-                        this.sActiveQMode   = "H";
-                        this.bExternalQueue = false;
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var sSource = oEvent.getSource();
 
-                        this.oScanModel.setProperty("/switchState", true);
-                        this.oScanModel.setProperty("/viewShipment", false);
-                        this.oScanModel.setProperty("/switchStateShip", true);
-                        this.oScanModel.setProperty("/viewCaption", sViewTitleH);
-                    } else {
-                        this.sActiveQMode   = "W";
-                        this.bExternalQueue = true;
+                    if (oTable !== null && oTable !== undefined && oTable.getBinding("rows").getContexts().length > 0) {
+                        var path = "";
 
-                        this.oScanModel.setProperty("/switchState", false);
-                        this.oScanModel.setProperty("/viewShipment", true);
-                        this.oScanModel.setProperty("/switchStateShip", true);
-                        this.oScanModel.setProperty("/viewCaption", sViewTitleW);
-                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
-
-                        this.loadShipmentData(true);
+                        if (oEvent.getParameter("listItem") !== null && oEvent.getParameter("listItem") !== undefined) {
+                            path = oEvent.getParameter("listItem").getBindingContext().getPath();
+                        } else {
+                            path = oTable.getBinding("items").getContexts()[0].getPath();
+                        }
+                       
+                        var selectedRow = sSource.getModel().getProperty(path);
+                        var iIndex = sSource.indexOfItem(sSource.getSelectedItem());
                     }
-
-                    this.loadQueueData();
                 }
             }
-        },
 
-        onSwitchChangeShipment: function (oEvent) {
-            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
-            var sViewTitleAll = this.oResourceBundle.getText("CaptureAllShipments");
-
-            if (oEvent !== null && oEvent !== undefined) {
-                if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
-                    var bState = oEvent.getParameter("state");
- 
-                    if (bState) {
-                        this.oScanModel.setProperty("/switchStateShip", true);
-                        this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
-                    } else {
-                        this.oScanModel.setProperty("/switchStateShip", false);
-                        this.oScanModel.setProperty("/captionShipment", sViewTitleAll);
-                    }
-
-                    this.loadShipmentData(bState);
-                }
-            }
-        },
-
-        onPressShipment: function (iShipmentNumber) {
-            this.saveShipmentData(iShipmentNumber);
+            this.oScanModel.setData(oData);
         },
 
 
@@ -539,6 +703,7 @@
 
         _setQueueTableData: function (oData) {
             var sErrMsg = this.oResourceBundle.getText("QueueErr");
+            var that = this;
 
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
@@ -553,10 +718,21 @@
 
             var oModel = new JSONModel();
                 oModel.setData(oData);
-
+                
             this.QueueListTable.setModel(oModel);
-            this.QueueListTable.bindRows("/");
-            this.QueueListTable.setSelectedIndex(0);
+
+            if (this.bMDE) {
+                this.QueueListTable.bindItems({
+                    path: "/",
+                    template: that.QueueListTable.removeItem(0),
+                    templateShareable: true
+                });
+
+                this.QueueListTable.setSelectedItem(this.QueueListTable.getItems()[0], true /*selected*/, true /*fire event*/);
+            } else {
+                this.QueueListTable.bindRows("/");
+                this.QueueListTable.setSelectedIndex(0);
+            }
         },
 
 	    loadShipmentData: function (bState) {
@@ -609,6 +785,7 @@
 
         _setShipmentTableData: function (oData) {
             var sErrMsg = this.oResourceBundle.getText("ShipmentErr");
+            var that = this;
 
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
@@ -624,9 +801,20 @@
             var oModel = new JSONModel();
                 oModel.setData(oData);
 
-            this.ShipmentListTable.setModel(oModel);
-            this.ShipmentListTable.bindRows("/");
-            this.ShipmentListTable.setSelectedIndex(0);
+                this.ShipmentListTable.setModel(oModel);
+
+            if (this.bMDE) {
+                this.ShipmentListTable.bindItems({
+                    path: "/",
+                    template: that.ShipmentListTable.removeItem(0),
+                    templateShareable: true
+                });
+
+                this.ShipmentListTable.setSelectedItem(this.ShipmentListTable.getItems()[0], true /*selected*/, true /*fire event*/);
+            } else {
+                this.ShipmentListTable.bindRows("/");
+                this.ShipmentListTable.setSelectedIndex(0);
+            }
         },
 
 
@@ -787,6 +975,8 @@
                 "back":            false,
                 "switchState":     true,
                 "switchStateShip": true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",

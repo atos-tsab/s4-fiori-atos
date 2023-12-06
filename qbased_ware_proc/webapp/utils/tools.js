@@ -1006,8 +1006,7 @@ sap.ui.define([
                 onClose: function () {
                     this._bMessageOpen = false;
                 }.bind(this)
-            }
-            );
+            });
         },
 
         showMessageWarning: function (oWarning, oDetails) {
@@ -1017,8 +1016,7 @@ sap.ui.define([
                 onClose: function () {
                     this._bMessageOpen = false;
                 }.bind(this)
-            }
-            );
+            });
         },
 
         showMessageSuccess: function (oSuccess, oDetails) {
@@ -1028,8 +1026,7 @@ sap.ui.define([
                 onClose: function () {
                     this._bMessageOpen = false;
                 }.bind(this)
-            }
-            );
+            });
         },
 
         showMessageError: function (oError, oDetails) {
@@ -1039,8 +1036,7 @@ sap.ui.define([
                 onClose: function () {
                     this._bMessageOpen = false;
                 }.bind(this)
-            }
-            );
+            });
         },
 
         showMessageErrorFocus: function (oError, oDetails, component) {
@@ -1130,6 +1126,18 @@ sap.ui.define([
 			// ---- Auto resize the first columns from a UI Table
 			oTable.autoResizeColumn(0);
 		},
+
+        getScreenResolution: function (oModel, param) {
+            var screenCheck = false;
+
+            if (oModel !== null && oModel !== undefined) {
+                if (oModel.getProperty("/system/" + param)) {
+                    screenCheck = true;
+                }
+            }
+
+            return screenCheck;
+        },
 
         getUriParameters: function (prop) {
             var uriCheck = false;

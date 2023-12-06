@@ -1,0 +1,60 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+    displayBlock="true"
+    xmlns="sap.m"
+    height="100%">
+
+	<ScrollContainer id="idScrollContainerLocationTableMDE" width="100%" horizontal="false" vertical="true">
+		<Table 
+			id="idTableLocationListMDE" 
+			growing="true"
+			growingThreshold="100"
+			growingScrollToLoad="true"
+			alternateRowColors="true"
+			contextualWidth="auto"
+			fixedLayout="false"
+			mode="SingleSelectMaster"
+			selectionChange="onRowSelectionLocationListMDE"
+			sticky="ColumnHeaders"
+			width="340px">
+			<columns>
+				<Column width="2em">
+					<Text text="{i18n>Nom}" />
+				</Column>
+				<Column width="1em">
+					<Text text="{i18n>WarehouseTask}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>HandlingUnit}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Material}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>SourceStorageLocation}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>SourceStorageType}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>DestStorageLocation}" />
+				</Column>
+			</columns>
+			<items>
+				<ColumnListItem type="Active" vAlign="Middle">
+					<cells>
+						<Text text="{No}" wrapping="false" />
+						<Text text="{WarehouseTaskId}" wrapping="false" />
+						<Text text="{HandlingUnitId}" />
+						<Text text="{Material}" />
+						<Text text="{SourceStorageLocation}" />
+						<Text text="{SourceStorageType}" />
+						<Text text="{DestinationStorageBin}" />
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

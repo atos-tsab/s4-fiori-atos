@@ -73,8 +73,9 @@ sap.ui.define([
             // ---- Define variables for the License View
             this.oView = this.getView();
 
-            this.sWN = "";
-            this.iHU = "";
+            this.sWN  = "";
+            this.iHU  = "";
+            this.bMDE = false;
             this.sScanType       = "";
             this.iBookCount      = 0;
             this.iHuQuantity     = 0;
@@ -85,10 +86,11 @@ sap.ui.define([
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
 
-            // ---- Define the Buttons
-            this.BookButton = this.byId("idButtonBookHU");
-
             // ---- Define the Input Fields
+            this.idInputHU       = "";
+            this.idInputQuantity = "";
+            this.idInputLocConf  = "";
+
             this.InputHU       = this.byId("idInput_HU");
             this.InputQuantity = this.byId("idInput_Quantity");
             this.InputLocConf  = this.byId("idInput_LocConf");
@@ -110,6 +112,8 @@ sap.ui.define([
                 "refresh":         true,
                 "ok":              true,
                 "captionResign":   sViewTitleInt,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -154,17 +158,17 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
-            this.InputHU.onsapenter       = ((oEvent) => { this._onOkClicked(); });
-            this.InputQuantity.onsapenter = ((oEvent) => { this._onOkClicked(); });
-            this.InputLocConf.onsapenter  = ((oEvent) => { this._onOkClicked(); });
+            this._handleInputFields();
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
-
             if (this.byId("idInput_HU"))       { this.byId("idInput_HU").destroy();       }
             if (this.byId("idInput_Quantity")) { this.byId("idInput_Quantity").destroy(); }
             if (this.byId("idInput_LocConf"))  { this.byId("idInput_LocConf").destroy();  }
+
+            if (this.byId("idInputMDE_HU"))       { this.byId("idInputMDE_HU").destroy();       }
+            if (this.byId("idInputMDE_Quantity")) { this.byId("idInputMDE_Quantity").destroy(); }
+            if (this.byId("idInputMDE_LocConf"))  { this.byId("idInputMDE_LocConf").destroy();  }
         },
 
         _onObjectMatched: function (oEvent) {
@@ -180,6 +184,9 @@ sap.ui.define([
 
             this.UrlParam = oEvent;
             this.sSuffix  = "";
+
+            // ---- Check for MDE device
+            this._handleMDE();
 
 			if (oEvent.getParameter("arguments") !== null && oEvent.getParameter("arguments") !== undefined) {
                 this.sActiveQueue = oEvent.getParameter("arguments").queue;
@@ -198,6 +205,42 @@ sap.ui.define([
 
                     this._loadWareHouseData(this.sWN, this.sActiveQueue, this.iHU);
                 }
+            }
+        },
+
+        _handleInputFields: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.idInputHU       = "idInputMDE_HU";
+                this.idInputQuantity = "idInputMDE_Quantity";
+                this.idInputLocConf  = "idInputMDE_LocConf";
+    
+                this.InputHU       = this.byId("idInputMDE_HU");
+                this.InputQuantity = this.byId("idInputMDE_Quantity");
+                this.InputLocConf  = this.byId("idInputMDE_LocConf");
+            } else {
+                this.idInputHU       = "idInput_HU";
+                this.idInputQuantity = "idInput_Quantity";
+                this.idInputLocConf  = "idInput_LocConf";
+            }
+
+            this.InputHU.onsapenter       = ((oEvent) => { this._onOkClicked(); });
+            this.InputQuantity.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this.InputLocConf.onsapenter  = ((oEvent) => { this._onOkClicked(); });
+        },
+
+        _handleMDE: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
             }
         },
 
@@ -264,7 +307,7 @@ sap.ui.define([
                                 this._loadQuantityData(sManNumber);
                             } else {
                                 this.oScanModel.setProperty("/valueManuallyNo", "");
-                                this._setFocus("idInput_HU");
+                                this._setFocus(this.idInputHU);
 
                                 tools.alertMe(sErrMsg);
 
@@ -317,7 +360,7 @@ sap.ui.define([
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
-                                    that._setFocus("idInput_HU");
+                                    that._setFocus(that.idInputHU);
 
                                     BusyIndicator.hide();
 
@@ -361,9 +404,10 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
 	    _loadWareHouseData: function (iWHN, sQueue, iHU) {
-            var sErrMsg = this.oResourceBundle.getText("HandlingUnitErr", iHU);
+            var sErrMsg  = this.oResourceBundle.getText("HandlingUnitErr", iHU);
+            var sErrNoDS = this.oResourceBundle.getText("NoDataset", iHU);
             var that = this;
-
+            
             BusyIndicator.show(1);
 
             // ---- Read the WareHouse Data from the backend
@@ -390,7 +434,7 @@ sap.ui.define([
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results[0].to_WarehouseTasks.results.length > 0) {
                                 if (rData.results.length > 0) {
-                                    var component = that.byId("idInput_HU");
+                                    var component = that.InputHU;
 
                                     if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                         // ---- Coding in case of showing Business application Errors
@@ -438,7 +482,7 @@ sap.ui.define([
                                 BusyIndicator.hide();
 
                                 // ---- Coding in case of showing Business application Errors
-                                var component = that.byId("idInput_HU");
+                                var component = that.InputHU;
 
                                 if (component !== null && component !== undefined) {
                                     tools.showMessageErrorFocus(sErrMsg, "", component);
@@ -448,6 +492,19 @@ sap.ui.define([
 
                                 that.oScanModel.setProperty("/valueManuallyNo", "");
                             }
+                        } else {
+                            BusyIndicator.hide();
+
+                            // ---- Coding in case of showing Business application Errors
+                            var component = that.InputHU;
+
+                            if (component !== null && component !== undefined) {
+                                tools.showMessageErrorFocus(sErrNoDS, "", component);
+                            } else {
+                                tools.showMessageError(sErrNoDS, "");
+                            }
+
+                            that.oScanModel.setProperty("/valueManuallyNo", "");
                         }
                     }
                 });
@@ -506,7 +563,7 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 // ---- Coding in case of showing Business application Errors
-                                var component = that.byId("idInput_HU");
+                                var component = that.InputHU;
 
                                 that._resetAll();
                                 
@@ -598,7 +655,7 @@ sap.ui.define([
                                 // ---- Check for complete final booking
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                     // ---- Coding in case of showing Business application Errors
-                                    var component = that.byId("idInput_HU");
+                                    var component = that.InputHU;
 
                                     if (component !== null && component !== undefined) {
                                         tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
@@ -751,7 +808,7 @@ sap.ui.define([
                         BusyIndicator.hide();
 
                         // ---- Coding in case of showing Business application Errors
-                        var component = this.byId("idInput_HU");
+                        var component = that.InputHU;
 
                         if (component !== null && component !== undefined) {
                             tools.showMessageErrorFocus(sErrHuQuantity, "", component);
@@ -796,7 +853,7 @@ sap.ui.define([
             var that = this;
 
             setTimeout(function () {
-                that._setFocus("idInput_HU");
+                that._setFocus(that.idInputHU);
             }, 1000);            
         },
 
@@ -806,7 +863,7 @@ sap.ui.define([
             this.oScanModel.setProperty("/viewHu", false);
             this.oScanModel.setProperty("/viewLocConf", false);
 
-            this._setFocus("idInput_Quantity");
+            this._setFocus(this.idInputQuantity);
         },
 
 		_handleQuantityData: function () {
@@ -823,23 +880,23 @@ sap.ui.define([
                 var check = tools._isNumeric(this.oScanModel.getProperty("/valueManuallyNo"));
 
                 if (!check) {
-                    this.byId("idInput_Quantity").setValueState("Error");
-                    this.byId("idInput_Quantity").setValueStateText(sValMesg);
+                    this.InputQuantity.setValueState("Error");
+                    this.InputQuantity.setValueStateText(sValMesg);
 
                     setTimeout(function () {
-                        that.byId("idInput_Quantity").setValueState("None");
-                        that.byId("idInput_Quantity").setValueStateText("");
+                        that.InputQuantity.setValueState("None");
+                        that.InputQuantity.setValueStateText("");
 
                         that.oScanModel.setProperty("/valueManuallyNo", "");
     
                         // ---- Set Focus to main Input field
-                        that._setFocus("idInput_Quantity");
+                        that._setFocus(this.idInputQuantity);
                     }, 3000);            
 
                     return;
                 } else {
-                    this.byId("idInput_Quantity").setValueState("None");
-                    this.byId("idInput_Quantity").setValueStateText("");
+                    this.InputQuantity.setValueState("None");
+                    this.InputQuantity.setValueStateText("");
                 }
                 
                 var iActualQuantity = parseInt(this.oScanModel.getProperty("/valueManuallyNo"), 10);
@@ -850,7 +907,7 @@ sap.ui.define([
                     this.oScanModel.setProperty("/valueManuallyNo", "");
                
                     // ---- Set Focus to default Input field
-                    this._setFocus("idInput_Quantity");
+                    this._setFocus(this.idInputQuantity);
 
                     return;
                 } else if (iActualQuantity < iQuantity) {
@@ -863,7 +920,7 @@ sap.ui.define([
                
                     // ---- Set Focus to default Input field
                     this.oScanModel.setProperty("/valueManuallyNo", "");
-                    this._setFocus("idInput_Quantity");
+                    this._setFocus(this.idInputQuantity);
                 }
             } else {
                 this.ActualQuantity = this.oDisplayModel.getProperty("/TargetQuantity");
@@ -878,7 +935,7 @@ sap.ui.define([
             var sErrMesg  = this.oResourceBundle.getText("StorageBinErr", sManNumber);
             var tSTime    = this.oResourceBundle.getText("ShowTime");
             var check = false;
-            var id    = "idInput_LocConf";
+            var id    = this.idInputLocConf;
             var that  = this
 
             check = this._checkDestStorageLocation(sManNumber);
@@ -886,8 +943,6 @@ sap.ui.define([
             this.oScanModel.setProperty("/viewMode", "LocConf");
 
             if (check) {
-                id = "idButtonBookHU";
-
                 this.oScanModel.setProperty("/viewHu", false);
                 this.oScanModel.setProperty("/viewQuantity", false);
                 this.oScanModel.setProperty("/viewLocConf", false);
@@ -895,7 +950,7 @@ sap.ui.define([
                 this.oScanModel.setProperty("/refresh", true);
                 this.oScanModel.setProperty("/ok", false);
             } else {
-                id = "idInput_LocConf";
+                id = this.idInputLocConf;
 
                 this.oScanModel.setProperty("/viewHu", false);
                 this.oScanModel.setProperty("/viewQuantity", false);
@@ -1078,7 +1133,7 @@ sap.ui.define([
                                 this._loadQuantityData(sManNumber);
                             } else {
                                 this.oScanModel.setProperty("/valueManuallyNo", "");
-                                this._setFocus("idInput_HU");
+                                this._setFocus(this.idInputHU);
 
                                 tools.alertMe(sErrMsg);
 
@@ -1229,7 +1284,7 @@ sap.ui.define([
 
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
-                // var controlF2 = that.byId("idInput_HU");
+                // var controlF2 = that.byId(that.idInputHU);
 
                 // ---- Now call the actual event/method for the keyboard keypress
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
@@ -1393,10 +1448,10 @@ sap.ui.define([
             this.oScanModel.setProperty("/ok", true);
             this.oScanModel.setProperty("/valueManuallyNo", "");
 
-            this.byId("idInput_Quantity").setValueState("None");
-            this.byId("idInput_Quantity").setValueStateText("");
+            this.InputQuantity.setValueState("None");
+            this.InputQuantity.setValueStateText("");
 
-            this._setFocus("idInput_LocConf");
+            this._setFocus(this.idInputLocConf);
         },
 
         _resetAll: function () {
@@ -1420,6 +1475,8 @@ sap.ui.define([
                 "refresh":         true,
                 "ok":              true,
                 "captionResign":   sTitle,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -1435,8 +1492,17 @@ sap.ui.define([
 
             this.oScanModel.setData(oData);
                 
-            this.byId("idInput_Quantity").setValueState("None");
-            this.byId("idInput_Quantity").setValueStateText("");
+            // ---- Check for MDE device
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+            }
+
+            this.InputQuantity.setValueState("None");
+            this.InputQuantity.setValueStateText("");
 
             this.sScanType  = "";
             this.iBookCount = 0;
