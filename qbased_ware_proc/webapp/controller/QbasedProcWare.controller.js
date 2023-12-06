@@ -71,6 +71,7 @@
             this.oView = this.getView();
 
             this.bMDE           = false;
+            this.bState         = true;
             this.sActiveQMode   = "H";
             this.iActiveQueue   = 0;
             this.sActiveQueue   = "";
@@ -186,6 +187,7 @@
                 this.bExternalQueue = false;
             } else {
                 this.oScanModel.setProperty("/switchState", false);
+                this.oScanModel.setProperty("/switchStateShip", true);
                 this.oScanModel.setProperty("/viewCaption", sViewTitleW);
 
                 this.bExternalQueue = true;
@@ -193,7 +195,13 @@
                 if (this.bMDE) {
                     this.oScanModel.setProperty("/viewShipment", false);
                 } else {
-                    this.loadShipmentData(false);
+                    this.oScanModel.setProperty("/viewShipment", true);
+                    
+                    if (!this.bState) {
+                        this.oScanModel.setProperty("/switchStateShip", false);
+                    }
+
+                    this.loadShipmentData(this.bState);
                 }
             }
 
@@ -253,7 +261,7 @@
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
                     var bState = oEvent.getParameter("state");
- 
+
                     if (bState) {
                         this.sActiveQMode   = "H";
                         this.bExternalQueue = false;
@@ -274,8 +282,8 @@
 
                         if (this.bMDE) {
                             this.oScanModel.setProperty("/viewShipment", false);
-                            this.oScanModel.setProperty("/switchStateShip", false);
                         } else {
+                            // ---- Load Shipment data for All Users first
                             this.loadShipmentData(true);
                         }
                     }
@@ -293,6 +301,9 @@
                 if (oEvent.getParameters() !== null && oEvent.getParameters() !== undefined) {
                     var bState = oEvent.getParameter("state");
  
+                    // ---- Set the new value for the Shipment State (Shows own or all Shipments)
+                    this.bState = bState;
+ 
                     if (bState) {
                         this.oScanModel.setProperty("/switchStateShip", true);
                         this.oScanModel.setProperty("/captionShipment", sViewTitleOwn);
@@ -301,7 +312,7 @@
                         this.oScanModel.setProperty("/captionShipment", sViewTitleAll);
                     }
 
-                    this.loadShipmentData(bState);
+                    this.loadShipmentData(this.bState);
                 }
             }
         },
@@ -586,7 +597,7 @@
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
-                                that.loadShipmentData(false);
+                                that.loadShipmentData(that.bState);
 
                                 setTimeout(function () {
                                     that._resetAll();                                
