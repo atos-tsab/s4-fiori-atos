@@ -5,11 +5,14 @@
 	displayBlock="true"
     xmlns="sap.m">
 
-	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}">
  		<customHeader>
 			<Toolbar>
-				<Title text="{ScanModel>/viewTitle}" titleStyle="H5" class="sapUiSmallMarginBegin" />
-				<ToolbarSpacer />
+				<content>
+					<Button type="Back" tooltip="{i18n>BackMain}" press="onNavBack" class="sapUiTinyMarginBegin" />
+					<Title text="{ScanModel>/viewTitle}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+					<ToolbarSpacer />
+					
 					<Button id="idButtonSave_DELIV" press="onPressSave" text="{i18n>Save}" type="Reject" width="80px" enabled="{ScanModel>/saving}" />
 					<ToolbarSeparator />
 					<Button id="idButtonBook_DELIV" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
@@ -17,6 +20,7 @@
 					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
 					<ToolbarSeparator />
 					<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" class="sapUiSmallMarginEnd" />
+				</content>
 			</Toolbar>
 		</customHeader>
 
@@ -27,8 +31,10 @@
 
 		<footer>
 			<Toolbar>
-				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
-				<ToolbarSpacer />
+				<content>
+					<Button text="{i18n>Back}" type="Back" tooltip="{i18n>BackMain}" visible="true" press="onNavBack" />
+					<ToolbarSpacer />
+				</content>
 			</Toolbar>
 		</footer>
     </Page>
