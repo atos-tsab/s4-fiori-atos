@@ -17,7 +17,7 @@
 		<content>
 			<VBox class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd">
 				<HBox>
-					<Label text="{i18n>QuantityScanContent}" width="auto" />
+					<Label text="{i18n>QuantityScanContent}" width="auto" wrapping="true" />
 				</HBox>
 			</VBox>
 		</content>
