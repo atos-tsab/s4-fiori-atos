@@ -8,13 +8,13 @@
         <content>
             <VBox>
                 <HBox>
-                    <Label text="{scanModel>/labelDialog}{i18n>Colon}" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" />
-					<Input id="idScannedDialog" change="onInputChanged" liveChange="onInputLiveChange" width="240px" 
+                    <Label text="{scanModel>/labelDialog}{i18n>Colon}" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" wrapping="true" />
+					<Input id="idScannedDialog" change="onInputChanged" liveChange="onInputLiveChange" width="auto" 
                            submit="onOkPress" value="{scanModel>/valueManuallyNo}" class="sapUiTinyMarginEnd" />
                 </HBox>
                 <HBox>
-                    <Label text="" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" />
-                    <Text text="{i18n>HintVideoInputDialog}" width="auto" class="customInputInfo" />
+                    <Label text="" width="{scanModel>/lblWidth}" class="sapUiTinyMarginTop" wrapping="true" />
+                    <Text text="{i18n>HintVideoInputDialog}" width="auto" class="customInputInfo" wrapping="true" />
                  </HBox>
             </VBox>
         </content>
