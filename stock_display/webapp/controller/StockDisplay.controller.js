@@ -74,6 +74,7 @@ sap.ui.define([
 
             this.iWN  = "";
             this.iMat = "";
+            this.bMDE = false;
             this.sShellSource    = "#Shell-home";
             this.oDeliveryData   = {};
             this.iScanModusAktiv = 0;
@@ -81,13 +82,12 @@ sap.ui.define([
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
 
-            // ---- Define the Buttons
-            this.BookButton = this.byId("idButtonBook_" + APP);
-
             // ---- Define the UI Tables
             this.MaterialInfoTable = this.byId("idTableMaterialInfo");
 
             // ---- Define the Input Fields
+            this.idInputMat = "";
+
             this.InputMat = this.byId("idInput_Mat");
         },
 
@@ -104,6 +104,8 @@ sap.ui.define([
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -143,25 +145,58 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
-            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this._handleInputFields();
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
-
-            if (this.byId("idInput_Mat")) { this.byId("idInput_Mat").destroy(); }
+            if (this.byId("idInput_Mat"))    { this.byId("idInput_Mat").destroy(); }
+            if (this.byId("idInputMDE_Mat")) { this.byId("idInputMDE_Mat").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
 			// ---- Enable the Function key solution
 			// this._setKeyboardShortcuts();
 
+            // ---- Set start constellation
             this._getShellSource();
             this._resetAll();
             this.loadUserData();
 
+            // ---- Check for MDE device
+            this._handleMDE();
+
             // ---- Set Focus to main Input field
             this._setFocus();
+        },
+
+        _handleInputFields: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.idInputMat = "idInputMDE_Mat";
+    
+                this.InputMat = this.byId("idInputMDE_Mat");
+                this.MaterialInfoTable = this.byId("idTableMaterialInfoMDE");
+            } else {
+                this.idInputMat = "idInput_Mat";
+                this.MaterialInfoTable = this.byId("idTableMaterialInfo");
+            }
+
+            this.InputMat.onsapenter = ((oEvent) => { this._onOkClicked(); });
+        },
+
+        _handleMDE: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+            }
         },
 
         
@@ -289,7 +324,7 @@ sap.ui.define([
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
-                                    var component = that.byId("idInput_Mat");
+                                    var component = that.byId(that.idInputMat);
 
                                     if (component !== null && component !== undefined) {
                                         tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
@@ -317,7 +352,7 @@ sap.ui.define([
                                 BusyIndicator.hide();
 
                                 // ---- Coding in case of showing Business application Errors
-                                var component = that.byId("idInput_Mat");
+                                var component = that.byId(that.idInputMat);
 
                                 if (component !== null && component !== undefined) {
                                     tools.showMessageErrorFocus(sErrMsg, "", component);
@@ -360,13 +395,36 @@ sap.ui.define([
 		_setTableModel: function (oData, oTable) {
             var tableTitle = this.oResourceBundle.getText("ResultTable", oData.results.length);
 
-            oTable.setTitle(tableTitle);
+            for (let i = 0; i < oData.results.length; i++) {
+                var item = oData.results[i];
+                    item.StorageLocation = "";
+                    item.SType = "";
+                
+                if (item.StorageType !== "" && item.StorageType !== "") {
+                    item.StorageLocation = item.StorageType + " | " + item.StorageBin;
+                }
+
+                if (item.StockType !== "" && item.StockTypeDescription !== "") {
+                    item.SType = item.StockType + " = " + item.StockTypeDescription;
+                }
+            }
 
             var oModel = new JSONModel();
                 oModel.setData(oData.results);
 
             oTable.setModel(oModel);
-            oTable.bindRows("/");
+
+            if (this.bMDE) {
+                oTable.setHeaderText(tableTitle);
+                oTable.bindItems({
+                    path: "/",
+                    template: oTable.removeItem(0),
+                    templateShareable: true
+                });
+            } else {
+                oTable.setTitle(tableTitle);
+                oTable.bindRows("/");
+            }
     	},
 
         onInputChanged: function (oEvent) {
@@ -621,7 +679,7 @@ sap.ui.define([
 			// ---- Set the Shortcut to buttons
 			$(document).keydown($.proxy(function (evt) {
                 var sViewMode = that.oScanModel.getData().viewMode;
-                var controlF2 = that.byId("idInput_Mat");
+                var controlF2 = that.byId(that.idInputMat);
 
                 // ---- Now call the actual event/method for the keyboard keypress
                 if (evt.keyCode !== null && evt.keyCode !== undefined) {
@@ -706,7 +764,7 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
         _setFocus: function () {
-            var id ="idInput_Mat";
+            var id = this.idInputMat;
             var that = this;
 
             if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
@@ -773,6 +831,8 @@ sap.ui.define([
                 "booking":         false,
                 "refresh":         true,
                 "ok":              true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
@@ -783,7 +843,24 @@ sap.ui.define([
 
             this.oScanModel.setData(oData);
 
-			// ---- Reset the UI Table A
+            // ---- Check for MDE device
+            var tableTitle = this.oResourceBundle.getText("ResultTable", "0");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+
+                this.MaterialInfoTable = this.byId("idTableMaterialInfoMDE");
+                this.MaterialInfoTable.setHeaderText(tableTitle);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+
+                this.MaterialInfoTable = this.byId("idTableMaterialInfo");
+                this.MaterialInfoTable.setTitle(tableTitle);
+            }
+
+            // ---- Reset the UI Table A
             var oModel = new JSONModel([]);
 
             if (this.MaterialInfoTable !== null && this.MaterialInfoTable !== undefined) {
@@ -792,10 +869,6 @@ sap.ui.define([
                 }
                
                 this.MaterialInfoTable.setModel(oModel);
-
-                var tableTitle = this.oResourceBundle.getText("ResultTable", "0");
-
-                this.MaterialInfoTable.setTitle(tableTitle);
             }
 
             // ---- Set Focus to main Input field

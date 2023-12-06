@@ -1117,6 +1117,18 @@ sap.ui.define([
             return timeFormated;
         },
 
+        getScreenResolution: function (oModel, param) {
+            var screenCheck = false;
+
+            if (oModel !== null && oModel !== undefined) {
+                if (oModel.getProperty("/system/" + param)) {
+                    screenCheck = true;
+                }
+            }
+
+            return screenCheck;
+        },
+
 		autoResizeColumns: function (oTable) {
 			var tcols = oTable.getColumns();
 

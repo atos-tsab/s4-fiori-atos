@@ -8,7 +8,7 @@
 	xmlns:f="sap.f"
     xmlns="sap.m">
 
-	<Panel accessibleRole="Form" height="auto" class="sapUiTinyMarginTop">
+	<Panel accessibleRole="Form" height="auto" class="sapUiResponsiveMargin">
 		<content>
 			<f:GridContainer>
 				<f:layout>
@@ -30,13 +30,13 @@
 							<VBox class="sapUiSmallMargin" alignContent="SpaceBetween" justifyContent="Start" width="100%">
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showOk}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{ScanModel>/showOkText}" width="auto" wrapping="true" class="atosOkText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{ScanModel>/showOkText}" width="auto" wrapping="true" class="atosOkText sapUiTinyMarginTop" />
 									</HBox>
 								</HBox>
 
-			 					<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showErr}">
+								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/showErr}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{ScanModel>/showErrText}" width="auto" wrapping="true" class="atosErrorText sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{ScanModel>/showErrText}" width="auto" wrapping="true" class="atosErrorText sapUiTinyMarginTop" />
 									</HBox>
 								</HBox>
 
@@ -44,11 +44,11 @@
 
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Material}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Mat" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
-											   width="160px" class="atosMInputBaseDisabled" />
+										<Label text="{i18n>Material}{i18n>Colon}" width="70px" class="sapUiTinyMarginTop" />
+										<Input id="idInputMDE_Mat" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange" 
+											   width="116px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
-												press="onScan('Material')" width="auto" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" />
+												press="onScan('Material')" width="auto" class="sapUiTinyMarginBegin" />
 									</HBox>
 								</HBox>
 
@@ -56,21 +56,25 @@
 
 								<HBox justifyContent="Start" wrap="Wrap">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Material}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
-										<TextArea value="{DisplayModel>/MaterialNo}" width="204px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiMediumMarginEnd" />
+										<Label text="{i18n>Material}{i18n>Colon}" width="70px" class="sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/MaterialNo}" width="160px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
 									</HBox>
 									<HBox justifyContent="Start" wrap="Wrap">
-										<TextArea value="{DisplayModel>/MaterialDescription}" width="344px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiLargeMarginBegin sapUiMediumMarginEnd" />
+										<TextArea value="{DisplayModel>/MaterialDescription}" width="230px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
 									</HBox>
 								</HBox>
 
-								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewQuantity}">
+								<VBox justifyContent="Start" wrap="Wrap" visible="{ScanModel>/viewQuantity}">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<Label text="{i18n>Amount} / {i18n>UOM}{i18n>Colon}" width="140px" class="sapUiLargeMarginBegin sapUiTinyMarginTop" />
+										<Label text="{i18n>Amount}{i18n>Colon}" width="70px" class="sapUiTinyMarginTop" />
 										<TextArea value="{DisplayModel>/Quantity}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
-										<TextArea value="{DisplayModel>/Unit}" width="100px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled sapUiTinyMarginBegin sapUiMediumMarginEnd" />
 									</HBox>
-								</HBox>
+
+									<HBox justifyContent="Start" wrap="Wrap">
+										<Label text="{i18n>UOM}{i18n>Colon}" width="70px" class="sapUiTinyMarginTop" />
+										<TextArea value="{DisplayModel>/Unit}" width="20px" growing="false" rows="1" enabled="false" class="atosMInputBaseDisabled" />
+									</HBox>
+								</VBox>
 							</VBox>
 
 						</f:content>
