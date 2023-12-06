@@ -1,11 +1,7 @@
 <core:FragmentDefinition
-    xmlns:mvc="sap.ui.core.mvc"
 	xmlns:core="sap.ui.core"
-	xmlns:u="sap.ui.unified" 
-	xmlns:l="sap.ui.layout" 
 	xmlns:ui="sap.ui.table" 
     displayBlock="true"
-	xmlns:ndc="sap.ndc" 
     xmlns="sap.m"
     height="100%">
 
@@ -15,6 +11,7 @@
 			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
 			selectionMode="None" 
 			selectionBehavior="Row" 
+			visibleRowCountMode="Auto"
 			visibleRowCount="1">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />

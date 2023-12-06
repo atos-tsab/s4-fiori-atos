@@ -12,6 +12,7 @@
 			enableSelectAll="false"
 			selectionMode="Single" 
 			selectionBehavior="Row" 
+			visibleRowCountMode="Auto"
 			visibleRowCount="1">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />

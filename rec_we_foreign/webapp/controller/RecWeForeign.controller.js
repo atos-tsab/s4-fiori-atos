@@ -999,9 +999,7 @@ sap.ui.define([
                 iRowCount = iMaxRowCount;
             }
 
-            if (this.bMDE) {
-
-            } else {
+            if (!this.bMDE) {
                 this.MaterialInfoTable.setVisibleRowCount(iRowCount);
             }
  		},
@@ -1688,9 +1686,7 @@ sap.ui.define([
 
                 this.MaterialInfoTable.setModel(oModel);
 
-                if (this.bMDE) {
-
-                } else {
+                if (!this.bMDE) {
                     this.MaterialInfoTable.setVisibleRowCount(1);
                 }
             }
