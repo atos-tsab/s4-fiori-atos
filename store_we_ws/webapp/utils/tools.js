@@ -1131,6 +1131,18 @@ sap.ui.define([
 			oTable.autoResizeColumn(0);
 		},
 
+        getScreenResolution: function (oModel, param) {
+            var screenCheck = false;
+
+            if (oModel !== null && oModel !== undefined) {
+                if (oModel.getProperty("/system/" + param)) {
+                    screenCheck = true;
+                }
+            }
+
+            return screenCheck;
+        },
+
         getUriParameters: function (prop) {
             var uriCheck = false;
 

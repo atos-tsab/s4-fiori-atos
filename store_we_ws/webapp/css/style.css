@@ -68,6 +68,10 @@
     opacity: 1 !important;
 }
 
+.atosLableTop {
+    top: -10;
+}
+
 .size1 {
     font-size : 1rem;
 }
