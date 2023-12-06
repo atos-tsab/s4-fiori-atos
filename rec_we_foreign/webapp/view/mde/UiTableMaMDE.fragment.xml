@@ -1,0 +1,59 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:l="sap.ui.layout"
+    displayBlock="true"
+    xmlns="sap.m">
+
+	<ScrollContainer id="idScrollContainerTableA_MDE" class="sapUiSmallMargin" width="100%" horizontal="false" vertical="true">
+		<Table 
+			id="idTableMaterialInfoMDE" 
+			growing="true"
+			growingThreshold="100"
+			growingScrollToLoad="true"
+			alternateRowColors="true"
+			contextualWidth="auto"
+			fixedLayout="false"
+			mode="None"
+			sticky="ColumnHeaders"
+			width="380px">
+			<columns>
+				<Column width="auto">
+					<Text text="{i18n>Scan}" />
+				</Column>
+				<Column width="auto">
+					<Text text="{i18n>HandlingUnit}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Packaging}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Material}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Amount}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>UOM}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Description}" />
+				</Column>
+			</columns>
+			<items>
+				<ColumnListItem type="Active" vAlign="Middle">
+					<cells>
+						<ObjectStatus text="{StatusSel}" state="{path:'StatusUnload',formatter: '.formatter.colorSelectedStatusMobile'}" icon="{StatusIcon}" />
+						<Text text="{HandlingUnit}" wrapping="false" />
+						<Text text="{MaterialPackaging}" />
+						<Text text="{Material}" />
+						<Text text="{Quantity}" />
+						<Text text="{UnitOfMeasurement}" />
+						<Text text="{MaterialDescription}" />
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

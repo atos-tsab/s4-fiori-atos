@@ -82,14 +82,13 @@ sap.ui.define([
             // ---- Define the Owner Component for the Tools Util
             tools.onInit(this.getOwnerComponent());
 
-            // ---- Define the Buttons
-            this.BookButton = this.byId("idButtonBook_" + APP);
-
             // ---- Define the UI Tables
             this.MaterialInfoTable = this.byId("idTableMaterialInfo");
             this.PackageListTable  = this.byId("idTablePackageList");
 
             // ---- Define the Input Fields
+            this.idInputHU = "";
+
             this.InputHU = this.byId("idInput_HU");
         },
 
@@ -109,11 +108,14 @@ sap.ui.define([
                 "refresh":         true,
                 "storno":          false,
                 "ok":              true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewMat":         true,
+                "subTitleStorno":  "",
                 "valueManuallyNo": ""
             };
 
@@ -148,13 +150,12 @@ sap.ui.define([
         },
 
         onAfterRendering: function () {
-            this.InputHU.onsapenter = ((oEvent) => { this._onOkClicked(); });
+            this._handleInputFields();
         },
 
         onExit: function () {
-			if (this.byId("idButtonBook_" + APP)) { this.byId("idButtonBook_" + APP).destroy(); }
-
-            if (this.byId("idInput_HU")) { this.byId("idInput_HU").destroy(); }
+            if (this.byId("idInput_HU"))    { this.byId("idInput_HU").destroy(); }
+            if (this.byId("idInputMDE_HU")) { this.byId("idInputMDE_HU").destroy(); }
         },
 
         _onObjectMatched: function (oEvent) {
@@ -167,8 +168,45 @@ sap.ui.define([
             this._resetAll();
             this.loadUserData();
 
+            // ---- Check for MDE device
+            this._handleMDE();
+
             // ---- Set Focus to main Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
+        },
+
+        _handleInputFields: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.idInputHU = "idInputMDE_HU";
+    
+                this.InputHU = this.byId("idInputMDE_HU");
+
+                this.MaterialInfoTable = this.byId("idTableMaterialInfoMDE");
+                this.PackageListTable  = this.byId("idTablePackageListMDE");
+            } else {
+                this.idInputHU = "idInput_HU";
+
+                this.MaterialInfoTable = this.byId("idTableMaterialInfo");
+                this.PackageListTable  = this.byId("idTablePackageList");
+            }
+
+            this.InputHU.onsapenter = ((oEvent) => { this._onOkClicked(); });
+        },
+
+        _handleMDE: function () {
+            // ---- Check for MDE device
+            this.bMDE = tools.getScreenResolution(this.getModel("device"), "phone");
+
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+            }
         },
 
         
@@ -342,7 +380,7 @@ sap.ui.define([
                                     BusyIndicator.hide();
 
                                     // ---- Set Focus to main Input field
-                                    that._setFocus("idInput_HU");
+                                    that._setFocus(that.idInputHU);
                                 }, tSTime);            
                             } else {
                                 BusyIndicator.hide();
@@ -408,7 +446,7 @@ sap.ui.define([
                                         that._resetAll();
                         
                                         // ---- Set Focus to main Input field
-                                        that._setFocus("idInput_HU");
+                                        that._setFocus(that.idInputHU);
                                     }, tSTime);            
                                 } else {
                                     BusyIndicator.hide();
@@ -656,13 +694,23 @@ sap.ui.define([
                             if (rData.ScanModus === "A") {
                                 that._setTableDataA(oData);
 
-                                that.byId("idScrollContainerTableA").setVisible(true);
-                                that.byId("idScrollContainerTableB").setVisible(false);        
+                                if (that.bMDE) {
+                                    that.byId("idScrollContainerTableA_MDE").setVisible(true);
+                                    that.byId("idScrollContainerTableB_MDE").setVisible(false);        
+                                } else {
+                                    that.byId("idScrollContainerTableA").setVisible(true);
+                                    that.byId("idScrollContainerTableB").setVisible(false);        
+                                }                    
                             } else {
                                 that._setTableDataB(oData, iHU);
 
-                                that.byId("idScrollContainerTableA").setVisible(false);
-                                that.byId("idScrollContainerTableB").setVisible(true);        
+                                if (that.bMDE) {
+                                    that.byId("idScrollContainerTableA_MDE").setVisible(false);
+                                    that.byId("idScrollContainerTableB_MDE").setVisible(true);        
+                                } else {
+                                    that.byId("idScrollContainerTableA").setVisible(false);
+                                    that.byId("idScrollContainerTableB").setVisible(true);        
+                                }                    
                             }
 
                             BusyIndicator.hide();
@@ -737,7 +785,7 @@ sap.ui.define([
             this._updateStatusAllHUs(oTable, oData);
 
             // ---- Set focus to Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
         },
 
         _setTableDataB: function (oData, iHU) {
@@ -756,7 +804,7 @@ sap.ui.define([
             this._updateStatusSingleHU(oTable, iHU);
 
             // ---- Set focus to Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
         },
 
         _updateStatusAllHUs: async function (oTable, oData) {
@@ -828,7 +876,7 @@ sap.ui.define([
 
                         that.oScanModel.setProperty("/valueManuallyNo", "");
 
-                        tools.handleODataRequestFailedTitle(oError, this.iHU, true);
+                        tools.handleODataRequestFailedTitle(oError, that.iHU, true);
                     },
                     success: function(rData, oResponse) {
                         // ---- Check for complete final booking
@@ -907,11 +955,40 @@ sap.ui.define([
         // --------------------------------------------------------------------------------------------------------------------
 
 		_setTableModel: function (oData, oTable) {
+            var sStatusTextNotOk = this.oResourceBundle.getText("StatusIconNotOk");
+            var sStatusIconOk    = this.oResourceBundle.getText("StatusIconOk");
+            var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
+            var sStatusSel       = this.oResourceBundle.getText("StatusSelect");
+
+            // ---- Adding of additional Status flags
+            if (oData.results.length > 0) {
+                for (let i = 0; i < oData.results.length; i++) {
+                    var data = oData.results[i];
+                    
+                    if (data.StatusUnload === true) {
+                        data.StatusIcon = sStatusIconOk;
+                        data.StatusSel  = sStatusSel;
+                    } else {
+                        data.StatusIcon = sStatusTextNotOk;
+                        data.StatusSel  = sStatusNoSel;
+                    }
+                }
+            }
+
             var oModel = new JSONModel();
                 oModel.setData(oData.results);
 
             oTable.setModel(oModel);
-            oTable.bindRows("/");
+
+            if (this.bMDE) {
+                oTable.bindItems({
+                    path: "/",
+                    template: oTable.removeItem(0),
+                    templateShareable: true
+                });
+            } else {
+                oTable.bindRows("/");
+            }
     	},
 
 		_changeTableSettings: function (oTable, iLength) {
@@ -922,8 +999,12 @@ sap.ui.define([
                 iRowCount = iMaxRowCount;
             }
 
-            oTable.setVisibleRowCount(iRowCount);
-		},
+            if (this.bMDE) {
+
+            } else {
+                this.MaterialInfoTable.setVisibleRowCount(iRowCount);
+            }
+ 		},
 
 		_handleScanModelData: function (type, oTable) {
             this.oScanModel.setProperty("/storno", true);
@@ -946,18 +1027,32 @@ sap.ui.define([
 		},
 
 		_handleHuData: function (oTable) {
-            var oData = oTable.getModel().getData();
-            var sNote = 0;
+            var sStatusTextNotOk = this.oResourceBundle.getText("StatusIconNotOk");
+            var sStatusIconOk    = this.oResourceBundle.getText("StatusIconOk");
+            var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
+            var sStatusSel       = this.oResourceBundle.getText("StatusSelect");
+
+            var oModel = oTable.getModel();
+            var oData  = oModel.getData();
+            var sNote  = 0;
 
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
  
                     if (data.StatusUnload === true) {
+                        data.StatusIcon = sStatusIconOk;
+                        data.StatusSel  = sStatusSel;
+
                         sNote = sNote + 1;
+                    } else {
+                        data.StatusIcon = sStatusTextNotOk;
+                        data.StatusSel  = sStatusNoSel;
                     }
                 }
             }
+
+            oTable.setModel(oModel);
 
             if (sNote === oData.length) {
                 this.AllBooked = true;
@@ -969,6 +1064,11 @@ sap.ui.define([
 		},
 
 		_handleLessHuData: function (oTable) {
+            var sStatusTextNotOk = this.oResourceBundle.getText("StatusIconNotOk");
+            var sStatusIconOk    = this.oResourceBundle.getText("StatusIconOk");
+            var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
+            var sStatusSel       = this.oResourceBundle.getText("StatusSelect");
+
             var oData = oTable.getModel().getData();
 
             if (oData.length > 0) {
@@ -976,10 +1076,14 @@ sap.ui.define([
                     var data = oData[i];
  
                     if (data.StatusUnload === false) {
+                        data.StatusIcon  = sStatusTextNotOk;
+                        data.StatusSel   = sStatusNoSel;
                         data.BookMissing = true;
-                        data.Status = "Error";
+                        data.Status      = "Error";
                     } else if (data.StatusUnload === true) {
-                        data.Status = "Success";
+                        data.StatusIcon = sStatusIconOk;
+                        data.StatusSel  = sStatusSel;
+                        data.Status     = "Success";
                     }
                 }
             }
@@ -988,6 +1092,11 @@ sap.ui.define([
 		},
 
 		_resetLessHuData: function (oTable) {
+            var sStatusTextNotOk = this.oResourceBundle.getText("StatusIconNotOk");
+            var sStatusIconOk    = this.oResourceBundle.getText("StatusIconOk");
+            var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
+            var sStatusSel       = this.oResourceBundle.getText("StatusSelect");
+
             var oData = oTable.getModel().getData();
 
             if (oData.length > 0) {
@@ -995,10 +1104,14 @@ sap.ui.define([
                     var data = oData[i];
  
                     if (data.StatusUnload === false) {
+                        data.StatusIcon  = sStatusTextNotOk;
+                        data.StatusSel   = sStatusNoSel;
                         data.BookMissing = false;
-                        data.Status = "None";
+                        data.Status      = "None";
                     } else if (data.StatusUnload === true) {
-                        data.Status = "Success";
+                        data.StatusIcon = sStatusIconOk;
+                        data.StatusSel  = sStatusSel;
+                        data.Status     = "Success";
                     }
                 }
             }
@@ -1007,11 +1120,16 @@ sap.ui.define([
 		},
 
 		_resetCanceledHuData: function (oTable) {
+            var sStatusTextNotOk = this.oResourceBundle.getText("StatusIconNotOk");
+            var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
+
             var oData = oTable.getModel().getData();
 
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
+                        data.StatusIcon   = sStatusTextNotOk;
+                        data.StatusSel    = sStatusNoSel;
                         data.StatusUnload = false;
                         data.BookMissing = false;
                         data.Status = "None";
@@ -1032,6 +1150,11 @@ sap.ui.define([
 			var oView = this.getView();
 			var that = this;
 			
+            // ---- Check for MDE screen
+            if (this.bMDE) {
+                fragmentFile = _fragmentPath + "DialogApproveBookingMDE";
+            }		
+
             // ---- Mark all HU's which are not delivered (under booking)
             this._handleLessHuData(oTable);
 
@@ -1062,11 +1185,11 @@ sap.ui.define([
             // ---- Unmark all HU's which are not delivered (reset under booking)
             this._resetLessHuData(oTable);
 
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
 		onBookApprovalAfterClose: function () {
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
 		onBookApprovalSave: function () {
@@ -1082,7 +1205,7 @@ sap.ui.define([
             this._bookHuMissingData(oTable);
 
             // ---- Set Focus to default Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -1090,8 +1213,13 @@ sap.ui.define([
         onCancellationApprovalOpen: function () {
 			var fragmentFile = _fragmentPath + "dialogApproveCancellation";
 			var oView = this.getView();
-			var that = this;
-			
+			var that  = this;
+
+            // ---- Check for MDE screen
+            if (this.bMDE) {
+                fragmentFile = _fragmentPath + "dialogApproveCancellationMDE";
+            }		
+
             // ---- Starts the Bookung Dialog for Handling Units
 			if (!this.getView().dialogApproveCancellation) {
 				sap.ui.core.Fragment.load({
@@ -1116,11 +1244,11 @@ sap.ui.define([
 				this.getView().dialogApproveCancellation.close();
 			}
 
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
 		onCancellationkApprovalAfterClose: function () {
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
 		onCancellationApprovalSave: function () {
@@ -1135,7 +1263,7 @@ sap.ui.define([
             this._CancelHuData(oTable);
 
             // ---- Set Focus to default Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
 		},
 
 
@@ -1446,8 +1574,7 @@ sap.ui.define([
         // ---- Helper Functions
         // --------------------------------------------------------------------------------------------------------------------
 
-        _setFocus: function () {
-            var id = "idInput_HU";
+        _setFocus: function (id) {
             var that = this;
 
             if (sap.ui.getCore().byId(id) !== null && sap.ui.getCore().byId(id) !== undefined) {
@@ -1523,21 +1650,35 @@ sap.ui.define([
                 "refresh":         true,
                 "storno":          false,
                 "ok":              true,
+                "showMain":        false,
+                "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewMat":         true,
+                "subTitleStorno":  "",
                 "valueManuallyNo": ""
             };
 
             this.oScanModel.setData(oData);
-            this.iScanModusAktiv = 0;
-            this.sScanType = "";
 
-            // ---- Reset the Scroll container
-            this.byId("idScrollContainerTableA").setVisible(true);
-            this.byId("idScrollContainerTableB").setVisible(false);
+            // ---- Check for MDE device
+            if (this.bMDE) {
+                this.oScanModel.setProperty("/showMain", false);
+                this.oScanModel.setProperty("/showMDE", true);
+
+                // ---- Reset the Scroll container
+                this.byId("idScrollContainerTableA_MDE").setVisible(true);
+                this.byId("idScrollContainerTableB_MDE").setVisible(false);
+            } else {
+                this.oScanModel.setProperty("/showMDE", false);
+                this.oScanModel.setProperty("/showMain", true);
+
+                // ---- Reset the Scroll container
+                this.byId("idScrollContainerTableA").setVisible(true);
+                this.byId("idScrollContainerTableB").setVisible(false);
+            }
 
 			// ---- Reset the UI Table A
             if (this.MaterialInfoTable !== null && this.MaterialInfoTable !== undefined) {
@@ -1546,7 +1687,12 @@ sap.ui.define([
                 }
 
                 this.MaterialInfoTable.setModel(oModel);
-                this.MaterialInfoTable.setVisibleRowCount(1);
+
+                if (this.bMDE) {
+
+                } else {
+                    this.MaterialInfoTable.setVisibleRowCount(1);
+                }
             }
 
             // ---- Reset the UI Table B
@@ -1556,8 +1702,11 @@ sap.ui.define([
                 }
             }
 
+            this.iScanModusAktiv = 0;
+            this.sScanType = "";
+
             // ---- Set Focus to main Input field
-            this._setFocus();
+            this._setFocus(this.idInputHU);
         }
 
 

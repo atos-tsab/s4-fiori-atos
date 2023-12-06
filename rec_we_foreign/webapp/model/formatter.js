@@ -171,6 +171,18 @@ sap.ui.define(["sap/ui/core/format/NumberFormat"], function(NumberFormat) {
 			return status;
 		},
 
+		colorSelectedStatusMobile: function (aValue) {
+			var status = "";
+
+			if (aValue) {
+				status = "Success";
+			} else {
+				status = "None";
+			}
+
+			return status;
+		},
+
 		colorExtLicStatus: function (aValue) {
 			var color = "black";
 

@@ -9,12 +9,12 @@
             <VBox>
                 <HBox>
                     <Label text="{i18n>HandlingUnit}{i18n>Colon}" width="110px" class="sapUiTinyMarginTop" />
-					<Input id="idScannedDialog" change="onInputChanged" liveChange="onInputLiveChange" width="240px" 
+					<Input id="idScannedDialog" change="onInputChanged" liveChange="onInputLiveChange" width="auto" 
                            submit="onOkPress" value="{scanModel>/valueManuallyNo}" class="sapUiTinyMarginEnd" />
                 </HBox>
                 <HBox>
                     <Label text="" width="110px" class="sapUiTinyMarginTop" />
-                    <Text text="{i18n>HintVideoInputDialog}" width="auto" class="customInputInfo" />
+                    <Text text="{i18n>HintVideoInputDialog}" width="auto" class="customInputInfo" wrapping="true" />
                  </HBox>
             </VBox>
         </content>

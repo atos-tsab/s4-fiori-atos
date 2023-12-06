@@ -1,0 +1,138 @@
+<core:FragmentDefinition
+    xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core"
+	xmlns:ui="sap.ui.table" 
+	xmlns:l="sap.ui.layout"
+    displayBlock="true"
+    xmlns="sap.m">
+
+	<ScrollContainer id="idScrollContainerTableB_MDE" class="sapUiSmallMargin" width="100%" horizontal="false" vertical="true">
+		<Table 
+			id="idTablePackageListMDE" 
+			growing="true"
+			growingThreshold="100"
+			growingScrollToLoad="true"
+			alternateRowColors="true"
+			contextualWidth="auto"
+			fixedLayout="false"
+			mode="None"
+			sticky="ColumnHeaders"
+			width="380px">
+			<columns>
+				<Column width="auto">
+					<Text text="{i18n>Scan}" />
+				</Column>
+				<Column width="auto">
+					<Text text="{i18n>HandlingUnit}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Packaging}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Material}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Amount}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>UOM}" />
+				</Column>
+				<Column minScreenWidth="Small" demandPopin="true">
+					<Text text="{i18n>Description}" />
+				</Column>
+			</columns>
+			<items>
+				<ColumnListItem type="Active" vAlign="Middle">
+					<cells>
+						<ObjectStatus text="{StatusSel}" state="{path:'StatusUnload',formatter: '.formatter.colorSelectedStatusMobile'}" icon="{StatusIcon}" />
+						<Text text="{HandlingUnit}" wrapping="false" />
+						<Text text="{MaterialPackaging}" />
+						<Text text="{Material}" />
+						<Text text="{Quantity}" />
+						<Text text="{UnitOfMeasurement}" />
+						<Text text="{MaterialDescription}" />
+					</cells>
+				</ColumnListItem>
+			</items>
+		</Table>
+
+
+		<ui:Table 
+			id="" visible="false"
+			class="sapUiSmallMarginBegin sapUiSmallMarginTop sapUiSmallMarginEnd sapUiSmallMarginBottom" 
+			enableSelectAll="false"
+			selectionMode="Single" 
+			selectionBehavior="Row" 
+			visibleRowCount="1">
+			<ui:rowSettingsTemplate>
+				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
+			</ui:rowSettingsTemplate>
+			<ui:columns>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "StatusUnload", "columnIndex":"0", "leadingProperty": "StatusUnload"}' />
+					</ui:customData>
+					<Label text="{i18n>Scan}" textAlign="Center" width="100%" />
+					<ui:template>
+						<CheckBox text="" selected="{StatusUnload}" enabled="false" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "HandlingUnit", "columnIndex":"1", "leadingProperty": "HandlingUnit"}' />
+					</ui:customData>
+					<Label text="{i18n>HandlingUnit}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{HandlingUnit}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialPackaging", "columnIndex":"2", "leadingProperty": "MaterialPackaging"}' />
+					</ui:customData>
+					<Label text="{i18n>Packaging}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{MaterialPackaging}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="15%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Material", "columnIndex":"3", "leadingProperty": "Material"}' />
+					</ui:customData>
+					<Label text="{i18n>Material}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Material}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="10%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"4", "leadingProperty": "Quantity"}' />
+					</ui:customData>
+					<Label text="{i18n>Amount}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Quantity}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="8%" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "UnitOfMeasurement", "columnIndex":"5", "leadingProperty": "UnitOfMeasurement"}' />
+					</ui:customData>
+					<Label text="{i18n>UOM}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{UnitOfMeasurement}" />
+					</ui:template>
+				</ui:Column>
+				<ui:Column width="auto" visible="true" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "MaterialDescription", "columnIndex":"6", "leadingProperty": "MaterialDescription"}' />
+					</ui:customData>
+					<Label text="{i18n>Description}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{MaterialDescription}" />
+					</ui:template>
+				</ui:Column>
+			</ui:columns>
+		</ui:Table>
+	</ScrollContainer>
+
+</core:FragmentDefinition>

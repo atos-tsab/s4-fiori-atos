@@ -5,18 +5,22 @@
 	displayBlock="true"
     xmlns="sap.m">
 
-	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>Back}">
+	<Page id="page" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}" visible="{ScanModel>/showMain}">
  		<customHeader>
 			<Toolbar>
-				<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
-				<ToolbarSpacer />
-				<Button id="idButtonBook_REC_WE_FORN" press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
-				<ToolbarSeparator />
-				<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
-				<ToolbarSeparator />
-				<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" />
-				<ToolbarSeparator />
-				<Button press="onPressCancellation" text="{i18n>Cancellation}" type="Reject" width="80px" enabled="{ScanModel>/storno}" class="sapUiSmallMarginEnd" />
+				<content>
+					<Button type="Back" tooltip="{i18n>BackMain}"  press="onNavBack" class="sapUiTinyMarginBegin" />
+					<Title text="{i18n>title}" titleStyle="H5" class="sapUiSmallMarginBegin" />
+					<ToolbarSpacer />
+					
+					<Button press="onPressBooking" text="{i18n>Book}" type="Reject" width="80px" enabled="{ScanModel>/booking}" />
+					<ToolbarSeparator />
+					<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="80px" enabled="{ScanModel>/ok}" />
+					<ToolbarSeparator />
+					<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="80px" enabled="{ScanModel>/refresh}" />
+					<ToolbarSeparator />
+					<Button press="onPressCancellation" text="{i18n>Cancellation}" type="Reject" width="80px" enabled="{ScanModel>/storno}" class="sapUiSmallMarginEnd" />
+				</content>
 			</Toolbar>
 		</customHeader>
 
@@ -28,10 +32,47 @@
 
 		<footer>
 			<Toolbar>
-				<Button text="{i18n>Back}" type="Back" visible="true" press="onNavBack" />
-				<ToolbarSpacer />
+				<content>
+					<Button text="{i18n>Back}" type="Back" tooltip="{i18n>BackMain}" visible="true" press="onNavBack" />
+					<ToolbarSpacer />
+				</content>
 			</Toolbar>
 		</footer>
     </Page>
+
+	<Page id="idPageMDE" title="{i18n>title}" showNavButton="true" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}" visible="{ScanModel>/showMDE}">
+		<headerContent></headerContent>
+		<subHeader>
+			<Toolbar>
+				<content>
+					<HBox alignContent="SpaceBetween" justifyContent="Start" width="100%" class="sapUiResponsiveMargin">
+						<Button press="onPressBooking" text="{i18n>Book}" type="Reject" width="70px" enabled="{ScanModel>/booking}" 
+								class="sapUiTinyMarginEnd sapUiSmallMarginTop sapUiTinyMarginButton" />
+						<Button press="onPressOk(${ScanModel>/viewMode})" text="{i18n>Ok}" type="Success" width="70px" 
+								enabled="{ScanModel>/ok}" class="sapUiTinyMarginEnd sapUiSmallMarginTop sapUiTinyMarginButton" />
+						<Button press="onPressRefresh" text="{i18n>Refresh}" type="Emphasized" width="70px" 
+								enabled="{ScanModel>/refresh}" class="sapUiTinyMarginEnd sapUiSmallMarginTop sapUiTinyMarginButton" />
+						<Button press="onPressCancellation" text="{i18n>CancellationShort}" tooltip="{i18n>CancellationTooltip}" type="Reject" width="auto" 
+								enabled="{ScanModel>/storno}" class="sapUiTinyMarginEnd sapUiSmallMarginTop sapUiTinyMarginButton" />
+					</HBox>
+				</content>
+			</Toolbar>
+		</subHeader>
+
+        <content>
+            <core:Fragment fragmentName="z.recweforeign.view.mde.ScanDetailsMDE" type="XML" />
+			<core:Fragment fragmentName="z.recweforeign.view.mde.UiTableMaMDE" type="XML" />
+            <core:Fragment fragmentName="z.recweforeign.view.mde.UiTableMbMDE" type="XML" />
+ 		</content>
+
+		<footer>
+			<Toolbar>
+				<content>
+					<Button text="{i18n>Back}" type="Back" tooltip="{i18n>BackMain}" visible="true" press="onNavBack" />
+					<ToolbarSpacer />
+				</content>
+			</Toolbar>
+		</footer>
+	</Page>
 
 </mvc:View>
