@@ -36,7 +36,7 @@
 		</footer>
 	</Page>
 
-	<Page id="idPageMDE" title="{i18n>title}" showNavButton="false" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}" visible="{ScanModel>/showMDE}" >
+	<Page id="idPageMDE" title="{i18n>title}" showNavButton="true" navButtonPress="onNavBack" navButtonTooltip="{i18n>BackMain}" visible="{ScanModel>/showMDE}" >
 		<headerContent></headerContent>
 		<subHeader>
 			<Toolbar>
