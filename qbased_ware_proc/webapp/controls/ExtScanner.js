@@ -438,7 +438,9 @@ sap.ui.define([
         },
 
         onScannerOkPress: function () {
-            this._oID.close();
+            if (this._oID) {
+                this._oID.close();
+            }
 
             var check = this._validateOkPressed();
 
@@ -1031,8 +1033,8 @@ sap.ui.define([
         },
     
         _validateInputs: function () {
-            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo");
-            var mScanNumber = this._oScanModel.getProperty("/valueScan");
+            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo").trim();
+            var mScanNumber = this._oScanModel.getProperty("/valueScan").trim();
 
             if (mNumber !== null && mNumber !== undefined && mNumber !== "") {                    
                 this._oScanModel.setProperty("/okButton", true);
@@ -1044,8 +1046,8 @@ sap.ui.define([
         },
     
         _validateOkPressed: function () {
-            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo");
-            var mScanNumber = this._oScanModel.getProperty("/valueScan");
+            var mNumber     = this._oScanModel.getProperty("/valueManuallyNo").trim();
+            var mScanNumber = this._oScanModel.getProperty("/valueScan").trim();
 
             if (mNumber !== null && mNumber !== undefined && mNumber !== "") {
                 return true;

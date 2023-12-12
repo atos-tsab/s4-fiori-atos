@@ -70,8 +70,9 @@
             // ---- Define variables for the License View
             this.oView = this.getView();
 
-            this.bMDE           = false;
-            this.bState         = true;
+            this.sWN    = "";
+            this.bMDE   = false;
+            this.bState = true;
             this.sActiveQMode   = "H";
             this.iActiveQueue   = 0;
             this.sActiveQueue   = "";
@@ -163,7 +164,10 @@
 
 			// this._setKeyboardShortcutsQueue();
 
+            // ---- Get the default Page ID
             this._getShellSource();
+            
+            // ---- Set start constellation
             this._resetAll();
 
             // ---- Check for MDE device
@@ -628,7 +632,7 @@
             var sParam = encodeURIComponent("/SCWM/LGN");
             var that   = this;
 
-            this.iWN = "";
+            this.sWN = "";
 
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
@@ -651,8 +655,12 @@
                         }
 
                         if (rData !== null && rData !== undefined && rData !== "") {
-                            that.iWN = rData.ParameterValue;
+                            that.sWN = rData.ParameterValue;
 
+                            // ---- Get the Page ID
+                            that._getShellSource();
+
+                            // ---- Load the Queue data
                             that.loadQueueData();
                         }
                     }
@@ -664,7 +672,7 @@
             var that = this;
 
             // ---- Check for Warehouse Number
-            if (this.iWN === "") {
+            if (this.sWN === "") {
                 tools.showMessageError(sWarehouseNumberErr, "");
                 
                 return;
@@ -674,7 +682,7 @@
             BusyIndicator.show(1);
 
 			var aFilters = [];
-                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("NoOfOpenTasks", sap.ui.model.FilterOperator.GT, 0));
                 aFilters.push(new sap.ui.model.Filter("ExternalQueue", sap.ui.model.FilterOperator.EQ, this.bExternalQueue));
 
@@ -849,12 +857,12 @@
         },
 
         onNavToHandlingUnits: function (queue) {
-            this.getRouter().navTo("hu", { "whn": this.iWN, "queue": queue, "qmode": this.sActiveQMode }, true);
+            this.getRouter().navTo("hu", { "whn": this.sWN, "queue": queue, "qmode": this.sActiveQMode }, true);
         },
 
 		_getShellSource: function (oEvent) {
 			var spaceID = this.oResourceBundle.getText("SpaceId");
-			var pageID  = this.oResourceBundle.getText("PageId");
+			var pageID  = this._getPageId();
 
             if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
                 this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
@@ -863,7 +871,7 @@
                     if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
                         var sPreviousHash = History.getInstance().getPreviousHash();
     
-                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                        if (sPreviousHash.includes("pageId=" + pageID + "&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                             this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
                             return;
@@ -874,6 +882,28 @@
                 this.sShellSource = "#Shell-home";
             }
 		},
+
+        _getPageId: function () {
+			var pageID  = this.oResourceBundle.getText("PageId");
+			var pageID1 = this.oResourceBundle.getText("PageIdWi");
+			var pageID2 = this.oResourceBundle.getText("PageIdHu");
+			var pageID3 = this.oResourceBundle.getText("PageIdBr");
+            var sPageID = pageID;
+
+            if (this.sWN !== null && this.sWN !== undefined && this.sWN !== "") {
+                if (this.sWN === "L001") {
+                    var sPageID = pageID1;
+                } else if (this.sWN === "L007") {
+                    var sPageID = pageID2;
+                } else if (this.sWN === "L009") {
+                    var sPageID = pageID3;
+                } else {
+                    sPageID = pageID;
+                }
+            }
+
+            return sPageID;
+        },
 
 		_getServiceUrl: function () {
             var sService = "";
