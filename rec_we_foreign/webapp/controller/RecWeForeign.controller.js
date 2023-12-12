@@ -72,7 +72,7 @@ sap.ui.define([
             // ---- Define variables for the License View
             this.oView = this.getView();
 
-            this.iWN = "";
+            this.sWN = "";
             this.iHU = "";
             this.sScanType       = "";
             this.sShellSource    = "#Shell-home";
@@ -164,7 +164,10 @@ sap.ui.define([
 			// ---- Enable the Function key solution
 			// this._setKeyboardShortcuts();
 
+            // ---- Get the default Page ID
             this._getShellSource();
+            
+            // ---- Set start constellation
             this._resetAll();
             this.loadUserData();
 
@@ -249,7 +252,7 @@ sap.ui.define([
             if (oScanModel !== null && oScanModel !== undefined) {
                 if (oScanModel.getData() !== null && oScanModel.getData() !== undefined) {
                     var oScanData  = oScanModel.getData();
-                    var sManNumber = oScanData.valueManuallyNo;
+                    var sManNumber = oScanData.valueManuallyNo.trim();
                     
                     this.sViewMode = oScanData.viewMode;
 
@@ -257,7 +260,6 @@ sap.ui.define([
                         // ---- Check for DMC All parameter
                         sManNumber = this._handleDMC(this.sViewMode, sManNumber);
 
-                        sManNumber = sManNumber.trim();
                         sManNumber = sManNumber.toUpperCase();
                         sManNumber = this._removePrefix(sManNumber);
                         
@@ -519,7 +521,7 @@ sap.ui.define([
             var sParam = encodeURIComponent("/SCWM/LGN");
             var that   = this;
 
-            this.iWN = "";
+            this.sWN = "";
 
             // ---- Read the User Data from the backend
             var sPath = "/UserParameter('" + sParam + "')";
@@ -550,7 +552,10 @@ sap.ui.define([
                         }
 
                         if (rData !== null && rData !== undefined && rData !== "") {
-                            that.iWN = rData.ParameterValue;
+                            that.sWN = rData.ParameterValue;
+
+                            // ---- Get the Page ID
+                            that._getShellSource();
                         }
 
                         BusyIndicator.hide();
@@ -574,7 +579,7 @@ sap.ui.define([
 
             // ---- Read the HU Data from the backend
 			var aFilters = [];
-                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
 
             BusyIndicator.show(1);
@@ -724,7 +729,7 @@ sap.ui.define([
 
             // ---- Read the HU Data from the backend
 			var aFilters = [];
-                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.iWN));
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
                 aFilters.push(new sap.ui.model.Filter("HandlingUnit", sap.ui.model.FilterOperator.EQ, this.iHU));
 
             var oModel = this._getServiceUrl()[0];
@@ -864,7 +869,7 @@ sap.ui.define([
         _updateStatusSingleHU: function (oTable, iHU) {
             var that = this;
 
-            var sPath    = "/DeliveryHU(WarehouseNumber='" + this.iWN + "',HandlingUnit='" + this.iHU + "')";
+            var sPath    = "/DeliveryHU(WarehouseNumber='" + this.sWN + "',HandlingUnit='" + this.iHU + "')";
             var urlParam = { "BookUnload": true };
 
             BusyIndicator.show(1);
@@ -959,20 +964,22 @@ sap.ui.define([
             var sStatusIconOk    = this.oResourceBundle.getText("StatusIconOk");
             var sStatusNoSel     = this.oResourceBundle.getText("StatusNotSel");
             var sStatusSel       = this.oResourceBundle.getText("StatusSelect");
-
+ 
             // ---- Adding of additional Status flags
             if (oData.results.length > 0) {
-                for (let i = 0; i < oData.results.length; i++) {
-                    var data = oData.results[i];
-                    
-                    if (data.StatusUnload === true) {
-                        data.StatusIcon = sStatusIconOk;
-                        data.StatusSel  = sStatusSel;
-                    } else {
-                        data.StatusIcon = sStatusTextNotOk;
-                        data.StatusSel  = sStatusNoSel;
+                if (this.bMDE) {
+                    for (let i = 0; i < oData.results.length; i++) {
+                        var data = oData.results[i];
+                        
+                        if (data.StatusUnload === true) {
+                            data.StatusIcon = sStatusIconOk;
+                            data.StatusSel  = sStatusSel;
+                        } else {
+                            data.StatusIcon = sStatusTextNotOk;
+                            data.StatusSel  = sStatusNoSel;
+                        }
                     }
-                }
+                }                        
             }
 
             var oModel = new JSONModel();
@@ -1039,13 +1046,17 @@ sap.ui.define([
                     var data = oData[i];
  
                     if (data.StatusUnload === true) {
-                        data.StatusIcon = sStatusIconOk;
-                        data.StatusSel  = sStatusSel;
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusIconOk;
+                            data.StatusSel  = sStatusSel;
+                        }
 
                         sNote = sNote + 1;
                     } else {
-                        data.StatusIcon = sStatusTextNotOk;
-                        data.StatusSel  = sStatusNoSel;
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusTextNotOk;
+                            data.StatusSel  = sStatusNoSel;
+                        }
                     }
                 }
             }
@@ -1074,14 +1085,20 @@ sap.ui.define([
                     var data = oData[i];
  
                     if (data.StatusUnload === false) {
-                        data.StatusIcon  = sStatusTextNotOk;
-                        data.StatusSel   = sStatusNoSel;
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusTextNotOk;
+                            data.StatusSel  = sStatusNoSel;
+                        }
+
                         data.BookMissing = true;
                         data.Status      = "Error";
                     } else if (data.StatusUnload === true) {
-                        data.StatusIcon = sStatusIconOk;
-                        data.StatusSel  = sStatusSel;
-                        data.Status     = "Success";
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusIconOk;
+                            data.StatusSel  = sStatusSel;
+                        }
+
+                        data.Status = "Success";
                     }
                 }
             }
@@ -1102,14 +1119,20 @@ sap.ui.define([
                     var data = oData[i];
  
                     if (data.StatusUnload === false) {
-                        data.StatusIcon  = sStatusTextNotOk;
-                        data.StatusSel   = sStatusNoSel;
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusTextNotOk;
+                            data.StatusSel  = sStatusNoSel;
+                        }
+
                         data.BookMissing = false;
                         data.Status      = "None";
                     } else if (data.StatusUnload === true) {
-                        data.StatusIcon = sStatusIconOk;
-                        data.StatusSel  = sStatusSel;
-                        data.Status     = "Success";
+                        if (this.bMDE) {
+                            data.StatusIcon = sStatusIconOk;
+                            data.StatusSel  = sStatusSel;
+                        }
+
+                        data.Status = "Success";
                     }
                 }
             }
@@ -1126,11 +1149,15 @@ sap.ui.define([
             if (oData.length > 0) {
                 for (let i = 0; i < oData.length; i++) {
                     var data = oData[i];
-                        data.StatusIcon   = sStatusTextNotOk;
-                        data.StatusSel    = sStatusNoSel;
-                        data.StatusUnload = false;
-                        data.BookMissing = false;
-                        data.Status = "None";
+
+                    if (this.bMDE) {
+                        data.StatusIcon = sStatusTextNotOk;
+                        data.StatusSel  = sStatusNoSel;
+                    }
+
+                    data.StatusUnload = false;
+                    data.BookMissing = false;
+                    data.Status = "None";
                 }
             }
 
@@ -1276,8 +1303,8 @@ sap.ui.define([
 
             if (oEvent !== null && oEvent !== undefined) {
                 if (oEvent.getParameter("valueManuallyNo") !== null && oEvent.getParameter("valueManuallyNo") !== undefined) {
-                    var sManNumber  = oEvent.getParameter("valueManuallyNo");
-                    var sScanNumber = oEvent.getParameter("valueScan");
+                    var sManNumber  = oEvent.getParameter("valueManuallyNo").trim();
+                    var sScanNumber = oEvent.getParameter("valueScan").trim();
                     
                     this.sViewMode = oScanModel.getData().viewMode;
 
@@ -1285,7 +1312,6 @@ sap.ui.define([
                         // ---- Check for Data Matix Code
                         sManNumber = this._handleDMC(this.sViewMode, sManNumber);
 
-                        sManNumber = sManNumber.trim()
                         sManNumber = sManNumber.toUpperCase();
                         sManNumber = this._removePrefix(sManNumber);
 
@@ -1296,7 +1322,6 @@ sap.ui.define([
                         // ---- Check for Data Matix Code
                         sScanNumber = this._handleDMC(this.sViewMode, sScanNumber);
 
-                        sScanNumber = sScanNumber.trim()
                         sScanNumber = sScanNumber.toUpperCase();
                         
                         oScanModel.setProperty("/valueManuallyNo", sScanNumber);
@@ -1428,7 +1453,7 @@ sap.ui.define([
 
 		_getShellSource: function (oEvent) {
 			var spaceID = this.oResourceBundle.getText("SpaceId");
-			var pageID  = this.oResourceBundle.getText("PageId");
+			var pageID  = this._getPageId();
 
             if (spaceID !== null && spaceID !== undefined && spaceID !== "" && pageID !== null && pageID !== undefined && pageID !== "") {
                 this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
@@ -1437,7 +1462,7 @@ sap.ui.define([
                     if (History.getInstance().getPreviousHash() !== null && History.getInstance().getPreviousHash() !== undefined) {
                         var sPreviousHash = History.getInstance().getPreviousHash();
     
-                        if (sPreviousHash.includes("pageId=Z_EEWM_PG_MOBILE_DIALOGS&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
+                        if (sPreviousHash.includes("pageId=" + pageID + "&spaceId=Z_EEWM_SP_MOBILE_DIALOGS")) {
                             this.sShellSource = "#Launchpad-openFLPPage?pageId=" + pageID + "&spaceId=" + spaceID;
 
                             return;
@@ -1448,6 +1473,28 @@ sap.ui.define([
                 this.sShellSource = "#Shell-home";
             }
 		},
+
+        _getPageId: function () {
+			var pageID  = this.oResourceBundle.getText("PageId");
+			var pageID1 = this.oResourceBundle.getText("PageIdWi");
+			var pageID2 = this.oResourceBundle.getText("PageIdHu");
+			var pageID3 = this.oResourceBundle.getText("PageIdBr");
+            var sPageID = pageID;
+
+            if (this.sWN !== null && this.sWN !== undefined && this.sWN !== "") {
+                if (this.sWN === "L001") {
+                    var sPageID = pageID1;
+                } else if (this.sWN === "L007") {
+                    var sPageID = pageID2;
+                } else if (this.sWN === "L009") {
+                    var sPageID = pageID3;
+                } else {
+                    sPageID = pageID;
+                }
+            }
+
+            return sPageID;
+        },
 
 		_getServiceUrl: function () {
             var sService = "";
