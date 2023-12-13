@@ -563,7 +563,7 @@
             var sOkMesg  = this.oResourceBundle.getText("OkMesBooking", iShipmentNumber);
             var tSTime   = this.oResourceBundle.getText("ShowTime");
             var that = this;
-
+            
             if (iShipmentNumber !== null && iShipmentNumber !== undefined && iShipmentNumber !== "") {
                 BusyIndicator.show(1);
 
@@ -584,8 +584,6 @@
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
-                                    that._resetAll();
-
                                     BusyIndicator.hide();
 
                                     return;
@@ -601,10 +599,11 @@
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
-                                that.loadShipmentData(that.bState);
-
                                 setTimeout(function () {
-                                    that._resetAll();                                
+                                    that.loadShipmentData(that.bState);
+
+                                    that.oScanModel.setProperty("/showOk", false);
+                                    that.oScanModel.setProperty("/showOkText", "");       
                                 }, tSTime);            
                             } else {
                                 BusyIndicator.hide();
@@ -803,10 +802,15 @@
         },
 
         _setShipmentTableData: function (oData) {
+            var sViewTitleOwn = this.oResourceBundle.getText("CaptureOwnShipments");
+            var sViewTitleAll = this.oResourceBundle.getText("CaptureAllShipments");
             var sErrMsg = this.oResourceBundle.getText("ShipmentErr");
-            var that = this;
+            var count = 0;
+            var that  = this;
 
             if (oData.length > 0) {
+                count = oData.length;
+
                 for (let i = 0; i < oData.length; i++) {
                     var item = oData[i];
                         item.No     = (i + 1);
@@ -815,6 +819,16 @@
                 } 
             } else {
                 tools.alertMeOffset(sErrMsg, "0 200");
+            }
+
+            // ---- Reset Title of the Shipmenttable
+            
+            if (this.bState) {
+                this.oScanModel.setProperty("/switchStateShip", true);
+                this.oScanModel.setProperty("/captionShipment", sViewTitleOwn + " (" + count + ")");
+            } else {
+                this.oScanModel.setProperty("/switchStateShip", false);
+                this.oScanModel.setProperty("/captionShipment", sViewTitleAll + " (" + count + ")");
             }
 
             var oModel = new JSONModel();
