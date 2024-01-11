@@ -328,6 +328,8 @@ sap.ui.define([
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+    
                                     var component = that.byId(that.idInputMat);
 
                                     if (component !== null && component !== undefined) {
@@ -335,8 +337,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-    
-                                    BusyIndicator.hide();
     
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
