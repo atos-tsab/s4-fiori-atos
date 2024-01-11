@@ -285,14 +285,14 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.showMessageError(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus("idInput_Material");
     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -445,6 +445,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === true) {
+                                    BusyIndicator.hide();
+    
                                     // ---- Coding in case of showing Business application Errors                                    
                                     if (component !== null && component !== undefined) {
                                         tools.showMessageError(rData.results[0].SapMessageText, "", component);
@@ -452,18 +454,16 @@ sap.ui.define([
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
     
-                                    BusyIndicator.hide();
-    
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E" && rData.results[0].StatusGoodsReceipt === false) {
+                                    BusyIndicator.hide();
+    
                                     // ---- Coding in case of showing Business application Errors
                                     if (component !== null && component !== undefined) {
                                         tools.showMessageError(rData.results[0].SapMessageText, "", component);
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-    
-                                    BusyIndicator.hide();
     
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -548,6 +548,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+    
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.byId("idInput_Location");
 
@@ -556,8 +558,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-    
-                                    BusyIndicator.hide();
     
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
 
