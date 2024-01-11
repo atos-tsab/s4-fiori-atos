@@ -288,6 +288,8 @@ sap.ui.define([
                         }
                     });
             } else {
+                BusyIndicator.hide();
+
                 that.oScanModel.setProperty("/showOk", false);
                 that.oScanModel.setProperty("/showOkText", "");
                 that.oScanModel.setProperty("/showErr", true);
@@ -376,6 +378,8 @@ sap.ui.define([
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 that._resetAll();
 
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_Transport");
 
                                 if (component !== null && component !== undefined) {
@@ -383,8 +387,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 that.oScanModel.setProperty("/valueManuallyNo", "");
 
@@ -483,6 +485,8 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
 
                                 if (component !== null && component !== undefined) {
@@ -491,9 +495,7 @@ sap.ui.define([
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
 
-                                BusyIndicator.hide();
-
-                                return;
+                               return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                 // ---- Coding in case of showing Business application Informations
                                 tools.alertMe(rData.SapMessageText, "");
@@ -542,6 +544,8 @@ sap.ui.define([
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
                                 that._resetAll();
 
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_Transport");
 
                                 if (component !== null && component !== undefined) {
@@ -549,8 +553,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
