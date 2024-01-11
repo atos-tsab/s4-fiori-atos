@@ -446,7 +446,7 @@ sap.ui.define([
             if (check) {
                 this.fireValueScanned({
                     valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueSuffix:     that._oScanModel.getProperty("/valueSuffix"),
+                    valueSuffix:     this._oScanModel.getProperty("/valueSuffix"),
                     valueManuallyNo: this._oScanModel.getProperty("/valueManuallyNo"),
                     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
                 });
@@ -481,10 +481,10 @@ sap.ui.define([
                     key = this._removePrefix(key);
 
                 this.fireValueScanned({
-                    valueScan:       this._oScanModel.getProperty("/valueScan"),
+                    valueScan:       that._oScanModel.getProperty("/valueScan"),
                     valueSuffix:     that._oScanModel.getProperty("/valueSuffix"),
                     valueManuallyNo: key,
-                    iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
+                    iScanModusAktiv: that._oScanModel.getProperty("/iScanModusAktiv")
                 });
             } else {
                 // this.fireValueScanned({
@@ -580,9 +580,9 @@ sap.ui.define([
                         this._getScanDialog().close()
     
                         this.fireValueScanned({
-                            valueScan:       this._oScanModel.getProperty("/valueScan"),
+                            valueScan:       that._oScanModel.getProperty("/valueScan"),
                             valueSuffix:     that._oScanModel.getProperty("/valueSuffix"),
-                            valueManuallyNo: this._oScanModel.getProperty("/valueManuallyNo"),
+                            valueManuallyNo: that._oScanModel.getProperty("/valueManuallyNo"),
                             iScanModusAktiv: 2
                         });
                     } else {
