@@ -234,11 +234,11 @@ sap.ui.define([
                         }
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
-                            this._loadStorageBinData(sManNumber);
+                            this._loadStorageBinData(1, sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
                         if (sManNumber !== "") {
-                            this._handleLocConfData(sManNumber);
+                            this._loadStorageBinData(2, sManNumber);
                         }
                     }
                 }    
@@ -494,7 +494,7 @@ sap.ui.define([
             this._handleHuData(sManNumber);
         },
 
-	    _loadStorageBinData: function (sManNumber) {
+	    _loadStorageBinData: function (trigger, sManNumber) {
             this.sStorageBin = sManNumber.toUpperCase();
 
             var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
@@ -556,15 +556,17 @@ sap.ui.define([
                                     tools.alertMe(rData.SapMessageText, "");
                                 }
                                     
-                                if (rData.StorageBin === that.sStorageBin) {
-                                    if (that.QsRelevantHU) {
-                                        if (rData.to_WarehouseTask !== null && rData.to_WarehouseTask !== undefined) {
-                                            that.oDisplayModel.setProperty("/Book2StorageBin", rData.StorageBin);
-                                            that.oDisplayModel.setProperty("/Book2StorageType", rData.StorageType);
-                                        }
+                                if (that.QsRelevantHU) {
+                                    if (rData.to_WarehouseTask !== null && rData.to_WarehouseTask !== undefined) {
+                                        that.oDisplayModel.setProperty("/Book2StorageBin", rData.StorageBin);
+                                        that.oDisplayModel.setProperty("/Book2StorageType", rData.StorageType);
                                     }
-                                    
+                                }
+                                     
+                                if (trigger === 1) {
                                     that._setStorageBinData(rData);
+                                } else {
+                                    that._handleLocConfData(rData.StorageBin);
                                 }
 
                                 BusyIndicator.hide();
@@ -1017,11 +1019,11 @@ sap.ui.define([
                         }
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
-                            this._loadStorageBinData(sManNumber);
+                            this._loadStorageBinData(1, sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
                         if (sManNumber !== "") {
-                            this._handleLocConfData(sManNumber);
+                            this._loadStorageBinData(2, sManNumber);
                         }
                     }
                 }    
