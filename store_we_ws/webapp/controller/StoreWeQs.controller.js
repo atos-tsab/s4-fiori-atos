@@ -290,11 +290,11 @@ sap.ui.define([
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
-                            this._loadStorageBinData(sManNumber);
+                            this._loadStorageBinData(1, sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
                         if (sManNumber !== "") {
-                            this._handleLocConfData(sManNumber);
+                            this._loadStorageBinData(2, sManNumber);
                         }
                     }
                 }    
@@ -344,25 +344,25 @@ sap.ui.define([
                 var oModel = this._getServiceUrl()[0];
                     oModel.create(sPath, urlData, {
                         error: function(oError, resp) {
+                            BusyIndicator.hide();
+
                             tools.handleODataRequestFailed(oError, resp, true);
 
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
-
-                            BusyIndicator.hide();
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus(that.idInputHU);
     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -371,6 +371,8 @@ sap.ui.define([
                             }
                             
                             if (parseInt(oResponse.statusCode, 10) === 201 || parseInt(oResponse.statusCode, 10) === 204) {
+                                BusyIndicator.hide();
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -378,8 +380,6 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
                     
-                                    BusyIndicator.hide();
-
                                     // ---- Set Focus to main Input field
                                     that._setFocus(that.idInputHU);
                                 }, tSTime);            
@@ -412,10 +412,10 @@ sap.ui.define([
                 var oData = this.oDisplayModel.getData();
                     oData.to_WarehouseTask.BookConfirm = true;
                     oData.to_WarehouseTask.BookMoveHu  = true;
-                    oData.to_WarehouseTask.HandlingUnitId            = oData.HandlingUnitId;
-                    oData.to_WarehouseTask.DestinationStorageBin     = oData.Book2StorageBin;
-                    oData.to_WarehouseTask.DestinationStorageType    = oData.Book2StorageType;
-                    oData.to_WarehouseTask.TargetQuantity            = oData.Quantity;
+                    oData.to_WarehouseTask.HandlingUnitId         = oData.HandlingUnitId;
+                    oData.to_WarehouseTask.DestinationStorageBin  = oData.Book2StorageBin;
+                    oData.to_WarehouseTask.DestinationStorageType = oData.Book2StorageType;
+                    oData.to_WarehouseTask.TargetQuantity         = oData.Quantity;
 
                 // ---- Check for HU from VDA table
                 if (this.StatusVirtual) {
@@ -434,24 +434,24 @@ sap.ui.define([
                 var oModel = this._getServiceUrl()[0];
                     oModel.update(sPath, oData.to_WarehouseTask, {
                         error: function(oError, resp) {
+                            BusyIndicator.hide();
+
                             tools.handleODataRequestFailed(oError, resp, true);
                             
                             that._resetQuantity();
                             that.oScanModel.setProperty("/refresh", true);
-
-                            BusyIndicator.hide();
                         },
                         success: function(rData, oResponse) {
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus(that.idInputHU);
     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -460,6 +460,8 @@ sap.ui.define([
                             }
 
                             if (parseInt(oResponse.statusCode, 10) === 202 || parseInt(oResponse.statusCode, 10) === 204) {
+                                BusyIndicator.hide();
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -467,8 +469,6 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
                     
-                                    BusyIndicator.hide();
-
                                     // ---- Set Focus to main Input field
                                     that._setFocus(that.idInputHU);
                                 }, tSTime);            
@@ -564,6 +564,8 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 // ---- Coding in case of showing Business application Errors
                                 that._resetAll();
 
@@ -574,8 +576,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -645,7 +645,7 @@ sap.ui.define([
             this._handleHuData(sManNumber);
         },
 
-	    _loadStorageBinData: function (sManNumber) {
+	    _loadStorageBinData: function (trigger, sManNumber) {
             this.sStorageBin = sManNumber.toUpperCase();
 
             var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
@@ -683,6 +683,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.byId(that.idInputLocation);
 
@@ -691,8 +693,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-
-                                    BusyIndicator.hide();
 
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
 
@@ -707,15 +707,17 @@ sap.ui.define([
                                 for (let i = 0; i < rData.results.length; i++) {
                                     let data = rData.results[i];                                    
                                     
-                                    if (data.StorageBinID === that.sStorageBin) {
-                                        if (that.QsRelevantHU) {
-                                            if (data.to_WarehouseTask !== null && data.to_WarehouseTask !== undefined) {
-                                                that.oDisplayModel.setProperty("/Book2StorageBin", data.StorageBinID);
-                                                that.oDisplayModel.setProperty("/Book2StorageType", data.StorageType);
-                                            }
+                                    if (that.QsRelevantHU) {
+                                        if (data.to_WarehouseTask !== null && data.to_WarehouseTask !== undefined) {
+                                            that.oDisplayModel.setProperty("/Book2StorageBin", data.StorageBinID);
+                                            that.oDisplayModel.setProperty("/Book2StorageType", data.StorageType);
                                         }
-                            
+                                    }
+                                    
+                                    if (trigger === 1) {
                                         that._setStorageBinData(data);
+                                    } else {
+                                        that._handleLocConfData(data.StorageBinID);
                                     }
                                 }
 
@@ -1073,11 +1075,11 @@ sap.ui.define([
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "Location") {
                         if (sManNumber !== "") {
-                            this._loadStorageBinData(sManNumber);
+                            this._loadStorageBinData(1, sManNumber);
                         }
                     } else if (this.sViewMode === "LocConf") {
                         if (sManNumber !== "") {
-                            this._handleLocConfData(sManNumber);
+                            this._loadStorageBinData(2, sManNumber);
                         }
                     }
                 }    
