@@ -122,6 +122,7 @@
                 "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
+                "showQuantity":    false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewHu":          false,
@@ -307,7 +308,6 @@
                 var selectedRow = oModel.getProperty(path);
 
                 this.iActiveQueue = iIndex;
-                this.sActiveQueue = selectedRow.QueueId;
             }
 
             this.oScanModel.setData(oData);
@@ -348,7 +348,6 @@
                 var selectedRow = oModel.getProperty(path);
 
                 this.iActiveQueue = iIndex;
-                this.sActiveQueue = selectedRow.QueueId;
             }
 
             this.oScanModel.setData(oData);
@@ -467,7 +466,8 @@
 
 	    loadHuData: function (iWHN, sQueue) {
             var sErrMsg = this.oResourceBundle.getText("QueueErr");
-            var sNavTo  = "to_HandlingUnits,to_WarehouseTasks";
+            // var sNavTo  = "to_WarehouseTasks,to_WarehouseTasks/to_HandlingUnits";
+            var sNavTo  = "to_WarehouseTasks";
             var that = this;
 
             // ---- Read the HU Data from the backend 
@@ -508,6 +508,8 @@
                         if (rData.results !== null && rData.results !== undefined) {
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+    
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.byId(id);
 
@@ -518,8 +520,6 @@
                                     }
     
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
-    
-                                    BusyIndicator.hide();
     
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -558,7 +558,7 @@
         },
 
         _setHuTableData: function (oData) {
-            var oSortTextArray = tools.splitStringIntoArray(this.oResourceBundle.getText("QueueSortProperty"), ",");
+            var oSortTextArray = tools.splitStringIntoArray(this.oResourceBundle.getText("QueueSortPropertyInt"), ",");
             var oListData = [];
             var that = this;
            
@@ -579,11 +579,6 @@
                 oListData.push(data);
             }
 
-            var oModel = new JSONModel();
-                oModel.setData(oListData);
-
-            this.LocationListTable.setModel(oModel);
-
             // ---- Special sorting in case of Queue REPL / REPL2
             var sSortText = "";
 
@@ -597,6 +592,19 @@
                 }
             }
 
+            if (this.sActiveQueue === sSortText) {
+                oListData = tools._sortArray(oListData, sSortText, 1);
+            }
+
+            // ---- Set the Model to the Table
+            var oModel = new JSONModel();
+                oModel.setData(oListData);
+
+            this.LocationListTable.setModel(oModel);
+
+            this.oScanModel.setProperty("/showQuantity", false);
+
+            // ---- Check for MDE Scanner
             if (this.bMDE) {
                 this.LocationListTable.bindItems({
                     path: "/",
@@ -604,28 +612,16 @@
                     templateShareable: true
                 });
 
-                if (this.sActiveQueue === sSortText) {
-                    var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
-
-                    this.LocationListTable.getBinding("items").sort(oSorter);
-                }
- 
                 this.LocationListTable.setSelectedItem(this.LocationListTable.getItems()[0], true /*selected*/, true /*fire event*/);
             } else {
                 this.LocationListTable.bindRows("/");
 
-                // ---- Special sorting in case of Queue REPL
-                if (this.sActiveQueue === sSortText) {
-                    var oSorter = new sap.ui.model.Sorter("SourceStorageLocation", false);
-
-                    this.LocationListTable.getBinding("rows").sort(oSorter);
-                }
- 
                 this.LocationListTable.setSelectedIndex(0);
             }
         },
 
         _setWhtTableData: function (oData) {
+            var sSortText = this.oResourceBundle.getText("QueueSortPropertyExt");
             var oListData = [];
             var that = this;
 
@@ -638,6 +634,7 @@
 
                     data.WarehouseTaskId       = item.WarehouseTaskId;
                     data.Material              = item.MaterialNo;
+                    data.Quantity              = item.TargetQuantity;
                     data.SourceStorageLocation = item.SourceStorageBin;
                     data.SourceStorageType     = item.SourceStorageType;
                     data.DestinationStorageBin = item.DestinationStorageBin;
@@ -645,11 +642,18 @@
                 oListData.push(data);
             } 
 
+            // ---- Special sorting in case of Queue REPL
+            oListData = tools._sortArray(oListData, sSortText, 1);
+
+            // ---- Set the Model to the Table
             var oModel = new JSONModel();
                 oModel.setData(oListData);
 
             this.LocationListTable.setModel(oModel);
 
+            this.oScanModel.setProperty("/showQuantity", true);
+
+            // ---- Check for MDE Scanner
             if (this.bMDE) {
                 this.LocationListTable.bindItems({
                     path: "/",
@@ -660,11 +664,12 @@
                 this.LocationListTable.setSelectedItem(this.LocationListTable.getItems()[0], true /*selected*/, true /*fire event*/);
             } else {
                 this.LocationListTable.bindRows("/");
+
                 this.LocationListTable.setSelectedIndex(0);
             }
         },
 
-		_onOkClicked: function () {
+        _onOkClicked: function () {
             var oScanModel = this.oScanModel;
 
             if (oScanModel !== null && oScanModel !== undefined) {
@@ -701,9 +706,9 @@
 
                         if (item.Material === iHU) {
                             if (this.bMDE) {
-                                oTable.setSelectedItem(oTable.getItems()[0], true /*selected*/, true /*fire event*/);
+                                oTable.setSelectedItem(oTable.getItems()[i], true /*selected*/, true /*fire event*/);
                             } else {
-                                oTable.setSelectedIndex(0);
+                                oTable.setSelectedIndex(i);
                             }
 
                             break;
@@ -716,6 +721,38 @@
                                 oTable.setSelectedIndex(0);
                             }
                         }
+                    }
+                }
+            }
+        },
+
+        onInputChanged: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        key = this._removePrefix(key);
+
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                        this.oScanModel.setProperty("/valueManuallyNo", "");
+                    }
+                }
+            }
+        },
+
+        onInputLiveChange: function (oEvent) {
+            if (oEvent !== null && oEvent !== undefined) {
+                if (oEvent.getSource() !== null && oEvent.getSource() !== undefined) {
+                    var source = oEvent.getSource();
+                    var key = source.getValue();
+    
+                    if (key !== null && key !== undefined && key !== "") {
+                        this.oScanModel.setProperty("/valueManuallyNo", key);
+                    } else {
+                        this.oScanModel.setProperty("/valueManuallyNo", "");
                     }
                 }
             }
@@ -1043,6 +1080,7 @@
                 "showMDE":         false,
                 "showOk":          false,
                 "showErr":         false,
+                "showQuantity":    false,
                 "showOkText":      "",
                 "showErrText":     "",
                 "viewHu":          false,

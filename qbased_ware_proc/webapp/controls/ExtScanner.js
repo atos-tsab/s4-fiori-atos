@@ -447,7 +447,7 @@ sap.ui.define([
             if (check) {
                 this.fireValueScanned({
                     valueScan:       this._oScanModel.getProperty("/valueScan"),
-                    valueSuffix:     that._oScanModel.getProperty("/valueSuffix"),
+                    valueSuffix:     this._oScanModel.getProperty("/valueSuffix"),
                     valueManuallyNo: this._oScanModel.getProperty("/valueManuallyNo"),
                     iScanModusAktiv: this._oScanModel.getProperty("/iScanModusAktiv")
                 });

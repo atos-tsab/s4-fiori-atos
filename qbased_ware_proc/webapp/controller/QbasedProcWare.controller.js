@@ -581,11 +581,11 @@
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations

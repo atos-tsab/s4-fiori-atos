@@ -53,7 +53,8 @@
 								<HBox justifyContent="Start" wrap="Wrap" class="sapUiSmallMarginBottom" visible="{ScanModel>/viewMat}">
 									<HBox justifyContent="Start" wrap="Wrap">
 										<Label text="{ScanModel>/captionTable}{i18n>Colon}" width="{ScanModel>/lblWidth}" class="sapUiSmallMarginBegin sapUiTinyMarginTop" />
-										<Input id="idInput_Material" value="{ScanModel>/valueManuallyNo}" width="160px" class="atosMInputBaseDisabled" />
+										<Input id="idInput_Material" value="{ScanModel>/valueManuallyNo}" change="onInputChanged" liveChange="onInputLiveChange"
+											   width="160px" class="atosMInputBaseDisabled" />
 										<Button text="" tooltip="{i18n>ToolTipBarcodeScan}" icon="sap-icon://bar-code" type="Emphasized"
 												press="onScanHu('Material')" width="auto" class="sapUiTinyMarginBegin" />
 									</HBox>
@@ -63,7 +64,7 @@
 
 								<VBox justifyContent="Start" wrap="Wrap" visible="true">
 									<HBox justifyContent="Start" wrap="Wrap">
-										<OverflowToolbar width="800px" class="sapUiSmallMarginBegin">
+										<OverflowToolbar width="940px" class="sapUiSmallMarginBegin">
 											<Label text="{i18n>Toolbar}{i18n>Colon}" />
 											<ToolbarSpacer/>
 											<Button press="onHandleLocation($event,'next')" text="{i18n>Next}"     type="Emphasized" width="60px" enabled="{ScanModel>/next}" />

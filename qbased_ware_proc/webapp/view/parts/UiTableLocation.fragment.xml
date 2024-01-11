@@ -14,7 +14,7 @@
 			selectionBehavior="Row" 
 			visibleRowCount="6"
 			rowSelectionChange="onRowSelectionLocationList"
-			width="880px">
+			width="940px">
 			<ui:rowSettingsTemplate>
 				<ui:RowSettings highlight="{path:'Status',formatter:'.formatter.colorSelectedStatus'}" />
 			</ui:rowSettingsTemplate>
@@ -55,9 +55,18 @@
 						<Text text="{Material}" />
 					</ui:template>
 				</ui:Column>
+				<ui:Column width="80px" visible="{ScanModel>/showQuantity}" autoResizable="true">
+					<ui:customData>
+						<core:CustomData key="p13nData" value='\{"columnKey": "Quantity", "columnIndex":"4", "leadingProperty": "Quantity"}' />
+					</ui:customData>
+					<Label text="{i18n>Quantity}" textAlign="Center" width="100%" />
+					<ui:template>
+						<Text text="{Quantity}" />
+					</ui:template>
+				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "SourceStorageLocation", "columnIndex":"4", "leadingProperty": "SourceStorageLocation"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "SourceStorageLocation", "columnIndex":"5", "leadingProperty": "SourceStorageLocation"}' />
 					</ui:customData>
 					<Label text="{i18n>SourceStorageLocation}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -66,7 +75,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "SourceStorageType", "columnIndex":"5" "leadingProperty": "SourceStorageType"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "SourceStorageType", "columnIndex":"6" "leadingProperty": "SourceStorageType"}' />
 					</ui:customData>
 					<Label text="{i18n>SourceStorageType}" textAlign="Center" width="100%" />
 					<ui:template>
@@ -75,7 +84,7 @@
 				</ui:Column>
 				<ui:Column width="auto" visible="true" autoResizable="true">
 					<ui:customData>
-						<core:CustomData key="p13nData" value='\{"columnKey": "DestinationStorageBin", "columnIndex":"6" "leadingProperty": "DestinationStorageBin"}' />
+						<core:CustomData key="p13nData" value='\{"columnKey": "DestinationStorageBin", "columnIndex":"7" "leadingProperty": "DestinationStorageBin"}' />
 					</ui:customData>
 					<Label text="{i18n>DestStorageLocation}" textAlign="Center" width="100%" />
 					<ui:template>

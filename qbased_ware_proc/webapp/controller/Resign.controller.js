@@ -317,7 +317,7 @@ sap.ui.define([
                     } else if (this.sViewMode === "Quantity") {
                         this._handleQuantityData();                           
                     } else if (this.sViewMode === "LocConf" && sManNumber !== "") {
-                        this._handleFinalData(sManNumber);
+                        this._loadStorageBinData(sManNumber);
                     }
 
                     this.iScanModusAktiv = 1;
@@ -356,13 +356,13 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus(that.idInputHU);
-
-                                    BusyIndicator.hide();
 
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -437,14 +437,14 @@ sap.ui.define([
                                     var component = that.InputHU;
 
                                     if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                        BusyIndicator.hide();
+
                                         // ---- Coding in case of showing Business application Errors
                                         if (component !== null && component !== undefined) {
                                             tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
                                         } else {
                                             tools.showMessageError(rData.results[0].SapMessageText, "");
                                         }
-
-                                        BusyIndicator.hide();
 
                                         that.oScanModel.setProperty("/valueManuallyNo", "");
 
@@ -562,6 +562,8 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 // ---- Coding in case of showing Business application Errors
                                 var component = that.InputHU;
 
@@ -572,8 +574,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 that.oScanModel.setProperty("/valueManuallyNo", "");
 
@@ -654,6 +654,8 @@ sap.ui.define([
                             if (rData.results.length > 0) {
                                 // ---- Check for complete final booking
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.InputHU;
 
@@ -662,8 +664,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-
-                                    BusyIndicator.hide();
 
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
 
@@ -689,6 +689,8 @@ sap.ui.define([
                                         that._setHuData(item, sManNumber);
                                     }
                                 }
+                                
+                                BusyIndicator.hide();
                             } else {
                                 BusyIndicator.hide();
 
@@ -931,6 +933,91 @@ sap.ui.define([
             this._resetQuantity();
 		},
 
+	    _loadStorageBinData: function (sManNumber) {
+            this.sStorageBin = sManNumber.toUpperCase();
+
+            var sWarehouseNumberErr = this.oResourceBundle.getText("WarehouseNumberErr");
+            var sErrMsg = this.oResourceBundle.getText("StorageBinErr", this.sStorageBin);
+            var that = this;
+
+            // ---- Check for Warehouse Number
+            if (this.sWN === "") {
+                tools.showMessageError(sWarehouseNumberErr, "");
+                
+                return;
+            }
+
+            // ---- Read the HU Data from the backend
+			var aFilters = [];
+                aFilters.push(new sap.ui.model.Filter("WarehouseNumber", sap.ui.model.FilterOperator.EQ, this.sWN));
+                aFilters.push(new sap.ui.model.Filter("StorageBinID", sap.ui.model.FilterOperator.EQ, this.sStorageBin));
+
+            BusyIndicator.show(1);
+
+            var sPath = "/StorageBin";
+
+            var oModel = this._getServiceUrl()[0];
+                oModel.read(sPath, {
+                    filters: aFilters,
+                    error: function(oError, resp) {
+                        BusyIndicator.hide();
+
+                        that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                        tools.handleODataRequestFailedTitle(oError, that.sStorageBin, true);
+                    },
+                    success: function(rData, response) {
+                        if (rData.results !== null && rData.results !== undefined) {
+                            // ---- Check for complete final booking
+                            if (rData.results.length > 0) {
+                                if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
+                                    // ---- Coding in case of showing Business application Errors
+                                    var component = that.byId(that.idInputLocation);
+
+                                    if (component !== null && component !== undefined) {
+                                        tools.showMessageErrorFocus(rData.results[0].SapMessageText, "", component);
+                                    } else {
+                                        tools.showMessageError(rData.results[0].SapMessageText, "");
+                                    }
+
+                                    that.oScanModel.setProperty("/valueManuallyNo", "");
+
+                                    return;
+                                } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
+                                    // ---- Coding in case of showing Business application Informations
+                                    tools.alertMe(rData.results[0].SapMessageText, "");
+                                }
+                            }
+
+                            if (rData.results.length > 0) {
+                                for (let i = 0; i < rData.results.length; i++) {
+                                    let data = rData.results[i];                                    
+                                    
+                                    that._handleFinalData(data.StorageBinID);
+                                }
+
+                                BusyIndicator.hide();
+                            } else {
+                                BusyIndicator.hide();
+                                
+                                // ---- Coding in case of showing Business application Errors
+                                var component = that.byId(that.idInputLocation);
+
+                                if (component !== null && component !== undefined) {
+                                    tools.showMessageErrorFocus(sErrMsg, "", component);
+                                } else {
+                                    tools.showMessageError(sErrMsg, "");
+                                }
+
+                                that.oScanModel.setProperty("/valueManuallyNo", "");
+                            }
+                        }
+                    }
+                });
+        },
+
         _handleFinalData: function (sManNumber) {
             var sErrMesg  = this.oResourceBundle.getText("StorageBinErr", sManNumber);
             var tSTime    = this.oResourceBundle.getText("ShowTime");
@@ -1143,7 +1230,7 @@ sap.ui.define([
                     } else if (this.sViewMode === "Quantity") {
                          this._handleQuantityData();                           
                     } else if (this.sViewMode === "LocConf" && this.oScanModel.getProperty("/valueManuallyNo") !== "") {
-                        this._handleFinalData(sManNumber);
+                        this._loadStorageBinData(sManNumber);
                     }
                 }    
             }
