@@ -303,14 +303,14 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._resetAll();
                                     that._setFocus("idInput_HU");
     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -320,6 +320,8 @@ sap.ui.define([
                             
                             if (parseInt(oResponse.statusCode, 10) === 204 && oResponse.statusText === "No Content" || 
                                 parseInt(oResponse.statusCode, 10) === 201 && oResponse.statusText === "Created") {
+                                BusyIndicator.hide();
+
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
@@ -327,8 +329,6 @@ sap.ui.define([
                                 setTimeout(function () {
                                     that._resetAll();
                     
-                                    BusyIndicator.hide();
-
                                     // ---- Set Focus to main Input field
                                     that._setFocus("idInput_HU");
                                 }, tSTime);            
@@ -427,6 +427,8 @@ sap.ui.define([
                                 // ---- Coding in case of showing Business application Errors
                                 that._resetAll();
 
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
 
                                 if (component !== null && component !== undefined) {
@@ -436,8 +438,6 @@ sap.ui.define([
                                 }
 
                                 that.oScanModel.setProperty("/valueManuallyNo", "");
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -537,6 +537,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.byId("idInput_Location");
 
@@ -545,8 +547,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-
-                                    BusyIndicator.hide();
 
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
 
