@@ -375,12 +375,12 @@ sap.ui.define([
                                 that.oScanModel.setProperty("/showOk", true);
                                 that.oScanModel.setProperty("/showOkText", sOkMesg);       
 
+                                BusyIndicator.hide();
+
                                 // ---- Do nothing -> Good case
                                 setTimeout(function () {
                                     that._resetAll();
                     
-                                    BusyIndicator.hide();
-
                                     // ---- Set Focus to main Input field
                                     that._setFocus(that.idInputHU);
                                 }, tSTime);            
@@ -601,6 +601,8 @@ sap.ui.define([
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
                                     that._resetAll();
 
+                                    BusyIndicator.hide();
+    
                                     var component = that.byId("idInput_HU");
     
                                     if (component !== null && component !== undefined) {
@@ -608,8 +610,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-    
-                                    BusyIndicator.hide();
     
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -623,11 +623,11 @@ sap.ui.define([
                                     let data = rData.results[i];
                                     
                                     if (data.HandlingUnit === that.iHU) {                                    
-                                        BusyIndicator.hide();
-
                                         that._loadDeliveryData(data.DocumentNo, that.iHU, rData);
                                     }
                                 }
+
+                                BusyIndicator.hide();
                             } else {
                                 BusyIndicator.hide();
 
@@ -668,6 +668,8 @@ sap.ui.define([
                         if (rData !== null && rData !== undefined) {
                             // ---- Check for complete final booking
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
 
                                 if (component !== null && component !== undefined) {
@@ -675,8 +677,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -747,6 +747,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData.results.length > 0) {
                                 if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "E") {
+                                    BusyIndicator.hide();
+    
                                     var component = that.byId("idInput_HU");
     
                                     if (component !== null && component !== undefined) {
@@ -754,8 +756,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.results[0].SapMessageText, "");
                                     }
-    
-                                    BusyIndicator.hide();
     
                                     return;
                                 } else if (rData.results[0].SapMessageType !== null && rData.results[0].SapMessageType !== undefined && rData.results[0].SapMessageType === "I") {
@@ -832,6 +832,8 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
     
                                 if (component !== null && component !== undefined) {
@@ -839,8 +841,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -887,6 +887,8 @@ sap.ui.define([
                         // ---- Check for complete final booking
                         if (rData !== null && rData !== undefined) {
                             if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
     
                                 if (component !== null && component !== undefined) {
@@ -894,8 +896,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
