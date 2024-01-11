@@ -572,9 +572,7 @@ sap.ui.define([
                                 for (let i = 0; i < rData.results.length; i++) {
                                     let data = rData.results[i];                                    
                                     
-                                    if (data.StorageBinID === that.sStorageBin) {
-                                        that._setStorageBinData(data, that.sStorageBin);
-                                    }
+                                    that._setStorageBinData(data, that.sStorageBin);
                                 }
 
                                 BusyIndicator.hide();
