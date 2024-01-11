@@ -297,13 +297,13 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData !== null && rData !== undefined) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     tools.alertMe(rData.SapMessageText, "");
                                     
                                     that._setFocus("idInput_HU");
     
-                                    BusyIndicator.hide();
-
                                     return;
                                 } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
                                     // ---- Coding in case of showing Business application Informations
@@ -424,6 +424,8 @@ sap.ui.define([
                                 // ---- Coding in case of showing Business application Errors
                                 that._resetAll();
 
+                                BusyIndicator.hide();
+
                                 var component = that.byId("idInput_HU");
 
                                 if (component !== null && component !== undefined) {
@@ -431,8 +433,6 @@ sap.ui.define([
                                 } else {
                                     tools.showMessageError(rData.SapMessageText, "");
                                 }
-
-                                BusyIndicator.hide();
 
                                 return;
                             } else if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "I") {
@@ -537,6 +537,8 @@ sap.ui.define([
                             // ---- Check for complete final booking
                             if (rData) {
                                 if (rData.SapMessageType !== null && rData.SapMessageType !== undefined && rData.SapMessageType === "E") {
+                                    BusyIndicator.hide();
+
                                     // ---- Coding in case of showing Business application Errors
                                     var component = that.byId("idInput_Location");
 
@@ -545,8 +547,6 @@ sap.ui.define([
                                     } else {
                                         tools.showMessageError(rData.SapMessageText, "");
                                     }
-
-                                    BusyIndicator.hide();
 
                                     that.oScanModel.setProperty("/valueManuallyNo", "");
 
