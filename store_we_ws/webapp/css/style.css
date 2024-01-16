@@ -89,3 +89,18 @@
 .atosBold {
     font-weight: bold !important;
 }
+
+.evidenMobileButton .sapMBtnInner {
+    font-weight: bold !important;
+    font-size: 1.4rem !important;
+    height: 30px !important;
+    margin-top: 4px !important;
+    padding-top: 3px !important;
+}
+
+.evidenMobileButtonMDE .sapMBtnInner {
+    font-weight: bold !important;
+    font-size: 1.3rem !important;
+    height: 30px !important;
+    margin-top: 5px !important;
+}
