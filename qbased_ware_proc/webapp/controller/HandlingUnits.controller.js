@@ -558,7 +558,8 @@
         },
 
         _setHuTableData: function (oData) {
-            var oSortTextArray = tools.splitStringIntoArray(this.oResourceBundle.getText("QueueSortPropertyInt"), ",");
+            var oSortTextArray = tools.splitStringIntoArray(this.oResourceBundle.getText("QueueSortArray"), ",");
+            var sSortText = this.oResourceBundle.getText("QueueSortProperty");
             var oListData = [];
             var that = this;
            
@@ -580,19 +581,19 @@
             }
 
             // ---- Special sorting in case of Queue REPL / REPL2
-            var sSortText = "";
+            var sSortQueue = "";
 
             for (let j = 0; j < oSortTextArray.length; j++) {
                 var item = oSortTextArray[j];
                 
                 if (item === this.sActiveQueue) {
-                    sSortText = item;
+                    sSortQueue = item;
 
                     break;
                 }
             }
 
-            if (this.sActiveQueue === sSortText) {
+            if (this.sActiveQueue === sSortQueue) {
                 oListData = tools._sortArray(oListData, sSortText, 1);
             }
 
@@ -621,7 +622,7 @@
         },
 
         _setWhtTableData: function (oData) {
-            var sSortText = this.oResourceBundle.getText("QueueSortPropertyExt");
+            var sSortText = this.oResourceBundle.getText("QueueSortProperty");
             var oListData = [];
             var that = this;
 
