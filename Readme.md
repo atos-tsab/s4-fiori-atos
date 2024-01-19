@@ -5,7 +5,7 @@
 - rm <foldername of new project here>/.gitignore
 - cp templates/deploy.sh <foldername of new project here>
 - cd <foldername of new project here>
-    - edit package json as shown in "templates/snippets package.json"
+    - edit package json as shown in "templates/snippets package.json" Hallo
 
 # Guideline & Documentation
 https://bpwjirakg.atlassian.net/wiki/spaces/S4G/pages/2039185471/SAP+Fiori+Guideline
